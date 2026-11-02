@@ -90,7 +90,10 @@ async function gymRefreshSocial(){
   db.from("gym_post_likes").select("post_id,user_id,created_at").limit(1000)
  ]);
  for(const r of requests)if(r.error)console.warn("EDGY community:",r.error.message);
- gymSocialProfiles=requests[0].data||[];gymFollowRows=requests[1].data||[];gymFeedPosts=requests[2].data||[];gymPostLikes=requests[3].data||[];
+ if(!requests[0].error)gymSocialProfiles=requests[0].data||[];
+ if(!requests[1].error)gymFollowRows=requests[1].data||[];
+ if(!requests[2].error)gymFeedPosts=requests[2].data||[];
+ if(!requests[3].error)gymPostLikes=requests[3].data||[];
 }
 const gymOldLoad=load;
 load=async function(){await gymOldLoad();await gymRefreshSocial()};
