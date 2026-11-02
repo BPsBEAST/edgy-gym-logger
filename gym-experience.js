@@ -75,7 +75,10 @@ document.addEventListener("change",event=>{
  const t=event.target;
  if(!user||!t.dataset?.set)return;
  if(t.dataset.field==="completed"||t.dataset.field==="to_failure"){
-  gymPrepareMotion("toggle",t.dataset.set);
-  t.closest?.(".gymSetItem")?.classList.add("gymTapFeedback");
+  const row=t.closest?.(".gymSetItem");
+  if(row){
+   row.classList.add("gymTapFeedback");
+   setTimeout(()=>row.classList.remove("gymTapFeedback"),420);
+  }
  }
 },true);
