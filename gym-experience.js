@@ -65,8 +65,8 @@ document.addEventListener("click",event=>{
  if(!button||!user)return;
  if(button.dataset.addSet)gymPrepareMotion("set",button.dataset.addSet);
  if(button.dataset.cycleSet){
-  gymPrepareMotion("type",button.dataset.cycleSet);
   button.classList.add("gymTypePressed");
+  setTimeout(()=>button.classList.remove("gymTypePressed"),340);
  }
  if(button.dataset.addSet)button.classList.add("gymAddPressed");
  if(button.dataset.uxAddEx)gymPrepareMotion("exercise",button.dataset.uxAddEx);
