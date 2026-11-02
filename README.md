@@ -10,6 +10,10 @@ Aplicação web mobile-first para registar treinos de musculação, acompanhar c
 - GitHub Pages ou qualquer outro alojamento estático compatível.
 - Manifesto PWA e ícone da aplicação.
 
+## Identidade visual
+
+A aplicação segue a identidade EDGY Game Hub: fundo roxo-escuro, gradiente rosa/magenta, marca **EDGY** com subtítulo **GYM LOGGER**, monograma **EG** no ícone PWA, avatar e sino de notificações no cabeçalho, e navegação inferior com botão central destacado.
+
 ## Navegação
 
 **Feed · Histórico · Treino · Exercícios · Perfil**
@@ -17,8 +21,10 @@ Aplicação web mobile-first para registar treinos de musculação, acompanhar c
 ### Treino
 Começar/retomar treino, adicionar exercícios, criar séries com peso, repetições e RPE, alternar série normal/aquecimento/dropset, marcar séries concluídas e terminar a sessão. Ao adicionar um exercício a primeira série é preenchida com os valores da última sessão concluída, quando existem.
 
+Temporizador de descanso ajustável (45–180 segundos), com contagem preservada após recarregar a página. Modelos reutilizáveis permitem iniciar sessões com exercícios e séries predefinidos.
+
 ### Histórico
-Cada sessão concluída apresenta duração, volume, séries, exercícios, detalhes e recordes calculados por exercício. Pode ser partilhada no Feed apenas por opção do utilizador.
+Cada sessão concluída apresenta duração, volume, séries, exercícios, detalhes e recordes calculados por exercício. Pode ser partilhada no Feed apenas por opção do utilizador. Sessões concluídas podem ser guardadas como modelos.
 
 ### Exercícios
 84 exercícios de base, filtros por grupo muscular, exercícios personalizados, histórico e gráfico de carga máxima por exercício, com estimativa de 1RM.
@@ -32,6 +38,8 @@ Desativado por defeito. Ao aderir, o utilizador passa a ter um perfil de comunid
 ## Base de dados
 
 Tabelas principais: `gym_exercises`, `gym_workouts`, `gym_workout_exercises`, `gym_sets`, `gym_measurements`.
+
+Modelos: `gym_templates`, `gym_template_exercises`.
 
 Tabelas sociais: `gym_social_profiles`, `gym_follows`, `gym_feed_posts`, `gym_post_likes`.
 
@@ -49,8 +57,20 @@ Tabelas sociais: `gym_social_profiles`, `gym_follows`, `gym_feed_posts`, `gym_po
 
 A validar no navegador: navegação completa, inserção de séries e RPE, PRs e interações sociais entre duas contas distintas.
 
-Ainda não implementado: templates reutilizáveis, notificações, fotos de progresso, sincronização offline, temporizador de descanso, login por link de email e testes automatizados de ponta a ponta.
+Ainda não implementado: fotos de progresso, sincronização offline, personalização avançada dos modelos, login por link de email e testes automatizados de ponta a ponta.
+
+As notificações da Gym Logger mostram novos seguidores, gostos e PRs; o estado de leitura é guardado localmente por dispositivo, sem sincronização entre dispositivos nesta versão.
 
 ### Publicação
 
 O repositório tem ficheiros estáticos na raiz, preparados para GitHub Pages. Confirmar o URL de publicação no painel do GitHub antes de o divulgar.
+
+## Testes manuais prioritários
+
+1. Entrar com conta EDGY já existente, confirmar avatar/nome/@.
+2. Iniciar treino, adicionar exercício e séries, marcar repetições/cargas, verificar persistência após atualização.
+3. Experimentar série de aquecimento, dropset, RPE e temporizador de descanso.
+4. Concluir treino, verificar volume e PRs, guardar modelo no Histórico e iniciar novo treino pelo modelo.
+5. Adicionar medidas em duas datas e verificar calendário e gráficos.
+6. Com segunda conta, ativar Feed e testar seguir, gostar, partilhar e notificações.
+7. Confirmar que o histórico completo e medidas não ficam visíveis na outra conta.
