@@ -1,0 +1,30 @@
+/* EDGY — Gym Logger / standalone shared account entry */
+.gymAccess{max-width:520px;margin:32px auto 65px;padding:0 10px;animation:gymAccessAppear .28s ease both}
+.gymAccessCard{background:linear-gradient(137deg,#271c3a 0%,#211833 100%);border:1px solid #5b3b67;border-top:3px solid #ef2b8f;border-radius:4px;padding:29px 26px 26px;box-shadow:0 20px 70px #0a05162e}
+.gymAuthOverline{font-size:10px;letter-spacing:2px;font-weight:900;color:#ff65ac}
+.gymAccessCard h1{font-size:28px;line-height:1.13;letter-spacing:-.6px;margin:13px 0 9px;color:#f9f2fb}
+.gymAccessCard>.muted{font-size:13px;line-height:1.65;color:#bbaaCA}
+.gymEntryTabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border:1px solid #624268;border-radius:3px;background:#1b132d;padding:4px;gap:5px;margin:20px 0}
+.gymEntryTabs button{padding:12px 9px;font-size:12px;font-weight:850;border:0;border-radius:3px;background:transparent;color:#b9a4c5;transition:background .18s,color .18s,transform .18s}
+.gymEntryTabs button.active{background:linear-gradient(100deg,#ef095e,#c20b95);color:#fff;box-shadow:0 5px 19px #e5207624}
+.gymEntryTabs button:active{transform:scale(.97)}
+.gymEntryTabs button:not(.active):hover{color:white;background:#3d2b4a}
+.gymAccessForm{display:grid;gap:9px}
+.gymAccessForm label{color:#e4d1e9;font-size:12px;font-weight:780;margin-top:6px}
+.gymAccessForm .input{min-height:46px;border-radius:3px;background:#19122b;border:1px solid #63456d;font-size:13px;color:#f9f0fa;padding:10px 12px;outline:0}
+.gymAccessForm .input:focus{border-color:#f25caa;box-shadow:0 0 0 3px #ee30911b}
+.gymAuthHint{display:block;color:#a998ba;font-size:11px;line-height:1.65;margin:10px 0 0}
+.gymAuthMessage{font-size:12px;line-height:1.5;font-weight:700;color:#ffb7ce;margin:3px 0;white-space:pre-wrap}
+.gymAuthMessage:empty{display:none}
+.gymAccessForm button[type="submit"]{min-height:46px;font-size:13px;font-weight:850;margin-top:5px}
+.gymAccessForm button:disabled{opacity:.7;cursor:progress}
+.gymAccessCard>button.full{margin:18px 0 11px}
+.gymEntryLink{display:block;margin:0 auto;color:#ff8abb;border:0;background:none;font-size:12px;font-weight:750;padding:8px;cursor:pointer}
+.gymEntryLink:hover{text-decoration:underline}
+@keyframes gymAccessAppear{from{opacity:.45;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:560px){
+ .gymAccess{margin:15px auto 90px;padding:0}
+ .gymAccessCard{padding:22px 17px;border-left:0;border-right:0}
+ .gymAccessCard h1{font-size:25px}
+}
+@media(prefers-reduced-motion:reduce){.gymAccess{animation:none!important}.gymEntryTabs button{transition:none!important}}
