@@ -17,7 +17,7 @@ document.addEventListener("click",event=>{
   event.preventDefault();event.stopImmediatePropagation();
   gymConfirmDialog(title,message,button,callback,danger);
  };
- if(b.id==="cancelWorkout"&&active){
+ if((b.id==="cancelWorkout"||b.id==="cancelWorkoutBottom")&&active){
   const workoutId=active.id;
   confirmAction("Cancelar treino","Vais eliminar definitivamente este treino em curso, incluindo os exercícios, as séries e as cargas registadas. Não serão atribuídos XP e o treino não aparecerá no Histórico.","Eliminar treino",()=>{
    action(async()=>{
