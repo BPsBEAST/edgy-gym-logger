@@ -20,8 +20,13 @@ document.addEventListener("click",event=>{
  if(b.id==="finish"&&active){
   confirmAction("Terminar treino","Queres concluir esta sessão? As séries e cargas ficam guardadas no Histórico.","Terminar treino",()=>{
    action(async()=>{
-    const {error}=await db.from("gym_workouts").update({finished_at:new Date().toISOString()}).eq("id",active.id);
-    if(error)throw error;page="historico";toast("Treino concluído!");
+    const workoutId=active.id;
+    const {error}=await db.from("gym_workouts").update({finished_at:new Date().toISOString()}).eq("id",workoutId);
+    if(error)throw error;
+    const {data:reward,error:rewardError}=await db.from("gym_xp_awards").select("xp_awarded,base_xp,volume_xp,pr_xp").eq("workout_id",workoutId).maybeSingle();
+    if(rewardError)console.warn("EDGY Gym XP:",rewardError.message);
+    page="historico";
+    toast("Treino concluído!"+(reward?.xp_awarded>0?" +"+reward.xp_awarded+" XP EDGY ✦":reward?" Sem XP nesta sessão.":""));
    });
   });return;
  }
