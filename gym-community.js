@@ -116,13 +116,17 @@ document.addEventListener("click",event=>{
   event.preventDefault();event.stopImmediatePropagation();
   const id=b.dataset.gymAthleteFollow;
   if(!gymOwnSocial()?.is_public){toast("Ativa o teu perfil público antes de seguires outros atletas.");return}
-  action(async()=>{
-   const existing=gymFollowRows.some(f=>f.follower_id===user.id&&f.followed_id===id);
-   const q=existing?db.from("gym_follows").delete().eq("follower_id",user.id).eq("followed_id",id):
-    db.from("gym_follows").insert({follower_id:user.id,followed_id:id});
-   const {error}=await q;if(error)throw error;
-   await gymAthleteDialog(id);
-  });
+  (async()=>{
+   try{
+    const existing=gymFollowRows.some(f=>f.follower_id===user.id&&f.followed_id===id);
+    const q=existing?db.from("gym_follows").delete().eq("follower_id",user.id).eq("followed_id",id):
+     db.from("gym_follows").insert({follower_id:user.id,followed_id:id});
+    const {error}=await q;if(error)throw error;
+    await load();
+    render();
+    if(gymUXModalOpen)await gymAthleteDialog(id);
+   }catch(err){console.warn("EDGY Gym follow:",err);toast("Não foi possível atualizar a ligação com este atleta.")}
+  })();
   return;
  }
  if(b.dataset.gymAthlete){gymAthleteDialog(b.dataset.gymAthlete);return}
