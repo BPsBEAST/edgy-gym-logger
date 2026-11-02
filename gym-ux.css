@@ -1,0 +1,122 @@
+/* EDGY Gym polished controls, modals and profile */
+html,body{max-width:100%;overflow-x:hidden}
+button,input,textarea,select{font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+button{touch-action:manipulation}
+.gymDialogLocked{overflow:hidden!important}
+.gymUXBackdrop{position:fixed;inset:0;z-index:500;display:flex;justify-content:center;align-items:center;padding:17px;background:#0c0718d9;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);opacity:0;transition:opacity .2s ease}
+.gymUXBackdrop.is-open{opacity:1;animation:gymUXFade .22s ease both}
+.gymUXBackdrop[aria-hidden="true"]{display:none}
+.gymUXDialog{width:min(100%,460px);max-height:min(90dvh,780px);overflow:hidden;display:flex;flex-direction:column;background:#211a35;border:1px solid #754565;border-top:3px solid #ed1681;box-shadow:0 30px 100px #05030ed9;border-radius:4px;animation:gymUXEnter .25s cubic-bezier(.18,.9,.18,1) both}
+.gymUXDialog.gymUXWide{width:min(100%,620px)}
+@keyframes gymUXFade{from{opacity:0}to{opacity:1}}
+@keyframes gymUXEnter{from{opacity:0;transform:translateY(12px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+.gymUXHead{padding:22px 23px 15px;display:flex;align-items:start;justify-content:space-between;gap:12px;border-bottom:1px solid #46314e;flex-shrink:0}
+.gymUXHead h2{margin:6px 0 5px;font-size:23px;letter-spacing:-.6px;color:#fff}
+.gymUXHead p{margin:0;color:#b0a0be;font-size:12px}
+.gymUXEyebrow{font-size:10px;font-weight:800;letter-spacing:2px;color:#ff5eae}
+.gymUXClose{border:1px solid #65506d;color:#e7d5ee;background:#30263f;width:32px;height:32px;border-radius:3px;flex-shrink:0;font-size:22px;line-height:1;cursor:pointer}
+.gymUXClose:hover{background:#50304f;border-color:#e34594}
+.gymUXBody{min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:20px 23px 24px;scrollbar-width:thin;scrollbar-color:#69416a transparent}
+.gymUXForm{display:grid;gap:15px}
+.gymUXField{display:grid;gap:7px;font-size:12px;font-weight:700;color:#e9daee;min-width:0}
+.gymUXInput{width:100%;min-width:0;min-height:43px;border:1px solid #5c4568;border-radius:3px;outline:none;background:#171229;color:#faf7ff;padding:11px 12px;font-weight:500;font-size:13px;transition:border-color .18s ease,box-shadow .18s ease,background .18s ease}
+.gymUXInput::placeholder{color:#9988aa}
+.gymUXInput:focus{background:#201831;border-color:#ed3f98;box-shadow:0 0 0 3px #ef23892b}
+textarea.gymUXInput{resize:vertical;line-height:1.45;min-height:85px}
+select.gymUXInput{appearance:auto;cursor:pointer}
+.gymUXSuggestLabel{font-size:11px;color:#baaac9;font-weight:700}
+.gymUXChips{display:flex;gap:7px;flex-wrap:wrap}
+.gymUXChip{background:#35263f;border:1px solid #674567;color:#ffc0da;border-radius:3px;padding:8px 11px;font-size:11px;font-weight:700;transition:background .18s ease,transform .18s ease;cursor:pointer}
+.gymUXChip:hover{background:#612d57;transform:translateY(-2px)}
+.gymUXActions{display:flex;gap:9px;margin-top:4px;justify-content:flex-end}
+.gymUXActions .btn{flex:1;min-height:42px}
+.gymUXTwo{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.gymUXPickerControls{display:grid;gap:9px;margin-bottom:12px}
+.gymUXList{display:grid;gap:0;max-height:350px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#75496b transparent}
+.gymUXExerciseRow{display:flex;align-items:center;gap:7px;border-bottom:1px solid #463451;min-height:62px;animation:gymUXItem .22s ease both}
+@keyframes gymUXItem{from{opacity:.6;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.gymUXExerciseRow:last-child{border:0}
+.gymUXExMain{background:none;border:0;color:#f7f1fa;flex:1;min-width:0;text-align:left;display:grid;gap:4px;padding:12px 5px;font-size:13px}
+.gymUXExMain strong{font-weight:750;line-height:1.35}
+.gymUXExMain small{color:#b6a3c4;font-size:11px}
+.gymUXExMain small span{color:#ff6aa9}
+.gymUXExMain:hover strong{color:#ff78b9}
+.gymUXFav{background:transparent;border:0;color:#91819f;width:39px;height:39px;font-size:24px;flex-shrink:0}
+.gymUXFav.is-fav,.gymUXFav:hover{color:#fc70b1}
+.gymUXTitleRow{display:flex;align-items:start;justify-content:space-between;gap:15px;margin-bottom:15px}
+.gymUXTitleRow h1{margin:0 0 4px}
+.gymUXTitleRow p{margin:0;font-size:13px}
+.gymUXTitleRow>.btn{align-self:center}
+.gymUXLibrary{padding:16px 16px 8px}
+.gymUXLibrary .gymUXList{max-height:none}
+.gymUXSort,.gymUXFeedSwitch{display:flex;gap:7px;align-items:center}
+.gymUXSort button,.gymUXFeedSwitch button{border:1px solid #584060;color:#b9a6c9;background:#30263f;border-radius:3px;padding:9px 11px;font-size:11px;font-weight:750;cursor:pointer;transition:all .16s ease}
+.gymUXSort .is-on,.gymUXFeedSwitch .is-on{color:white;border-color:#e3298d;background:linear-gradient(115deg,#c80d70,#8d2478)}
+.gymUXFeedSwitch{margin-bottom:12px}
+.gymUXFeedSwitch button{flex:1}
+.gymUXEmpty{text-align:center;padding:28px 15px;color:#b9accb}
+.gymUXEmpty strong{display:block;margin-bottom:8px;color:#fff}
+.gymUXEmpty p{margin:0}
+.gymUXNewPost{background:linear-gradient(115deg,#ff075c,#c300a7);color:white;border:0;border-radius:3px;padding:11px 13px;display:flex;align-items:center;gap:7px;font-weight:800;font-size:12px;box-shadow:0 5px 14px #ef0f753b;white-space:nowrap;transition:transform .18s ease}
+.gymUXNewPost:hover{transform:translateY(-2px)}
+.gymUXPrivate{border-left:3px solid #e43c90}
+.gymUXPrivate strong{display:block;margin-bottom:8px}
+.gymUXPrivate p{font-size:12px}
+.gymUXProfileActions{padding:17px 18px}
+.gymUXProfileTop{display:flex;align-items:center;justify-content:space-between;gap:14px}
+.gymUXProfileTop strong{display:block;font-size:13px}
+.gymUXProfileTop small{display:block;color:#b0a1c0;font-size:11px;line-height:1.5;margin-top:5px}
+.gymUXProfileTop .btn{white-space:nowrap}
+.gymUXSocialStats{display:grid;grid-template-columns:1fr 1fr 1.3fr;gap:8px;margin-top:14px;border-top:1px solid #493652;padding-top:13px;align-items:center}
+.gymUXSocialStats button{padding:5px;border:0;background:transparent;color:#eee3f7;display:grid;gap:3px;text-align:center;cursor:pointer}
+.gymUXSocialStats button:hover{color:#ff77b9}
+.gymUXSocialStats button strong{font-size:19px;line-height:1.2}
+.gymUXSocialStats button span{font-size:10px;color:#a99abc}
+.gymUXVisibility{text-align:center;color:#c9b0cd;font-size:11px}
+.gymUXDot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#a4a0af;margin-right:6px}
+.gymUXDot.public{background:#54dca1}
+.gymUXPeopleRow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #463451}
+.gymUXPeopleRow:last-child{border:0}
+.gymUXPeopleRow strong{font-size:13px;display:block}
+.gymUXPeopleRow small{display:block;margin-top:3px;color:#b7a1c0;font-size:11px}
+.gymUXPhoto{display:flex;align-items:center;gap:14px;padding-bottom:12px;border-bottom:1px solid #443251}
+.gymUXPhotoPreview{width:70px;height:70px;border-radius:50%;background:#372844;border:2px solid #ba498f;display:grid;place-items:center;flex:0 0 70px;font-size:25px;font-weight:900;overflow:hidden}
+.gymUXPhotoPreview img{width:100%;height:100%;object-fit:cover;object-position:center;display:block}
+.gymUXPhoto strong,.gymUXPhoto small{display:block}
+.gymUXPhoto strong{font-size:13px}.gymUXPhoto small{color:#b7a3c0;font-size:11px;line-height:1.45;margin:4px 0 8px}
+.gymUXUpload{display:inline-block;padding:7px 10px;border:1px solid #855079;color:#ffc3df;border-radius:3px;cursor:pointer;font-size:11px;font-weight:750}
+.gymUXPrivacy{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:13px 11px;border:1px solid #58405e;background:#30243e;border-radius:3px}
+.gymUXPrivacy strong,.gymUXPrivacy small{display:block}
+.gymUXPrivacy strong{font-size:12px}
+.gymUXPrivacy small{font-size:10px;color:#b8a7c4;line-height:1.55;margin-top:4px}
+.gymUXPrivacy input{width:20px;height:20px;accent-color:#f12891;flex-shrink:0}
+.gymUXFine{color:#ae9cbb;font-size:10px;line-height:1.6;margin:0}
+.gymUXPostKinds{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.gymUXPostKinds label{cursor:pointer}
+.gymUXPostKinds input{position:absolute;opacity:0;pointer-events:none}
+.gymUXPostKinds label span{display:block;text-align:center;border:1px solid #604665;border-radius:3px;background:#2b223a;color:#bba9c9;padding:12px 8px;font-weight:750;font-size:12px;transition:all .2s ease}
+.gymUXPostKinds input:checked+span{border-color:#e23b96;color:white;background:#602953}
+.gymUXPostKinds input:focus-visible+span{outline:2px solid #f268b4;outline-offset:2px}
+/* remove visible desktop scrollbar while preserving scrolling */
+@media(min-width:800px){
+ html,body{width:100%;height:100%;overflow:hidden!important}
+ .app{overflow-y:auto!important;overflow-x:hidden!important;scrollbar-width:none!important;-ms-overflow-style:none}
+ .app::-webkit-scrollbar{width:0!important;height:0!important;display:none!important}
+ .gymSidebar{overflow:hidden!important}
+}
+.gymHeaderAvatar{padding:0!important;overflow:hidden!important;line-height:1;aspect-ratio:1}
+.gymHeaderAvatar img{width:100%!important;height:100%!important;display:block!important;object-fit:cover!important;object-position:center center!important;aspect-ratio:1}
+.gymHeaderAvatar span{display:grid;place-items:center;width:100%;height:100%}
+@media(max-width:520px){
+ .gymUXBackdrop{padding:10px;align-items:center}
+ .gymUXDialog{max-height:88dvh;width:100%}
+ .gymUXHead{padding:17px 17px 13px}
+ .gymUXBody{padding:16px 17px 21px}
+ .gymUXTitleRow{gap:7px}.gymUXNewPost span{display:none}
+ .gymUXNewPost{width:41px;height:41px;display:grid;place-items:center;padding:0;font-size:23px}
+ .gymUXProfileTop{align-items:flex-start}
+ .gymUXProfileTop .btn{padding:9px;font-size:11px}
+ .gymUXTwo{gap:7px}
+ .gymUXSocialStats{gap:4px}
+}
+@media(prefers-reduced-motion:reduce){.gymUXBackdrop,.gymUXDialog,.gymUXExerciseRow,.gymUXNewPost,.gymUXChip{animation:none!important;transition:none!important}}
