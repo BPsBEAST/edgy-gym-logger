@@ -1,7 +1,7 @@
-/* EDGY Gym Logger integrated app: workout, profile, community and UX */
+/* EDGY Gym Logger · all modules */
 (function(){
 
-/* MODULE: app.js */
+/* app.js */
 const URL='https://okzpfhjdckmoawmwmydu.supabase.co',KEY='sb_publishable_hF29Hv9P7Snfj2utKL-XjA_PvE0oK5a';
 const db=window.supabase.createClient(URL,KEY), screen=document.querySelector('#screen');
 let user=null,profile=null,page='treino',active=null,exercises=[],history=[],measurements=[],search='',filter='Todos';
@@ -69,7 +69,7 @@ window.EDGY_GYM_START=async function(){
 };
 
 
-/* MODULE: enhancements.js */
+/* enhancements.js */
 /* EDGY Gym · analytics, exercise records and opt-in community */
 "use strict";
 let gymSelectedExercise=null,gymCalendarMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1);
@@ -124,7 +124,7 @@ function gymProfileMarkup(){
  const current=measurements.filter(x=>x[gymMeasureMetric]!=null).slice().reverse().map(m=>({label:m.recorded_at.slice(5),value:Number(m[gymMeasureMetric])}));
  const latest=measurements[0];
  const avatar=profile?.avatar_path?'<img class="gymAvatar" src="'+esc(db.storage.from("edgy-avatars").getPublicUrl(profile.avatar_path).data.publicUrl)+'" alt="Fotografia de perfil">':'<div class="gymAvatar gymAvatarFallback">◉</div>';
- return '<div class="card hero"><div class="row" style="justify-content:flex-start">'+avatar+'<div><h1 style="margin:0">'+esc(profile?.display_name||user.email?.split("@")[0]||"Atleta")+'</h1><span class="muted">@'+esc(profile?.username||"edgy")+'</span><div class="gymJoined">Membro EDGY desde '+(profile?.created_at?new Date(profile.created_at).toLocaleDateString("pt-PT",{day:"numeric",month:"long",year:"numeric"}):"—")+'</div></div></div><p class="muted" style="margin-bottom:0">'+esc(profile?.bio||"O teu progresso, um treino de cada vez.")+'</p></div>'+
+ return '<div class="card hero"><div class="row" style="justify-content:flex-start">'+avatar+'<div><h1 style="margin:0">'+esc(profile?.display_name||user.email?.split("@")[0]||"Atleta")+'</h1><span class="muted">@'+esc(profile?.username||"edgy")+'</span><div class="gymJoined">Membro EDGY desde '+((user?.created_at||profile?.created_at)?new Date(user?.created_at||profile?.created_at).toLocaleDateString("pt-PT",{day:"numeric",month:"long",year:"numeric"}):"—")+'</div></div></div><p class="muted" style="margin-bottom:0">'+esc(profile?.bio||"O teu progresso, um treino de cada vez.")+'</p></div>'+
  '<div class="gymSharedXP"><div><span class="gymXPTag">XP EDGY PARTILHADO</span><strong>Nível '+(Math.floor(Math.max(0,Number(profile?.xp)||0)/100)+1)+'</strong></div><div class="gymXPProgress"><div class="gymXPProgressBar"><span style="width:'+(Math.max(0,Number(profile?.xp)||0)%100)+'%"></span></div><small>'+fmt(profile?.xp||0)+' XP no ecossistema EDGY</small></div></div>'+
  '<div class="grid gymGrid4"><div class="stat"><strong>'+done.length+'</strong><small>Treinos</small></div><div class="stat"><strong>'+fmt(total)+'</strong><small>Volume kg</small></div><div class="stat"><strong>'+Math.round(minutes/60*10)/10+'h</strong><small>Tempo</small></div><div class="stat"><strong>'+records+'</strong><small>Recordes</small></div></div>'+
  '<div class="card"><div class="row"><h3>Treinos por semana</h3><span class="pill">12 semanas</span></div><div class="chart gymWeekChart">'+weeks.map(w=>'<div class="barslot" title="'+w.count+' treinos · '+w.minutes+' minutos"><div class="bar" style="height:'+(w.count?Math.max(5,w.count/max*100):1)+'%;opacity:'+(w.count?1:.18)+'"></div><small>'+w.count+'</small></div>').join("")+'</div><small class="muted">Cada coluna representa uma semana, de segunda a domingo.</small></div>'+
@@ -221,7 +221,7 @@ document.addEventListener("submit",event=>{
 });
 
 
-/* MODULE: edgy-shell.js */
+/* edgy-shell.js */
 /* EDGY Gym - unified header, identity and real event notifications. */
 "use strict";
 const gymShellRender=render;
@@ -303,7 +303,7 @@ db.auth.onAuthStateChange((event)=>{
 gymUpdateHeader();
 
 
-/* MODULE: gym-templates.js */
+/* gym-templates.js */
 /* Reusable workout templates for EDGY Gym Logger */
 "use strict";
 let gymTemplates=[],gymTemplateBusy=false;
@@ -400,7 +400,7 @@ document.addEventListener("click",event=>{
 });
 
 
-/* MODULE: gym-rest.js */
+/* gym-rest.js */
 /* Rest timer: local to the athlete, survives page reloads */
 "use strict";
 const gymRestWorkoutBase=renderWorkout;
@@ -446,7 +446,7 @@ document.addEventListener("change",event=>{
 });
 
 
-/* MODULE: gym-ux.js */
+/* gym-ux.js */
 /* EDGY Gym Logger · profile, feed, modal and exercise UX */
 "use strict";
 let gymUXModalOpen=false,gymUXPickerSearch="",gymUXPickerMuscle="Todos",gymUXPickerEquipment="Todos";
@@ -739,7 +739,7 @@ const gymUXOldRender=render;
 render=function(){gymUXOldRender();if(page==="exercicios"&&!gymSelectedExercise){gymUXSetSelect("gymUXExMuscle",gymUXExMuscle);gymUXSetSelect("gymUXExEquipment",gymUXExEquipment)}};
 
 
-/* MODULE: gym-community.js */
+/* gym-community.js */
 /* EDGY Gym · post conversations, public athlete profiles, personal feed */
 "use strict";
 let gymPostComments=[],gymExpandedComments=new Set();
@@ -871,7 +871,7 @@ gymNotificationItems=function(){
 };
 
 
-/* MODULE: gym-confirm.js */
+/* gym-confirm.js */
 /* EDGY Gym · branded confirmation dialogs */
 "use strict";
 let gymConfirmCallback=null;
