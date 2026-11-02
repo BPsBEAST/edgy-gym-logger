@@ -148,7 +148,7 @@ renderFeed=function(){
  const people=gymSocialProfiles.filter(p=>p.user_id!==user.id&&p.is_public&&(p.display_name+" "+p.username).toLowerCase().includes(gymFeedSearch.toLowerCase()));
  const following=new Set(gymFollowRows.filter(f=>f.follower_id===user.id).map(f=>f.followed_id));
  const visible=gymFeedPosts.filter(p=>gymFeedMode==="discover"||p.user_id===user.id||following.has(p.user_id));
- return '<div class="gymUXTitleRow"><div><h1>Feed</h1><p class="muted">Partilha o progresso com a comunidade.</p></div><button type="button" class="gymUXNewPost" id="gymUXNewPost" aria-label="Criar publicação">＋ <span>Publicar</span></button></div>'+
+ return '<div class="gymUXTitleRow"><div><h1>Feed</h1><p class="muted">Partilha o progresso com a comunidade.</p></div><div class="gymUXFeedHeadActions"><button type="button" class="gymUXNewPost" id="gymUXNewPost" aria-label="Criar publicação">＋ <span>Publicar</span></button><button type="button" class="btn secondary small" id="gymUXFeedPrivacy">Privacidade</button></div></div>'+
  (!publicProfile?'<div class="card gymUXPrivate"><strong>O teu perfil está privado</strong><p class="muted">Podes descobrir publicações. Para publicar e receber seguidores, ativa o perfil público nas definições do Perfil.</p><button class="btn secondary small" id="gymUXEditProfile">Editar privacidade</button></div>':"")+
  '<div class="card gymUXFeedSwitch"><button class="'+(gymFeedMode==="following"?"is-on":"")+'" data-feed-mode="following">A seguir</button><button class="'+(gymFeedMode==="discover"?"is-on":"")+'" data-feed-mode="discover">Descobrir</button></div>'+
  (visible.length?visible.map(gymFeedCard).join(""):'<div class="card gymUXEmpty"><strong>Sem publicações nesta vista</strong><p class="muted">Encontra atletas ou publica a tua primeira conquista.</p></div>')+
@@ -216,6 +216,7 @@ document.addEventListener("click",event=>{
  if(b.dataset.uxFav){event.preventDefault();const favs=gymUXFavorites();favs.has(b.dataset.uxFav)?favs.delete(b.dataset.uxFav):favs.add(b.dataset.uxFav);gymUXStoreFav(favs);if(gymUXModalOpen)gymUXRefreshPicker();if(!gymUXModalOpen)render();return}
  if(b.dataset.uxAddEx){event.preventDefault();gymUXAddExercise(b.dataset.uxAddEx);return}
  if(b.dataset.uxSort){gymUXExSort=b.dataset.uxSort;render();return}
+ if(b.id==="gymUXFeedPrivacy"){page="perfil";render();gymUXEditProfile();return}
  if(b.id==="gymUXEditProfile"){gymUXEditProfile();return}
  if(b.id==="gymUXFollowers"){gymUXFindUsers("Seguidores",gymUXSocialStats().followers);return}
  if(b.id==="gymUXFollowing"){gymUXFindUsers("A seguir",gymUXSocialStats().following);return}
