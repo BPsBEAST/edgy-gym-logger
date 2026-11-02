@@ -189,6 +189,7 @@ async function gymUXUploadPhoto(file){
  }catch(error){console.error(error);toast(error.message||"Não foi possível guardar a fotografia")}
 }
 async function gymUXAddExercise(id){
+ gymPrepareMotion("exercise",id);
  gymUXClose();
  action(async()=>{
   const {data:we,error:e}=await db.from("gym_workout_exercises").insert({workout_id:active.id,exercise_id:id,position:(active.gym_workout_exercises||[]).length}).select("id").single();
