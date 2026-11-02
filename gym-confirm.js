@@ -43,6 +43,30 @@ document.addEventListener("click",event=>{
    });
   });return;
  }
+ if(b.dataset.deleteSet&&active){
+  const id=b.dataset.deleteSet,found=gymFindSet(id);
+  if(!found)return;
+  confirmAction("Eliminar série","Só esta série será removida. O exercício e as restantes séries permanecem no treino.","Eliminar série",()=>{
+   gymFastDeleteSet(id);
+  },true);
+  return;
+ }
+ if(b.dataset.deleteWorkout){
+  const id=b.dataset.deleteWorkout;
+  const workout=gymDone().find(w=>w.id===id);
+  if(!workout)return;
+  const award=typeof gymXPForWorkout==="function"?gymXPForWorkout(id):null;
+  const xp=Number(award?.xp_awarded||0);
+  confirmAction("Eliminar treino do Histórico","O treino «"+workout.name+"» e todas as suas séries serão eliminados permanentemente."+(xp>0?" Serão retirados "+xp+" XP EDGY recebidos neste treino.":"")+" As publicações que partilhaste no Feed permanecem.","Eliminar treino",()=>{
+   action(async()=>{
+    const {data,error}=await db.rpc("gym_delete_my_workout",{p_workout_id:id});
+    if(error)throw error;
+    if(!data?.deleted)throw new Error("Não foi possível confirmar a eliminação do treino.");
+    toast("Treino eliminado do Histórico."+(data.xp_removed>0?" −"+data.xp_removed+" XP EDGY":""));
+   });
+  },true);
+  return;
+ }
  if(b.dataset.removeEx&&active){
   const id=b.dataset.removeEx;
   confirmAction("Remover exercício","As séries deste exercício serão eliminadas deste treino.","Remover exercício",()=>{
