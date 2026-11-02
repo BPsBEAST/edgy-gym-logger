@@ -174,9 +174,23 @@ document.addEventListener("submit",event=>{
   }catch(err){console.warn(err);toast("Não foi possível enviar a resposta.");if(submit)submit.disabled=false}
  })();
 },true);
+// A network poll only updates markup when its visible social data actually changed.
+function gymLiveViewFingerprint(){
+ return JSON.stringify({
+  actors:gymSocialProfiles,
+  follows:gymFollowRows,
+  posts:gymFeedPosts,
+  likes:gymPostLikes,
+  comments:gymPostComments,
+  totals:gymLikeTotals,
+  postCount:gymOwnPublishedCount,
+  replyCount:gymOwnReplyCount
+ });
+}
 async function gymLiveRefresh(){
  if(!user||gymLiveBusy){gymLiveQueued=true;return}
  gymLiveBusy=true;const id=user.id;
+ const viewBefore=gymLiveViewFingerprint();
  try{
   // Logging sets must stay fast: only sync inbox data when the social UI is not visible.
   if(page!=="perfil"&&page!=="feed"&&!gymPublicProfileId){
@@ -201,8 +215,10 @@ async function gymLiveRefresh(){
   gymUpdateHeader();
   const isSocial=page==="perfil"||page==="feed";
   const focus=document.activeElement,typing=focus&&/^(INPUT|TEXTAREA|SELECT)$/.test(focus.tagName||"");
-  if(isSocial&&!typing)render();
-  if(gymPublicProfileId&&gymUXModalOpen&&!typing)await gymAthleteDialog(gymPublicProfileId,{quiet:true});
+  const changed=viewBefore!==gymLiveViewFingerprint();
+  if(changed&&isSocial&&!typing)render();
+  // The public profile needs no repeated network redraw while the data is unchanged.
+  if(changed&&gymPublicProfileId&&gymUXModalOpen&&!typing)await gymAthleteDialog(gymPublicProfileId,{quiet:true});
  }catch(e){console.warn("Gym live social:",e)}
  finally{
   gymLiveBusy=false;
@@ -233,9 +249,14 @@ gymStartNotificationSync=function(){
 };
 const gymPublicBaseOpen=gymOpenNotifications;
 gymOpenNotifications=function(){gymPublicBaseOpen();gymScheduleLiveSync()};
+let gymLiveLastFallback=0;
 setInterval(()=>{
- if(user&&document.visibilityState!=="hidden")gymScheduleLiveSync();
-},gymLiveSubscribed?12000:8000);
+ if(!user||document.visibilityState==="hidden")return;
+ const now=Date.now(),interval=gymLiveSubscribed?45000:15000;
+ if(now-gymLiveLastFallback<interval)return;
+ gymLiveLastFallback=now;
+ gymScheduleLiveSync();
+},15000);
 document.addEventListener("visibilitychange",()=>{
  if(user&&document.visibilityState==="visible")gymScheduleLiveSync();
 });
