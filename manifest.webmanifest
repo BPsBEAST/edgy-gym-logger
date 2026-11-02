@@ -1,11 +1,11 @@
 {
-  "name": "EDGY Gym Logger",
+  "name": "EDGY — Gym Logger",
   "short_name": "EDGY Gym",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#141126",
   "theme_color": "#141126",
-  "description": "EDGY Gym Logger — treina, regista e evolui.",
+  "description": "Treinos, progresso e XP EDGY num só lugar.",
   "icons": [
     {
       "src": "icon.svg",
