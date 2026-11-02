@@ -1,0 +1,21 @@
+/* Notifications: soft backdrop, spring entry, staggered notice reveal */
+#gymNotifBackdrop{background:rgba(7,5,17,.80)!important;backdrop-filter:blur(13px)!important;-webkit-backdrop-filter:blur(13px)!important}
+#gymNotifBackdrop.gymNotifOpening{animation:gymNotifOverlayIn .27s ease both}
+#gymNotifBackdrop.gymNotifOpening .gymNotifPanel{animation:gymNotifPanelIn .36s cubic-bezier(.18,1.1,.24,1) both;transform-origin:50% 20%}
+#gymNotifBackdrop.gymNotifClosing{animation:gymNotifOverlayOut .21s ease both}
+#gymNotifBackdrop.gymNotifClosing .gymNotifPanel{animation:gymNotifPanelOut .21s ease both}
+.gymNotifPanel{border-top:3px solid #ef258c!important;border-radius:5px!important;box-shadow:0 30px 95px rgba(5,3,17,.72)!important;will-change:transform,opacity}
+.gymNotice{animation:gymNotifItemIn .27s both;animation-delay:calc(var(--note-index,0)*35ms);background:transparent;transition:background .17s}
+.gymNotice.unread{background:#3d284332;border-left:2px solid #ed3293;padding-left:9px}
+.gymNotice .gymNoticeIcon{transition:transform .18s,background .18s}
+.gymNotice:hover .gymNoticeIcon{transform:scale(1.1);background:#63365b}
+.gymNoticeDate{margin-top:5px}
+.gymBellPulse{animation:gymBellAlert .72s ease}
+@keyframes gymBellAlert{0%,100%{transform:scale(1)}23%{transform:rotate(-13deg) scale(1.08)}52%{transform:rotate(9deg) scale(1.07)}72%{transform:rotate(-5deg)}}
+@keyframes gymNotifOverlayIn{from{opacity:0;backdrop-filter:blur(0px)}to{opacity:1;backdrop-filter:blur(13px)}}
+@keyframes gymNotifOverlayOut{from{opacity:1}to{opacity:0}}
+@keyframes gymNotifPanelIn{from{opacity:0;transform:translateY(24px) scale(.94)}60%{opacity:1}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes gymNotifPanelOut{from{opacity:1;transform:translateY(0) scale(1)}to{opacity:0;transform:translateY(10px) scale(.975)}}
+@keyframes gymNotifItemIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:520px){#gymNotifBackdrop{align-items:flex-end;padding:0} .gymNotifPanel{width:100%!important;max-width:none!important;border-radius:12px 12px 0 0!important;padding:22px 18px calc(22px + env(safe-area-inset-bottom))!important;max-height:88dvh}}
+@media(prefers-reduced-motion:reduce){#gymNotifBackdrop,.gymNotifPanel,.gymNotice,.gymBellPulse{animation:none!important;transition:none!important}}
