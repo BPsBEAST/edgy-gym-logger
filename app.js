@@ -45,4 +45,21 @@ if(b.dataset.filter){filter=b.dataset.filter;render()}});
 document.addEventListener('input',e=>{if(e.target.id==='search'){search=e.target.value;const caret=e.target.selectionStart;render();const input=document.querySelector('#search');input.focus();input.setSelectionRange(caret,caret)}if(e.target.id==='pick-search'){const q=e.target.value.toLowerCase();document.querySelectorAll('#pick-list button').forEach(b=>b.style.display=b.textContent.toLowerCase().includes(q)?'block':'none')}});
 document.addEventListener('change',e=>{const el=e.target;if(!el.dataset.set)return;const field=el.dataset.field,value=field==='completed'?el.checked:(field==='rpe'&&el.value==='')?null:Number(el.value);action(async()=>{const {error}=await db.from('gym_sets').update({[field]:value}).eq('id',el.dataset.set);if(error)throw error})});
 document.addEventListener('submit',e=>{e.preventDefault();if(e.target.id==='login')action(async()=>{const data=new FormData(e.target),{error}=await db.auth.signInWithPassword({email:data.get('email'),password:data.get('password')});if(error)throw error;user=(await db.auth.getUser()).data.user;await load()});if(e.target.id==='measure')action(async()=>{const data=new FormData(e.target),row={user_id:user.id,recorded_at:data.get('recorded_at')};for(const key of ['body_weight','waist','abdomen','chest','shoulders','arm','left_arm','thigh','calf','glutes'])if(data.get(key)!=='')row[key]=Number(data.get(key));const {error}=await db.from('gym_measurements').insert(row);if(error)throw error})});
-(async()=>{const {data}=await db.auth.getUser();user=data.user;if(user)await load();render()})();
+// Present the application immediately. Authentication must never leave the UI blank.
+render();
+(async()=>{
+ try{
+  const result=await Promise.race([
+   db.auth.getUser(),
+   new Promise((_,reject)=>setTimeout(()=>reject(new Error('A ligação à conta demorou demasiado.')),10000))
+  ]);
+  if(result.error)throw result.error;
+  user=result.data?.user||null;
+  if(user)await load();
+  render();
+ }catch(error){
+  console.warn('EDGY Gym authentication:',error);
+  toast('Não foi possível validar a sessão. Podes iniciar sessão novamente.');
+  render();
+ }
+})();
