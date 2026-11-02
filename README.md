@@ -92,3 +92,31 @@ O repositório tem ficheiros estáticos na raiz, preparados para GitHub Pages. C
 3. Confirmar que o email não aparece ao visitar perfis públicos e que o XP corresponde ao da EDGY Games.
 4. Editar foto e verificar o avatar no PC e no telemóvel; confirmar que a foto não fica cortada.
 5. Iniciar treino, escolher exercício e concluir sessão sem caixas nativas do browser.
+
+## XP EDGY — Recompensas de treino (novembro de 2026)
+
+O XP é único no ecossistema: o XP da Gym Logger soma-se diretamente a `profiles.xp`, utilizado também pela EDGY Games. O cálculo é feito **na base de dados**, quando o utilizador termina uma sessão. Não é suficiente criar uma publicação nem preencher séries por concluir.
+
+| Critério | Recompensa |
+| --- | ---: |
+| Sessão válida (mín. 15 min desde o início real; 3 séries de trabalho concluídas; 2 exercícios diferentes; 300 kg de volume) | +20 XP |
+| Volume de trabalho (sem aquecimento) | +5 XP por 1.000 kg, até +30 XP por sessão |
+| Novo PR de carga (comparado com sessões anteriores, com subida mínima de 2,5 kg) | +15 XP por exercício, até 3 PR por sessão |
+| Limites | Até 100 XP/sessão, 120 XP e 2 sessões recompensadas em qualquer período de 24 h |
+
+Não são atribuídos XP retroativos por treinos terminados antes da migração. A tabela `gym_xp_awards` guarda uma entrada por treino, com detalhamento e política RLS de leitura própria. Triggers na base de dados impedem reabrir treinos concluídos ou alterar as respetivas séries. As cargas/repetições que entram no cálculo são limitadas para reduzir abusos. Um treino que não cumpra os requisitos pode ser concluído normalmente, mas recebe 0 XP.
+
+## Marca e navegação
+
+- Nome de aplicação e separador: **EDGY — Gym Logger**.
+- Símbolo **E** no logótipo e ícone, com **GYM LOGGER** em letras pequenas e gradiente EDGY.
+- A lista completa de exercícios tem deslocação independente no desktop; no telemóvel continua a deslocação normal da página, sem limite artificial de 150 exercícios.
+- Os dados de treino continuam privados e apenas o utilizador vê o detalhe e o XP atribuído em cada sessão.
+
+### Testes após publicação
+
+1. Na biblioteca de Exercícios, percorrer até ao último item com rato e no telemóvel.
+2. Iniciar um treino, registar séries normais, completar e verificar se o XP surge no Histórico.
+3. Para testar XP positivo, cumprir os requisitos mínimos. Testar também uma sessão inferior a 15 min, que deve receber 0 XP.
+4. Atualizar a página e confirmar que a recompensa não se repete.
+5. Verificar na EDGY Games que o total de XP e nível reflete a recompensa quando atualizar os dados da conta.
