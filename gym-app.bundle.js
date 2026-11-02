@@ -1,7 +1,7 @@
-/* EDGY — Gym Logger · smooth workout editor */
+/* EDGY — Gym Logger · smooth logging / reliable writes */
 (function(){
 
-/* MODULE app.js */
+/* app.js */
 const URL='https://okzpfhjdckmoawmwmydu.supabase.co',KEY='sb_publishable_hF29Hv9P7Snfj2utKL-XjA_PvE0oK5a';
 const db=window.supabase.createClient(URL,KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storageKey:'sb-okzpfhjdckmoawmwmydu-auth-token'}}), screen=document.querySelector('#screen');
 let user=null,profile=null,page='treino',active=null,exercises=[],history=[],measurements=[],search='',filter='Todos';
@@ -128,7 +128,7 @@ window.EDGY_GYM_START=async function(){
 };
 
 
-/* MODULE enhancements.js */
+/* enhancements.js */
 /* EDGY Gym · analytics, exercise records and opt-in community */
 "use strict";
 let gymSelectedExercise=null,gymCalendarMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1);
@@ -280,7 +280,7 @@ document.addEventListener("submit",event=>{
 });
 
 
-/* MODULE edgy-shell.js */
+/* edgy-shell.js */
 /* EDGY Gym - unified header, identity and real event notifications. */
 "use strict";
 const gymShellRender=render;
@@ -362,7 +362,7 @@ db.auth.onAuthStateChange((event)=>{
 gymUpdateHeader();
 
 
-/* MODULE gym-templates.js */
+/* gym-templates.js */
 /* Reusable workout templates for EDGY Gym Logger */
 "use strict";
 let gymTemplates=[],gymTemplateBusy=false;
@@ -459,7 +459,7 @@ document.addEventListener("click",event=>{
 });
 
 
-/* MODULE gym-rest.js */
+/* gym-rest.js */
 /* Rest timer: local to the athlete, survives page reloads */
 "use strict";
 const gymRestWorkoutBase=renderWorkout;
@@ -512,7 +512,7 @@ document.addEventListener("change",event=>{
 });
 
 
-/* MODULE gym-ux.js */
+/* gym-ux.js */
 /* EDGY Gym Logger · profile, feed, modal and exercise UX */
 "use strict";
 let gymUXModalOpen=false,gymUXPickerSearch="",gymUXPickerMuscle="Todos",gymUXPickerEquipment="Todos";
@@ -806,7 +806,7 @@ const gymUXOldRender=render;
 render=function(){gymUXOldRender();if(page==="exercicios"&&!gymSelectedExercise){gymUXSetSelect("gymUXExMuscle",gymUXExMuscle);gymUXSetSelect("gymUXExEquipment",gymUXExEquipment)}};
 
 
-/* MODULE gym-community.js */
+/* gym-community.js */
 /* EDGY Gym · post conversations, public athlete profiles, personal feed */
 "use strict";
 let gymPostComments=[],gymExpandedComments=new Set();
@@ -993,7 +993,7 @@ gymNotificationItems=function(){
 };
 
 
-/* MODULE gym-confirm.js */
+/* gym-confirm.js */
 /* EDGY Gym · branded confirmation dialogs */
 "use strict";
 let gymConfirmCallback=null;
@@ -1095,7 +1095,7 @@ document.addEventListener("click",event=>{
 },true);
 
 
-/* MODULE gym-polish.js */
+/* gym-polish.js */
 /* EDGY Gym · fast set steppers, likes totals and reactive notifications */
 "use strict";
 let gymLikeTotals=[];
@@ -1255,7 +1255,7 @@ db.auth.onAuthStateChange(event=>{
 });
 
 
-/* MODULE gym-xp.js */
+/* gym-xp.js */
 /* EDGY Gym: XP uses the single profile XP balance, awarded only by Supabase triggers. */
 "use strict";
 let gymXPAwards=[];
@@ -1280,7 +1280,7 @@ renderProfile=function(){
 };
 
 
-/* MODULE gym-experience.js */
+/* gym-experience.js */
 /* EDGY Gym · social activity count, smooth workout interactions and page transitions */
 "use strict";
 let gymOwnPublishedCount=0,gymOwnReplyCount=0;
@@ -1367,7 +1367,7 @@ document.addEventListener("change",event=>{
 },true);
 
 
-/* MODULE gym-trends.js */
+/* gym-trends.js */
 /* EDGY Gym charts — weekly summary and 12-week activity trajectory */
 "use strict";
 function gymMondayOf(input){
@@ -1438,7 +1438,7 @@ renderProfile=function(){
 };
 
 
-/* MODULE gym-performance.js */
+/* gym-performance.js */
 /* EDGY Gym · lightweight set editor. Never refetch the app for a set edit. */
 "use strict";
 const gymSetSaveQueue=new Map();
@@ -1634,6 +1634,8 @@ async function gymFastAddSet(btn){
    row?.classList.add("gymJustChanged");
    row?.scrollIntoView?.({behavior:"smooth",block:"nearest"});
   }else render();
+  // Partial DOM insert already animated the new row; do not replay it on a later page render.
+  gymMotionNext=null;
   const labelCount=btn.closest(".gymExerciseWorkoutCard")?.querySelector(".gymExerciseHeading small");
   if(labelCount)labelCount.textContent=exercise.gym_sets.length+" séries";
  }catch(err){console.error(err);toast(err.message||"Não foi possível adicionar a série")}
