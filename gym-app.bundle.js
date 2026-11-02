@@ -1,4 +1,4 @@
-/* EDGY Gym Logger: consolidated app + polished UI */
+/* EDGY Gym Logger · integrated application */
 (function(){
 
 /* app.js */
@@ -182,7 +182,7 @@ function gymFeedCard(p){
  const author=gymSocialProfiles.find(x=>x.user_id===p.user_id);
  const likes=gymPostLikes.filter(x=>x.post_id===p.id).length;
  const liked=gymPostLikes.some(x=>x.post_id===p.id&&x.user_id===user.id);
- return '<div class="card"><div class="row"><div><strong>'+esc(author?.display_name||"Atleta EDGY")+'</strong><div class="muted" style="font-size:12px">@'+esc(author?.username||"edgy")+' · '+date(p.created_at)+'</div></div><span class="pill">'+({pr:"🏆 PR",workout:"🏋️ Treino",goal:"🎯 Meta"}[p.kind]||"Treino")+'</span></div><h3 style="margin-top:14px">'+esc(p.title)+'</h3><p class="muted" style="white-space:pre-wrap">'+esc(p.body)+'</p><div class="row"><button class="btn small '+(liked?"":"secondary")+'" data-like="'+p.id+'">'+(liked?"♥":"♡")+' '+likes+'</button>'+(p.user_id===user.id?'<button class="btn ghost small" data-delete-post="'+p.id+'">Eliminar</button>':"")+'</div></div>';
+ return '<div class="card"><div class="row"><div><strong>'+esc(author?.display_name||"Atleta EDGY")+'</strong><div class="muted" style="font-size:12px">@'+esc(author?.username||"edgy")+' · '+date(p.created_at)+'</div></div><span class="pill">'+({pr:"🏆 PR",workout:"🏋️ Treino",goal:"🎯 Meta",post:"✎ Publicação"}[p.kind]||"Treino")+'</span></div><h3 style="margin-top:14px">'+esc(p.title)+'</h3><p class="muted" style="white-space:pre-wrap">'+esc(p.body)+'</p><div class="row"><button class="btn small '+(liked?"":"secondary")+'" data-like="'+p.id+'">'+(liked?"♥":"♡")+' '+likes+'</button>'+(p.user_id===user.id?'<button class="btn ghost small" data-delete-post="'+p.id+'">Eliminar</button>':"")+'</div></div>';
 }
 const gymOldRender=render;
 render=function(){gymOldRender()};
