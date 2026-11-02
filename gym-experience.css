@@ -1,0 +1,45 @@
+/* EDGY Gym · mobile notifications, refined social metrics and interaction polish */
+.gymUXSocialStats{grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:7px!important}
+.gymUXStatPosts{display:grid;place-items:center;align-content:center;gap:3px;padding:5px;text-align:center;min-width:0}
+.gymUXStatPosts strong{color:#f8f6ff;font-size:19px;line-height:1.2}
+.gymUXStatPosts span{color:#a99abc;font-size:10px;line-height:1.4}
+.gymWorkoutFinishRow{display:grid;grid-template-columns:minmax(0,2.5fr) minmax(135px,1fr);gap:10px;align-items:stretch}
+.gymWorkoutFinishRow .gymFinishWorkoutButton{width:100%;min-height:46px}
+.gymCancelWorkoutButton{border:1px solid #80506b;background:#2a2038;color:#edabcc;font-weight:750;font-size:12px;padding:11px;border-radius:3px;transition:background .2s,border-color .2s,color .2s,transform .2s}
+.gymCancelWorkoutButton:hover{background:#51283f;color:#ffd5e6;border-color:#df4a8d}
+.gymCancelWorkoutButton:active{transform:scale(.975)}
+/* Keep the notification inbox near the header instead of a bottom sheet. */
+@media(max-width:520px){
+ #gymNotifBackdrop{align-items:flex-start!important;justify-content:center!important;padding:max(66px,calc(env(safe-area-inset-top) + 63px)) 12px 12px!important}
+ #gymNotifBackdrop .gymNotifPanel{width:min(100%,510px)!important;max-width:510px!important;max-height:calc(100dvh - max(82px,calc(env(safe-area-inset-top) + 82px)))!important;overflow-y:auto!important;border-radius:5px!important;padding:17px 15px 19px!important}
+ #gymNotifBackdrop.gymNotifOpening .gymNotifPanel{transform-origin:85% 0%!important}
+ .gymUXSocialStats{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:12px!important}
+ .gymUXVisibility{grid-column:span 2;justify-content:center;align-content:center}
+ .gymWorkoutFinishRow{grid-template-columns:minmax(0,1fr)}
+ .gymCancelWorkoutButton{min-height:42px}
+}
+@media(min-width:521px) and (max-width:799px){
+ .gymUXSocialStats{grid-template-columns:repeat(5,minmax(0,1fr))!important}
+}
+/* Full page navigation and lightweight row feedback. */
+#screen.gymPageEnter{animation:gymPageFadeSlide .26s cubic-bezier(.2,.7,.2,1) both}
+@keyframes gymPageFadeSlide{from{opacity:.55;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.gymExerciseWorkoutCard.gymJustChanged{animation:gymExerciseAppear .46s cubic-bezier(.2,1,.25,1) both}
+.gymSetItem.gymJustChanged{animation:gymSetAccent .48s cubic-bezier(.2,.9,.2,1) both}
+@keyframes gymExerciseAppear{from{opacity:.35;transform:translateY(14px) scale(.985);border-color:#f73394}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes gymSetAccent{0%{opacity:.55;transform:translateX(-7px);border-color:#ff418f;background:#5a2b52}65%{opacity:1;transform:translateX(0);border-color:#e94d9a}100%{opacity:1;transform:translateX(0)}}
+.gymSetType{transition:transform .17s cubic-bezier(.2,.9,.2,1),background .18s,border-color .18s,color .18s}
+.gymSetType:active{transform:scale(.84) rotate(-7deg)}
+.gymSetItem.gymTapFeedback{border-color:#e54a9a;transition:border-color .2s,background .2s}
+.gymFailureGroup input:checked+.gymFailureToggle{animation:gymControlConfirm .23s cubic-bezier(.18,1.5,.45,1) both}
+.gymDoneGroup input:checked+.gymDoneToggle{animation:gymControlConfirm .25s cubic-bezier(.18,1.5,.45,1) both}
+@keyframes gymControlConfirm{0%{transform:scale(.82)}65%{transform:scale(1.12)}100%{transform:scale(1)}}
+.gymSetItem:has(.gymDoneGroup input:checked){border-color:#6c5683}
+.gymSetType-warmup{background:#4e4036!important;color:#ffd6ae!important}
+.gymSetType-dropset{background:#3c325e!important;color:#c7c0ff!important}
+.gymSetType-working{background:#443153}
+.gymAddSet,.gymAddExerciseButton{transition:transform .16s,background .19s,border-color .19s}
+.gymAddSet:active,.gymAddExerciseButton:active{transform:scale(.985)}
+@media(prefers-reduced-motion:reduce){
+ #screen.gymPageEnter,.gymExerciseWorkoutCard.gymJustChanged,.gymSetItem.gymJustChanged,.gymFailureGroup input:checked+.gymFailureToggle,.gymDoneGroup input:checked+.gymDoneToggle{animation:none!important}
+}
