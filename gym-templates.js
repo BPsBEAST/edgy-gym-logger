@@ -28,7 +28,7 @@ renderHistory=function(){
 const gymTemplateProfileBase=renderProfile;
 renderProfile=function(){
  const content=gymTemplateProfileBase();
- return user&&gymTemplates.length?content+'<div class="card"><h3>Modelos de treino</h3>'+gymTemplateCards()+'</div>':content;
+ if(!user||!gymTemplates.length)return content;const panel='<div class="card"><h3>Modelos de treino</h3>'+gymTemplateCards()+'</div>';return content.replace('<div class="card"><div class="row"><h3>Privacidade e conta</h3>',panel+'<div class="card"><div class="row"><h3>Privacidade e conta</h3>');
 };
 async function gymStartTemplate(id){
  if(gymTemplateBusy)return;
