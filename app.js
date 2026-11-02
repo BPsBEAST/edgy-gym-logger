@@ -36,7 +36,7 @@ function gymSetEditor(we,s,i){
    const value=field==='weight'?s.weight:s.reps;
    return '<div class="gymInputGroup gymGroup'+field+'"><span class="gymSetLabel">'+label+'</span><div class="gymStepper">'+
     '<button type="button" class="gymStepBtn" data-step-set="'+s.id+'" data-step-field="'+field+'" data-step-dir="-1" aria-label="Diminuir '+label+'" title="Diminuir '+increment+'">−</button>'+
-    '<input class="gymStepValue" type="number" min="0" step="'+increment+'" inputmode="decimal" data-set="'+s.id+'" data-field="'+field+'" value="'+value+'" aria-label="'+label+(unit?' em '+unit:'')+'">'+
+    '<input class="gymStepValue" type="number" min="0" step="'+increment+'" inputmode="'+(field==="reps"?"numeric":"decimal")+'" data-set="'+s.id+'" data-field="'+field+'" value="'+value+'" aria-label="'+label+(unit?' em '+unit:'')+'">'+
     '<button type="button" class="gymStepBtn" data-step-set="'+s.id+'" data-step-field="'+field+'" data-step-dir="1" aria-label="Aumentar '+label+'" title="Aumentar '+increment+'">+</button>'+
     '</div></div>';
  };
