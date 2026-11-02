@@ -1,0 +1,16 @@
+/* EDGY Gym: responsive instant save feedback, no layout shifts while logging */
+.gymSetSaveStatus{display:inline-flex;align-items:center;justify-content:center;padding:6px 9px;border:1px solid transparent;border-radius:3px;font-size:10px;font-weight:750;color:#a9a0b8;white-space:nowrap;min-height:27px;transition:color .2s ease,background .2s ease,border-color .2s ease}
+.gymSetSaveStatus[data-save-state="saving"]{color:#e9b5d3;background:#4b2b4d;border-color:#73516f}
+.gymSetSaveStatus[data-save-state="saved"]{color:#a7d7bb}
+.gymSetSaveStatus[data-save-state="error"]{cursor:pointer;background:#60243c;color:#ffc5dd;border-color:#f1579b}
+.gymSetSaveStatus[data-save-state="error"]:hover{background:#78304b}
+.gymSetItem.gymSetQuickFeedback{animation:gymQuickSetTap .32s ease}
+@keyframes gymQuickSetTap{0%{box-shadow:0 0 0 0 #f1219129}35%{box-shadow:0 0 0 3px #f1219129}100%{box-shadow:0 0 0 0 transparent}}
+.gymAddSet:disabled{opacity:.66;cursor:progress}
+.gymStepValue{font-variant-numeric:tabular-nums;contain:layout style}
+.gymStepper{transform:translateZ(0)}
+@media(max-width:600px){
+ .gymWorkoutHeaderActions{gap:5px}
+ .gymSetSaveStatus{width:100%;order:3;justify-content:flex-end;font-size:10px;padding:4px 0}
+}
+@media(prefers-reduced-motion:reduce){.gymSetItem.gymSetQuickFeedback{animation:none!important}}
