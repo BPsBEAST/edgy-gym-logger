@@ -61,3 +61,11 @@
 /* Improve photo dimensions in the profile hero */
 .gymAvatar{object-fit:contain!important;object-position:center!important;aspect-ratio:1;border-radius:50%;padding:0}
 @media(max-width:440px){.gymSharedXP{gap:10px;padding:12px}.gymSharedXP strong{font-size:16px}.gymXPProgress{width:50%}.gymCommentForm{gap:5px}.gymCommentForm button{padding:10px 8px}.gymPostActions{gap:3px}.gymSocialPost{padding:14px 12px}}
+
+.gymUXFeedHeadActions{display:flex;align-items:center;gap:9px;flex-shrink:0}
+.gymUXFeedHeadActions>.btn{min-height:41px}
+.gymConfirmMark{height:50px;width:50px;display:grid;place-items:center;border:1px solid #96527d;border-radius:50%;background:#612950;color:#ffafcf;font-size:25px;font-weight:850;margin:0 auto 16px}
+.gymConfirmMark.danger{color:#ffb6b6;background:#5c2838;border-color:#a4516d}
+.gymConfirmDanger{background:linear-gradient(115deg,#e02a65,#a62356)!important}
+.gymUXDialog .gymUXActions{margin-top:12px}
+@media(max-width:500px){.gymUXFeedHeadActions{gap:6px}.gymUXFeedHeadActions>.btn{font-size:10px;padding:10px 8px}.gymPersonalFeedHead .btn{padding:9px 10px}}
