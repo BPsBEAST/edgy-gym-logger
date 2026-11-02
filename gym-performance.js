@@ -182,7 +182,7 @@ async function gymFastAddSet(btn){
   await gymFlushSetWrites();
   const sets=(exercise.gym_sets||[]).slice().sort((a,b)=>a.position-b.position);
   const last=sets[sets.length-1],previous=previousFor(exercise.exercise_id)[0];
-  const payload={workout_exercise_id:id,position:sets.length,weight:last?.weight??previous?.weight??0,reps:last?.reps??previous?.reps??0};
+  const payload={workout_exercise_id:id,position:(last?Number(last.position)+1:0),weight:last?.weight??previous?.weight??0,reps:last?.reps??previous?.reps??0};
   const {data:created,error}=await db.from("gym_sets").insert(payload).select("*").single();
   if(error)throw error;
   exercise.gym_sets.push(created);
@@ -199,6 +199,50 @@ async function gymFastAddSet(btn){
   if(labelCount)labelCount.textContent=exercise.gym_sets.length+" séries";
  }catch(err){console.error(err);toast(err.message||"Não foi possível adicionar a série")}
  finally{gymPendingAdds.delete(id);btn.disabled=false;btn.textContent=label}
+}
+
+async function gymFastDeleteSet(id){
+ if(!user||!active)return;
+ const found=gymFindSet(id);if(!found)return;
+ const we=found.exercise;
+ if(gymPendingAdds.has("delete:"+id))return;
+ gymPendingAdds.add("delete:"+id);
+ try{
+  // Do not let queued weight/reps writes recreate stale UI or race with the DELETE.
+  await gymFlushSetWrites();
+  const {data,error}=await db.from("gym_sets")
+   .delete()
+   .eq("id",id)
+   .eq("workout_exercise_id",we.id)
+   .select("id");
+  if(error)throw error;
+  if(!data?.length)throw new Error("A série não foi eliminada. Atualiza a página e tenta novamente.");
+  we.gym_sets=(we.gym_sets||[]).filter(s=>s.id!==id);
+  const row=document.querySelector('[data-set-item="'+id+'"]');
+  const list=row?.closest(".gymSetList");
+  const exerciseCard=row?.closest(".gymExerciseWorkoutCard");
+  if(row){
+   row.classList.add("gymSetRemoving");
+   await new Promise(resolve=>setTimeout(resolve,180));
+   row.remove();
+  }
+  if(list){
+   for(const [index,item] of [...list.querySelectorAll(".gymSetItem")].entries()){
+    const ordinal=item.querySelector(".gymSetOrdinal");
+    if(ordinal)ordinal.textContent="Série "+(index+1);
+    const type=item.querySelector("button[data-cycle-set]");
+    const record=we.gym_sets.find(s=>s.id===item.dataset.setItem);
+    if(type&&record?.set_type==="working")type.textContent=String(index+1);
+   }
+  }else render();
+  const summary=exerciseCard?.querySelector(".gymExerciseHeading small");
+  if(summary)summary.textContent=we.gym_sets.length+(we.gym_sets.length===1?" série":" séries");
+  gymUpdateWorkoutNumbers();
+  toast("Série eliminada.");
+ }catch(error){
+  console.error("Delete set:",error);
+  toast(error.message||"Não foi possível eliminar a série.");
+ }finally{gymPendingAdds.delete("delete:"+id)}
 }
 async function gymFastAddExercise(id){
  if(!user||!active||gymPendingAdds.has("exercise:"+id))return;
