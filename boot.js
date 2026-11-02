@@ -8,7 +8,7 @@ const sources=[
  "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2",
  "https://unpkg.com/@supabase/supabase-js@2"
 ];
-const local=["app.js?v=5","enhancements.js?v=5","edgy-shell.js?v=3","gym-templates.js?v=3","gym-rest.js?v=3"];
+const local=["app.js?v=6","enhancements.js?v=5","edgy-shell.js?v=3","gym-templates.js?v=3","gym-rest.js?v=3"];
 function showIssue(message){
  if(!main)return;
  main.innerHTML='<section class="card hero" role="alert"><h1>Não foi possível carregar a aplicação</h1><p class="muted">'+message+'</p><button type="button" class="btn" id="gymRetryLoad">Tentar novamente</button></section>';
@@ -48,6 +48,8 @@ fallbackNav();
    if(!available)throw new Error("A biblioteca Supabase não carregou. Experimenta desativar temporariamente um bloqueador de scripts ou atualizar o navegador.");
   }
   for(const asset of local){await insertScript(asset,10)}
+  if(typeof window.EDGY_GYM_START!=="function")throw new Error("O arranque da aplicação não foi encontrado.");
+  await window.EDGY_GYM_START();
   window.EDGY_GYM_LOADED=true;
   const content=main?.textContent||"";
   if(content.includes("A iniciar a aplicação")||content.includes("A preparar a aplicação")){
