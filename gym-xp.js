@@ -10,14 +10,6 @@ load=async function(){
  if(error){console.warn("EDGY Gym XP:",error.message);return}
  gymXPAwards=data||[];
 };
-const gymXPOriginalWorkout=renderWorkout;
-renderWorkout=function(){
- const content=gymXPOriginalWorkout();
- if(!user||!active)return content;
- const widget='<div class="gymXPInfo"><div><h3>Ganha XP ao treinar</h3><p>+20 XP por treino válido · +5 XP/1.000 kg · +15 XP por PR.</p><p>Mínimo: 15 min, 3 séries, 2 exercícios, 300 kg. Máx. 2 treinos e 120 XP em 24 h.</p></div><span class="gymXPNumber">XP EDGY ✦</span></div>';
- const target='<div class="gymWorkoutFooterActions">';
- return content.includes(target)?content.replace(target,widget+target):content+widget;
-};
 const gymXPOriginalProfile=renderProfile;
 renderProfile=function(){
  const content=gymXPOriginalProfile();
