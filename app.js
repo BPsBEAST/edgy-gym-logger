@@ -41,7 +41,7 @@ function gymSetEditor(we,s,i){
     '</div></div>';
  };
  return '<div class="gymSetItem" data-set-item="'+s.id+'">'+
-   '<div class="gymSetTop"><div class="gymSetIdentity"><button type="button" class="gymSetType gymSetType-'+esc(s.set_type)+'" data-cycle-set="'+s.id+'" title="Alternar tipo de série: normal, aquecimento, dropset" aria-label="Alterar tipo de série">'+kind+'</button><span class="gymSetOrdinal">Série '+(i+1)+'</span><span class="gymPrevLabel">Anterior: <strong>'+previous+'</strong></span></div><span class="gymSetState">'+(s.completed?'Concluída':'Por fazer')+'</span></div>'+
+   '<div class="gymSetTop"><div class="gymSetIdentity"><button type="button" class="gymSetType gymSetType-'+esc(s.set_type)+'" data-cycle-set="'+s.id+'" title="Alternar tipo de série: normal, aquecimento, dropset" aria-label="Alterar tipo de série">'+kind+'</button><span class="gymSetOrdinal">Série '+(i+1)+'</span><span class="gymPrevLabel">Anterior: <strong>'+previous+'</strong></span></div><div class="gymSetEndActions"><span class="gymSetState">'+(s.completed?'Concluída':'Por fazer')+'</span><button type="button" class="gymDeleteSetBtn" data-delete-set="'+s.id+'" aria-label="Eliminar série '+(i+1)+'" title="Eliminar só esta série"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7h16M10 3h4M7 7l1 14h8l1-14M10 11v6M14 11v6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div></div>'+
    '<div class="gymSetControls">'+
      stepper('weight','Peso',2.5,'kg')+
      stepper('reps','Reps',1,'')+
