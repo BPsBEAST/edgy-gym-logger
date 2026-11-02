@@ -17,6 +17,19 @@ document.addEventListener("click",event=>{
   event.preventDefault();event.stopImmediatePropagation();
   gymConfirmDialog(title,message,button,callback,danger);
  };
+ if(b.id==="cancelWorkout"&&active){
+  const workoutId=active.id;
+  confirmAction("Cancelar treino","Vais eliminar definitivamente este treino em curso, incluindo os exercícios, as séries e as cargas registadas. Não serão atribuídos XP e o treino não aparecerá no Histórico.","Eliminar treino",()=>{
+   action(async()=>{
+    const {error}=await db.from("gym_workouts").delete().eq("id",workoutId).eq("user_id",user.id);
+    if(error)throw error;
+    localStorage.removeItem("edgy-gym-rest-"+user.id+"-end");
+    page="treino";
+    toast("Treino cancelado.");
+   });
+  },true);
+  return;
+ }
  if(b.id==="finish"&&active){
   confirmAction("Terminar treino","Queres concluir esta sessão? As séries e cargas ficam guardadas no Histórico.","Terminar treino",()=>{
    action(async()=>{
