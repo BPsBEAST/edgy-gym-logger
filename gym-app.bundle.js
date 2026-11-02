@@ -1,7 +1,7 @@
-/* EDGY Gym Logger: integrated app v6 */
+/* EDGY — Gym Logger · integrated v7 */
 (function(){
 
-/* MODULE app.js */
+/* app.js */
 const URL='https://okzpfhjdckmoawmwmydu.supabase.co',KEY='sb_publishable_hF29Hv9P7Snfj2utKL-XjA_PvE0oK5a';
 const db=window.supabase.createClient(URL,KEY), screen=document.querySelector('#screen');
 let user=null,profile=null,page='treino',active=null,exercises=[],history=[],measurements=[],search='',filter='Todos';
@@ -120,7 +120,7 @@ window.EDGY_GYM_START=async function(){
 };
 
 
-/* MODULE enhancements.js */
+/* enhancements.js */
 /* EDGY Gym · analytics, exercise records and opt-in community */
 "use strict";
 let gymSelectedExercise=null,gymCalendarMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1);
@@ -176,7 +176,7 @@ function gymProfileMarkup(){
  const latest=measurements[0];
  const avatar=profile?.avatar_path?'<img class="gymAvatar" src="'+esc(db.storage.from("edgy-avatars").getPublicUrl(profile.avatar_path).data.publicUrl)+'" alt="Fotografia de perfil">':'<div class="gymAvatar gymAvatarFallback">◉</div>';
  return '<div class="card hero"><div class="row" style="justify-content:flex-start">'+avatar+'<div><h1 style="margin:0">'+esc(profile?.display_name||user.email?.split("@")[0]||"Atleta")+'</h1><span class="muted">@'+esc(profile?.username||"edgy")+'</span><div class="gymJoined">Membro EDGY desde '+((user?.created_at||profile?.created_at)?new Date(user?.created_at||profile?.created_at).toLocaleDateString("pt-PT",{day:"numeric",month:"long",year:"numeric"}):"—")+'</div></div></div><p class="muted" style="margin-bottom:0">'+esc(profile?.bio||"O teu progresso, um treino de cada vez.")+'</p></div>'+
- '<div class="gymSharedXP"><div><span class="gymXPTag">XP EDGY PARTILHADO</span><strong>Nível '+(Math.floor(Math.max(0,Number(profile?.xp)||0)/100)+1)+'</strong></div><div class="gymXPProgress"><div class="gymXPProgressBar"><span style="width:'+(Math.max(0,Number(profile?.xp)||0)%100)+'%"></span></div><small>'+fmt(profile?.xp||0)+' XP no ecossistema EDGY</small></div></div>'+
+ '<div class="gymSharedXP"><div><span class="gymXPTag">XP EDGY</span><strong>Nível '+(Math.floor(Math.max(0,Number(profile?.xp)||0)/100)+1)+'</strong></div><div class="gymXPProgress"><div class="gymXPProgressBar"><span style="width:'+(Math.max(0,Number(profile?.xp)||0)%100)+'%"></span></div><small>'+fmt(profile?.xp||0)+' XP EDGY</small></div></div>'+
  '<div class="grid gymGrid4"><div class="stat"><strong>'+done.length+'</strong><small>Treinos</small></div><div class="stat"><strong>'+fmt(total)+'</strong><small>Volume kg</small></div><div class="stat"><strong>'+Math.round(minutes/60*10)/10+'h</strong><small>Tempo</small></div><div class="stat"><strong>'+records+'</strong><small>Recordes</small></div></div>'+
  '<div class="card"><div class="row"><h3>Treinos por semana</h3><span class="pill">12 semanas</span></div><div class="chart gymWeekChart">'+weeks.map(w=>'<div class="barslot" title="'+w.count+' treinos · '+w.minutes+' minutos"><div class="bar" style="height:'+(w.count?Math.max(5,w.count/max*100):1)+'%;opacity:'+(w.count?1:.18)+'"></div><small>'+w.count+'</small></div>').join("")+'</div><small class="muted">Cada coluna representa uma semana, de segunda a domingo.</small></div>'+
  '<div class="card"><div class="row"><h3>Calendário</h3><div class="row"><button class="btn ghost small" id="gymCalPrev" aria-label="Mês anterior">‹</button><span class="muted" style="font-size:12px">'+m.toLocaleDateString("pt-PT",{month:"long",year:"numeric"})+'</span><button class="btn ghost small" id="gymCalNext" aria-label="Mês seguinte">›</button></div></div>'+cells+'<p class="muted" style="font-size:12px">Os dias assinalados correspondem a treinos concluídos.</p></div>'+
@@ -199,8 +199,8 @@ function gymExercisesMarkup(){
 function gymHistoryMarkup(){
  const done=gymDone(),ach=gymPRData().events;
  return '<h1>Histórico</h1><p class="muted">'+done.length+' treinos concluídos. Todos os registos ficam na tua conta.</p>'+(done.length?done.map(w=>{
-  const prs=ach.get(w.id)||[];
-  return '<div class="card"><div class="row"><div><h3>'+esc(w.name)+'</h3><small class="muted">'+date(w.started_at)+'</small></div>'+(prs.length?'<span class="pill">🏆 '+prs.length+' PR</span>':'<span class="pill">Concluído</span>')+'</div><div class="grid" style="margin:13px 0"><div class="stat"><strong>'+duration(w)+'m</strong><small>Duração</small></div><div class="stat"><strong>'+fmt(volume(w))+'</strong><small>Volume kg</small></div><div class="stat"><strong>'+count(w)+'</strong><small>Séries</small></div></div><details><summary>Ver exercício e séries</summary>'+(w.gym_workout_exercises||[]).sort((a,b)=>a.position-b.position).map(we=>'<div class="item"><strong>'+esc(we.gym_exercises?.name)+'</strong><div class="muted" style="font-size:12px">'+(we.gym_sets||[]).sort((a,b)=>a.position-b.position).map(s=>(s.completed?"✓ ":"○ ")+fmt(s.weight)+" kg × "+s.reps+(s.to_failure?" · Falha":"")).join(" · ")+'</div></div>').join("")+'</details>'+(prs.length?'<p class="muted" style="font-size:12px">🏆 '+prs.map(x=>esc(x.name)).join(", ")+'</p>':'')+(gymOwnSocial()?.is_public?(gymFeedPosts.some(p=>p.workout_id===w.id&&p.user_id===user.id)?'<span class="pill">✓ Partilhado</span>':'<button class="btn secondary full" data-share-workout="'+w.id+'">Partilhar no Feed</button>'):'')+'</div>';
+  const prs=ach.get(w.id)||[]; const award=(typeof gymXPForWorkout==='function'?gymXPForWorkout(w.id):null);
+  return '<div class="card"><div class="row"><div><h3>'+esc(w.name)+'</h3><small class="muted">'+date(w.started_at)+'</small></div>'+(prs.length?'<span class="pill">🏆 '+prs.length+' PR</span>':'<span class="pill">Concluído</span>')+'</div><div class="grid" style="margin:13px 0"><div class="stat"><strong>'+duration(w)+'m</strong><small>Duração</small></div><div class="stat"><strong>'+fmt(volume(w))+'</strong><small>Volume kg</small></div><div class="stat"><strong>'+count(w)+'</strong><small>Séries</small></div></div>'+(award?'<div class="gymXPBreakdown"><strong>+'+award.xp_awarded+' XP</strong>'+(award.xp_awarded?'<span class="gymXPPart">Treino +'+award.base_xp+'</span><span class="gymXPPart">Volume +'+award.volume_xp+'</span><span class="gymXPPart">PR +'+award.pr_xp+'</span>':'<span>Este treino não cumpriu os critérios de XP.</span>')+'</div>':'')+'<details><summary>Ver exercício e séries</summary>'+(w.gym_workout_exercises||[]).sort((a,b)=>a.position-b.position).map(we=>'<div class="item"><strong>'+esc(we.gym_exercises?.name)+'</strong><div class="muted" style="font-size:12px">'+(we.gym_sets||[]).sort((a,b)=>a.position-b.position).map(s=>(s.completed?"✓ ":"○ ")+fmt(s.weight)+" kg × "+s.reps+(s.to_failure?" · Falha":"")).join(" · ")+'</div></div>').join("")+'</details>'+(prs.length?'<p class="muted" style="font-size:12px">🏆 '+prs.map(x=>esc(x.name)).join(", ")+'</p>':'')+(gymOwnSocial()?.is_public?(gymFeedPosts.some(p=>p.workout_id===w.id&&p.user_id===user.id)?'<span class="pill">✓ Partilhado</span>':'<button class="btn secondary full" data-share-workout="'+w.id+'">Partilhar no Feed</button>'):'')+'</div>';
  }).join(""):'<div class="card">Ainda não tens treinos concluídos.</div>');
 }
 function gymOwnSocial(){return gymSocialProfiles.find(p=>p.user_id===user?.id)}
@@ -272,7 +272,7 @@ document.addEventListener("submit",event=>{
 });
 
 
-/* MODULE edgy-shell.js */
+/* edgy-shell.js */
 /* EDGY Gym - unified header, identity and real event notifications. */
 "use strict";
 const gymShellRender=render;
@@ -354,7 +354,7 @@ db.auth.onAuthStateChange((event)=>{
 gymUpdateHeader();
 
 
-/* MODULE gym-templates.js */
+/* gym-templates.js */
 /* Reusable workout templates for EDGY Gym Logger */
 "use strict";
 let gymTemplates=[],gymTemplateBusy=false;
@@ -451,7 +451,7 @@ document.addEventListener("click",event=>{
 });
 
 
-/* MODULE gym-rest.js */
+/* gym-rest.js */
 /* Rest timer: local to the athlete, survives page reloads */
 "use strict";
 const gymRestWorkoutBase=renderWorkout;
@@ -504,7 +504,7 @@ document.addEventListener("change",event=>{
 });
 
 
-/* MODULE gym-ux.js */
+/* gym-ux.js */
 /* EDGY Gym Logger · profile, feed, modal and exercise UX */
 "use strict";
 let gymUXModalOpen=false,gymUXPickerSearch="",gymUXPickerMuscle="Todos",gymUXPickerEquipment="Todos";
@@ -797,7 +797,7 @@ const gymUXOldRender=render;
 render=function(){gymUXOldRender();if(page==="exercicios"&&!gymSelectedExercise){gymUXSetSelect("gymUXExMuscle",gymUXExMuscle);gymUXSetSelect("gymUXExEquipment",gymUXExEquipment)}};
 
 
-/* MODULE gym-community.js */
+/* gym-community.js */
 /* EDGY Gym · post conversations, public athlete profiles, personal feed */
 "use strict";
 let gymPostComments=[],gymExpandedComments=new Set();
@@ -929,7 +929,7 @@ gymNotificationItems=function(){
 };
 
 
-/* MODULE gym-confirm.js */
+/* gym-confirm.js */
 /* EDGY Gym · branded confirmation dialogs */
 "use strict";
 let gymConfirmCallback=null;
@@ -952,8 +952,13 @@ document.addEventListener("click",event=>{
  if(b.id==="finish"&&active){
   confirmAction("Terminar treino","Queres concluir esta sessão? As séries e cargas ficam guardadas no Histórico.","Terminar treino",()=>{
    action(async()=>{
-    const {error}=await db.from("gym_workouts").update({finished_at:new Date().toISOString()}).eq("id",active.id);
-    if(error)throw error;page="historico";toast("Treino concluído!");
+    const workoutId=active.id;
+    const {error}=await db.from("gym_workouts").update({finished_at:new Date().toISOString()}).eq("id",workoutId);
+    if(error)throw error;
+    const {data:reward,error:rewardError}=await db.from("gym_xp_awards").select("xp_awarded,base_xp,volume_xp,pr_xp").eq("workout_id",workoutId).maybeSingle();
+    if(rewardError)console.warn("EDGY Gym XP:",rewardError.message);
+    page="historico";
+    toast("Treino concluído!"+(reward?.xp_awarded>0?" +"+reward.xp_awarded+" XP EDGY ✦":reward?" Sem XP nesta sessão.":""));
    });
   });return;
  }
@@ -1013,7 +1018,7 @@ document.addEventListener("click",event=>{
 },true);
 
 
-/* MODULE gym-polish.js */
+/* gym-polish.js */
 /* EDGY Gym · fast set steppers, likes totals and reactive notifications */
 "use strict";
 let gymLikeTotals=[];
@@ -1189,6 +1194,39 @@ db.auth.onAuthStateChange(event=>{
   if(gymRealtimeChannel){db.removeChannel?.(gymRealtimeChannel);gymRealtimeChannel=null}
  }
 });
+
+
+/* gym-xp.js */
+/* EDGY Gym: XP uses the single profile XP balance, awarded only by Supabase triggers. */
+"use strict";
+let gymXPAwards=[];
+function gymXPForWorkout(workoutId){return gymXPAwards.find(a=>a.workout_id===workoutId)||null}
+const gymXPOriginalLoad=load;
+load=async function(){
+ await gymXPOriginalLoad();
+ if(!user){gymXPAwards=[];return}
+ const {data,error}=await db.from("gym_xp_awards").select("workout_id,awarded_at,qualified,base_xp,volume_xp,pr_xp,xp_awarded,volume_kg,pr_count").order("awarded_at",{ascending:false}).limit(200);
+ if(error){console.warn("EDGY Gym XP:",error.message);return}
+ gymXPAwards=data||[];
+};
+const gymXPOriginalWorkout=renderWorkout;
+renderWorkout=function(){
+ const content=gymXPOriginalWorkout();
+ if(!user||!active)return content;
+ const widget='<div class="gymXPInfo"><div><h3>Ganha XP ao treinar</h3><p>+20 XP por treino válido · +5 XP/1.000 kg · +15 XP por PR.</p><p>Mínimo: 15 min, 3 séries, 2 exercícios, 300 kg. Máx. 2 treinos e 120 XP em 24 h.</p></div><span class="gymXPNumber">XP EDGY ✦</span></div>';
+ const target='<div class="gymWorkoutFooterActions">';
+ return content.includes(target)?content.replace(target,widget+target):content+widget;
+};
+const gymXPOriginalProfile=renderProfile;
+renderProfile=function(){
+ const content=gymXPOriginalProfile();
+ if(!user)return content;
+ const total=gymXPAwards.reduce((n,a)=>n+Number(a.xp_awarded||0),0);
+ const earned=gymXPAwards.filter(a=>a.xp_awarded>0);
+ const info='<div class="card gymXPRules"><h3>XP de treino</h3><p class="muted">Já ganhaste <strong>'+fmt(total)+' XP</strong> nos '+earned.length+' treinos recompensados. O XP soma-se ao teu nível EDGY.</p><details><summary>Como são calculados os pontos?</summary><p class="muted">20 XP por sessão válida, 5 XP por cada 1.000 kg de volume (máximo 30), 15 XP por cada novo recorde de carga (máximo 3). Máximo de 100 XP por treino, 120 XP e 2 treinos em 24 horas. As recompensas só se aplicam a treinos concluídos após a ativação deste sistema.</p></details></div>';
+ const where='<div class="grid gymGrid4">';
+ return content.includes(where)?content.replace(where,info+where):content+info;
+};
 
 
 })();
