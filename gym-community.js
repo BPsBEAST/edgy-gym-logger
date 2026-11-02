@@ -53,10 +53,11 @@ renderProfile=function(){
  const original=gymCommunityBaseProfile();
  if(!user)return original;
  const posts=gymFeedPosts.filter(p=>p.user_id===user.id).sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
- return original+
- '<section class="gymPersonalFeed"><div class="gymPersonalFeedHead"><div><h2>As tuas publicações</h2><p class="muted">O teu Feed e conquistas EDGY Gym.</p></div><button class="btn small secondary" id="gymGoFeed">Ver Feed</button></div>'+
+ const feed='<section class="gymPersonalFeed"><div class="gymPersonalFeedHead"><div><h2>As tuas publicações</h2><p class="muted">O teu Feed e conquistas EDGY Gym.</p></div><button class="btn small secondary" id="gymGoFeed">Ver Feed</button></div>'+
  (posts.length?posts.map(gymFeedCard).join(""):'<div class="card gymUXEmpty"><strong>Ainda não publicaste nada</strong><p class="muted">Partilha a tua primeira meta ou uma frase no Feed.</p></div>')+
  '</section>';
+ const anchor='<div class="card"><div class="row"><h3>Privacidade e conta</h3>';
+ return original.includes(anchor)?original.replace(anchor,feed+anchor):original+feed;
 };
 function gymAthleteDialog(id){
  if(id===user.id){gymUXClose();page="perfil";render();return}
