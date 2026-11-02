@@ -113,7 +113,7 @@ renderExercises=function(){
 };
 function gymUXFindUsers(title,people){
  gymUXShow(title,"Atletas da comunidade EDGY Gym.",
- '<div class="gymUXList">'+(people.length?people.map(p=>'<div class="gymUXPeopleRow"><div><strong>'+esc(p.display_name||"Atleta EDGY")+'</strong><small>@'+esc(p.username||"edgy")+'</small></div></div>').join(""):'<div class="gymUXEmpty">Ainda não existem atletas nesta lista.</div>')+'</div>',true);
+ '<div class="gymUXList">'+(people.length?people.map(p=>'<div class="gymUXPeopleRow">'+(p.user_id?'<button type="button" class="gymUXAthleteLink" data-gym-athlete="'+esc(p.user_id)+'">'+gymCommunityAvatar(p.user_id,p.display_name||"Atleta EDGY")+'<span><strong>'+esc(p.display_name||"Atleta EDGY")+'</strong><small>@'+esc(p.username||"edgy")+'</small></span></button>':'<div><strong>Perfil privado</strong></div>')+'</div>').join(""):'<div class="gymUXEmpty">Ainda não existem atletas nesta lista.</div>')+'</div>',true);
 }
 function gymUXSocialStats(){
  const followers=gymFollowRows.filter(f=>f.followed_id===user.id).map(f=>gymSocialProfiles.find(p=>p.user_id===f.follower_id)||{display_name:"Atleta EDGY",username:"privado"});
@@ -152,7 +152,7 @@ renderFeed=function(){
  (!publicProfile?'<div class="card gymUXPrivate"><strong>O teu perfil está privado</strong><p class="muted">Podes descobrir publicações. Para publicar e receber seguidores, ativa o perfil público nas definições do Perfil.</p><button class="btn secondary small" id="gymUXEditProfile">Editar privacidade</button></div>':"")+
  '<div class="card gymUXFeedSwitch"><button class="'+(gymFeedMode==="following"?"is-on":"")+'" data-feed-mode="following">A seguir</button><button class="'+(gymFeedMode==="discover"?"is-on":"")+'" data-feed-mode="discover">Descobrir</button></div>'+
  (visible.length?visible.map(gymFeedCard).join(""):'<div class="card gymUXEmpty"><strong>Sem publicações nesta vista</strong><p class="muted">Encontra atletas ou publica a tua primeira conquista.</p></div>')+
- '<div class="card"><h3>Encontrar atletas</h3><input class="gymUXInput" id="gymFindPeople" placeholder="Procurar por nome ou @" value="'+esc(gymFeedSearch)+'">'+(people.length?people.slice(0,30).map(p=>'<div class="gymUXPeopleRow"><div><strong>'+esc(p.display_name)+'</strong><small>@'+esc(p.username||"edgy")+'</small></div><button class="btn small '+(following.has(p.user_id)?"secondary":"")+'" data-follow="'+p.user_id+'">'+(following.has(p.user_id)?"A seguir ✓":"Seguir")+'</button></div>').join(""):'<p class="muted">Não há outros perfis públicos correspondentes.</p>')+'</div>';
+ '<div class="card"><h3>Encontrar atletas</h3><input class="gymUXInput" id="gymFindPeople" placeholder="Procurar por nome ou @" value="'+esc(gymFeedSearch)+'">'+(people.length?people.slice(0,30).map(p=>'<div class="gymUXPeopleRow"><button type="button" class="gymUXAthleteLink" data-gym-athlete="'+esc(p.user_id)+'">'+gymCommunityAvatar(p.user_id,p.display_name)+'<span><strong>'+esc(p.display_name)+'</strong><small>@'+esc(p.username||"edgy")+'</small></span></button><button class="btn small '+(following.has(p.user_id)?"secondary":"")+'" data-follow="'+p.user_id+'">'+(following.has(p.user_id)?"A seguir ✓":"Seguir")+'</button></div>').join(""):'<p class="muted">Não há outros perfis públicos correspondentes.</p>')+'</div>';
 };
 function gymUXPostModal(){
  if(!gymOwnSocial()?.is_public){gymUXEditProfile();toast("Ativa o perfil público para publicares no Feed.");return}
