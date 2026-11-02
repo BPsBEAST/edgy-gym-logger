@@ -73,8 +73,8 @@ render=function(){
 };
 document.addEventListener("click",event=>{
  const target=event.target.closest("button");
- if(target?.id==="gymBrand"){if(!user){toast("Entra com a tua conta EDGY para começar.");return}page="treino";render();window.scrollTo({top:0,behavior:"smooth"});return}
- if(target?.id==="gymHeaderAvatar"){page="perfil";render();window.scrollTo({top:0,behavior:"smooth"});return}
+ if(target?.id==="gymBrand"){if(!user){toast("Entra com a tua conta EDGY para começar.");return}if(page!=="treino"){page="treino";render()}window.scrollTo({top:0,behavior:"smooth"});return}
+ if(target?.id==="gymHeaderAvatar"){if(!user)return;if(page!=="perfil"){page="perfil";render()}window.scrollTo({top:0,behavior:"smooth"});return}
  if(target?.id==="gymBell"){gymOpenNotifications();return}
  if(target?.id==="gymNotifClose"){gymCloseNotifications();return}
  if(event.target.id==="gymNotifBackdrop"){gymCloseNotifications()}
