@@ -38,3 +38,20 @@
  .app{padding-left:23px!important;padding-right:23px!important}
  .gymSidebar{padding-left:13px;padding-right:10px}
 }
+
+/* Match EDGY Game Hub desktop coordinates and content widths. */
+@media(min-width:800px){
+ .shell{grid-template-columns:240px minmax(0,1fr)!important;width:100%;max-width:1240px}
+ .gymSidebar{padding:32px 18px 28px!important;gap:10px}
+ .gymSideBrand{margin-bottom:34px!important}
+ .gymSideButton{padding:14px 13px!important}
+ .app{padding:30px 45px 50px!important}
+ .app>.header{height:42px;min-height:42px;margin-bottom:23px}
+ .app>.header,.app>#screen,.app>.gymFooter{max-width:100%}
+ .app>#screen{width:100%}
+ .app>.gymFooter{margin-top:auto;padding-top:30px}
+}
+@media(min-width:800px) and (max-width:1099px){
+ .shell{grid-template-columns:200px minmax(0,1fr)!important}
+ .app{padding-left:25px!important;padding-right:25px!important}
+}
