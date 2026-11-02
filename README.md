@@ -74,3 +74,21 @@ O repositório tem ficheiros estáticos na raiz, preparados para GitHub Pages. C
 5. Adicionar medidas em duas datas e verificar calendário e gráficos.
 6. Com segunda conta, ativar Feed e testar seguir, gostar, partilhar e notificações.
 7. Confirmar que o histórico completo e medidas não ficam visíveis na outra conta.
+
+## Atualização — comunidade e identidade EDGY
+
+- As publicações podem receber **gostos e respostas**. O autor da resposta pode eliminá-la, e o autor do post pode moderar respostas. A política RLS impede acesso a comentários de posts privados.
+- O **Feed pessoal** aparece no Perfil, e os perfis públicos de outros atletas mostram as respetivas publicações. Seguidores e A seguir aparecem no Perfil.
+- O botão **+ Publicar** abre um modal para metas ou frases livres; a privacidade configura-se em Editar Perfil.
+- O Perfil mostra o dia de criação da **conta EDGY** e o **XP/nível partilhado**. O email não aparece na área pública; é visível apenas ao próprio na edição de perfil.
+- **XP Gym:** por agora não atribui XP novo; apenas apresenta o saldo partilhado com a EDGY Games. Antes de ativar ganhos por treino, definir limites que evitem spam e duplicação.
+- Imagens de perfil com enquadramento corrigido no cabeçalho; para ajustar a fotografia original, usar o editor de recorte do Perfil.
+- Modais EDGY para criar exercícios/treinos e confirmar eliminação, partilha e conclusão.
+
+### Testes recomendados
+
+1. Com duas contas públicas, publicar uma frase, gostar, responder, apagar uma resposta e confirmar a notificação ao autor.
+2. Consultar o Feed individual no Perfil e abrir o perfil de outro atleta.
+3. Confirmar que o email não aparece ao visitar perfis públicos e que o XP corresponde ao da EDGY Games.
+4. Editar foto e verificar o avatar no PC e no telemóvel; confirmar que a foto não fica cortada.
+5. Iniciar treino, escolher exercício e concluir sessão sem caixas nativas do browser.
