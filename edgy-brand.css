@@ -83,3 +83,16 @@ p{line-height:1.55}.muted{color:var(--edgy-muted)}
 @media(min-width:800px){.app{max-width:860px}.nav{max-width:860px}.header{margin-bottom:30px}}
 @media(max-width:380px){.app{padding-left:12px;padding-right:12px}.gymBrandName{font-size:25px}.gymBrandSub{letter-spacing:2.1px}.topActions{gap:8px}.gymBell,.gymHeaderAvatar{width:38px;height:38px;flex-basis:38px}.nav{padding-left:2px;padding-right:2px}.nav button{font-size:9px}.nav button.navHome .navHomeGlyph{width:43px;height:43px;flex-basis:43px}.sethead,.setrow{gap:3px}}
 @media(prefers-reduced-motion:reduce){.card,.btn,.nav button,.nav .navIcon,.gymHeaderAvatar{animation:none;transition:none}}
+
+/* Use precisely the same typography fallback chain and button geometry as EDGY Game Hub. */
+html,body,:root{font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important}
+button,input,select,textarea{font-family:inherit}
+@media(max-width:799px){
+ .gymBrandName{font-size:25px;letter-spacing:-1.5px;font-weight:950}
+ .gymBrandSub{font-size:9px;letter-spacing:3px}
+ .app>.header{margin-bottom:23px;min-height:42px}
+ .nav{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr));gap:2px;align-items:end;width:100%;min-height:74px}
+ .nav button{width:100%;min-width:0;max-width:100%}
+ .nav button span{white-space:nowrap}
+ .nav button.navHome{transform:translateY(-7px)}
+}
