@@ -1,7 +1,7 @@
-/* EDGY — Gym Logger · integrated v10 */
+/* EDGY — Gym Logger · UI + Charts v11 */
 (function(){
 
-/* MODULE app.js */
+/* app.js */
 const URL='https://okzpfhjdckmoawmwmydu.supabase.co',KEY='sb_publishable_hF29Hv9P7Snfj2utKL-XjA_PvE0oK5a';
 const db=window.supabase.createClient(URL,KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storageKey:'sb-okzpfhjdckmoawmwmydu-auth-token'}}), screen=document.querySelector('#screen');
 let user=null,profile=null,page='treino',active=null,exercises=[],history=[],measurements=[],search='',filter='Todos';
@@ -142,7 +142,7 @@ window.EDGY_GYM_START=async function(){
 };
 
 
-/* MODULE enhancements.js */
+/* enhancements.js */
 /* EDGY Gym · analytics, exercise records and opt-in community */
 "use strict";
 let gymSelectedExercise=null,gymCalendarMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1);
@@ -294,7 +294,7 @@ document.addEventListener("submit",event=>{
 });
 
 
-/* MODULE edgy-shell.js */
+/* edgy-shell.js */
 /* EDGY Gym - unified header, identity and real event notifications. */
 "use strict";
 const gymShellRender=render;
@@ -376,7 +376,7 @@ db.auth.onAuthStateChange((event)=>{
 gymUpdateHeader();
 
 
-/* MODULE gym-templates.js */
+/* gym-templates.js */
 /* Reusable workout templates for EDGY Gym Logger */
 "use strict";
 let gymTemplates=[],gymTemplateBusy=false;
@@ -473,7 +473,7 @@ document.addEventListener("click",event=>{
 });
 
 
-/* MODULE gym-rest.js */
+/* gym-rest.js */
 /* Rest timer: local to the athlete, survives page reloads */
 "use strict";
 const gymRestWorkoutBase=renderWorkout;
@@ -526,7 +526,7 @@ document.addEventListener("change",event=>{
 });
 
 
-/* MODULE gym-ux.js */
+/* gym-ux.js */
 /* EDGY Gym Logger · profile, feed, modal and exercise UX */
 "use strict";
 let gymUXModalOpen=false,gymUXPickerSearch="",gymUXPickerMuscle="Todos",gymUXPickerEquipment="Todos";
@@ -820,7 +820,7 @@ const gymUXOldRender=render;
 render=function(){gymUXOldRender();if(page==="exercicios"&&!gymSelectedExercise){gymUXSetSelect("gymUXExMuscle",gymUXExMuscle);gymUXSetSelect("gymUXExEquipment",gymUXExEquipment)}};
 
 
-/* MODULE gym-community.js */
+/* gym-community.js */
 /* EDGY Gym · post conversations, public athlete profiles, personal feed */
 "use strict";
 let gymPostComments=[],gymExpandedComments=new Set();
@@ -952,7 +952,7 @@ gymNotificationItems=function(){
 };
 
 
-/* MODULE gym-confirm.js */
+/* gym-confirm.js */
 /* EDGY Gym · branded confirmation dialogs */
 "use strict";
 let gymConfirmCallback=null;
@@ -1054,7 +1054,7 @@ document.addEventListener("click",event=>{
 },true);
 
 
-/* MODULE gym-polish.js */
+/* gym-polish.js */
 /* EDGY Gym · fast set steppers, likes totals and reactive notifications */
 "use strict";
 let gymLikeTotals=[];
@@ -1232,7 +1232,7 @@ db.auth.onAuthStateChange(event=>{
 });
 
 
-/* MODULE gym-xp.js */
+/* gym-xp.js */
 /* EDGY Gym: XP uses the single profile XP balance, awarded only by Supabase triggers. */
 "use strict";
 let gymXPAwards=[];
@@ -1257,7 +1257,7 @@ renderProfile=function(){
 };
 
 
-/* MODULE gym-experience.js */
+/* gym-experience.js */
 /* EDGY Gym · social activity count, smooth workout interactions and page transitions */
 "use strict";
 let gymOwnPublishedCount=0,gymOwnReplyCount=0;
@@ -1341,7 +1341,7 @@ document.addEventListener("change",event=>{
 },true);
 
 
-/* MODULE gym-trends.js */
+/* gym-trends.js */
 /* EDGY Gym charts — weekly summary and 12-week activity trajectory */
 "use strict";
 function gymMondayOf(input){
@@ -1399,9 +1399,9 @@ function gymWeekCard(){
  const trend='<section class="card gymChartCard gymTrendCard"><div class="gymChartHead"><div><span class="gymChartEyebrow">EVOLUÇÃO</span><h3>Treinos por semana</h3><p>Últimas 12 semanas · cada ponto é uma semana</p></div><div class="gymTrendAverage"><strong>'+fmt(average)+'</strong><span>média / semana</span></div></div><div class="gymTrendCanvas">'+chart+'</div><div class="gymTrendLegend"><i></i> Treinos concluídos <span>·</span> '+weeks.reduce((n,w)=>n+w.count,0)+' treinos no período</div></section>';
  return current+trend;
 }
-const gymGraphsBaseProfileMarkup=gymProfileMarkup;
-gymProfileMarkup=function(){
- const html=gymGraphsBaseProfileMarkup();
+const gymGraphsBaseProfileRender=renderProfile;
+renderProfile=function(){
+ const html=gymGraphsBaseProfileRender();
  const begin='<div class="card"><div class="row"><h3>Treinos por semana</h3>';
  const i=html.indexOf(begin);
  if(i<0)return html;
