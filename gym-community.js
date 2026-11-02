@@ -67,7 +67,7 @@ function gymAthleteDialog(id){
  const following=gymFollowRows.some(f=>f.follower_id===user.id&&f.followed_id===id);
  const content='<div class="gymAthleteHeader">'+gymCommunityAvatar(athlete.display_name)+'<div><h3>'+esc(athlete.display_name)+'</h3><span>@'+esc(athlete.username||"edgy")+'</span></div></div>'+
  '<div class="gymAthleteActions"><button type="button" class="btn small '+(following?"secondary":"")+'" data-follow="'+id+'">'+(following?"A seguir ✓":"Seguir atleta")+'</button></div>'+
- '<h3 class="gymAthleteFeedTitle">Publicações</h3>'+
+ '<div class="gymAthleteStats"><span><strong>'+fmt(gymTotalLikesFor(id))+'</strong> likes recebidos</span><span><strong>'+posts.length+'</strong> publicações recentes</span></div>'+ '<h3 class="gymAthleteFeedTitle">Publicações</h3>'+
  (posts.length?posts.map(p=>'<div class="gymAthletePost"><strong>'+esc(p.kind==="goal"?"Meta":p.kind==="workout"?"Treino":p.kind==="pr"?"Recorde":"Publicação")+'</strong><p>'+esc(p.kind==="post"?(p.body||p.title):p.title)+'</p><small>'+date(p.created_at)+'</small></div>').join(""):'<p class="muted">Ainda não tem publicações.</p>');
  gymUXShow("Perfil EDGY Gym","O Feed público deste atleta.",content,true);
 }
