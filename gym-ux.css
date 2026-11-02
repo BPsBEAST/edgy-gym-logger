@@ -126,3 +126,32 @@ select.gymUXInput{appearance:auto;cursor:pointer}
 .cropActions button{border-radius:3px!important}
 .cropCircle{border-color:#f2218a!important}
 .cropZoom{accent-color:#ff2f91!important}
+
+/* Profile editor: visible saving/error state without discarding form inputs */
+.gymUXProfileHint{
+ margin:-2px 0 3px;
+ color:#bfaac9;
+ font-size:11px;
+ line-height:1.55;
+}
+.gymUXProfileStatus{
+ border:1px solid #72567c;
+ border-left:3px solid #e9539b;
+ background:#352440;
+ color:#f1c1dd;
+ border-radius:3px;
+ padding:11px 12px;
+ font-size:12px;
+ line-height:1.5;
+ font-weight:700;
+ overflow-wrap:anywhere;
+}
+.gymUXProfileStatus[hidden]{display:none!important}
+.gymUXProfileStatus.is-error{
+ border-color:#a45b7a;
+ border-left-color:#ff619b;
+ background:#4b233c;
+ color:#ffd1e3;
+}
+.gymUXProfileStatus.is-saving{color:#f1c1dd}
+.gymUXForm .gymUXActions button:disabled{opacity:.6;cursor:progress}
