@@ -33,9 +33,16 @@ function gymUpdateHeader(){
  if(user){
    const photo=profile?.avatar_path?db.storage.from("edgy-avatars").getPublicUrl(profile.avatar_path).data.publicUrl:"";
    const fallback=esc((profile?.display_name||user.email||"E").trim().charAt(0).toUpperCase()||"E");
-   el.innerHTML=photo?'<img src="'+esc(photo)+'" alt="Fotografia de perfil" loading="lazy">':'<span>'+fallback+'</span>';
+   const avatarKey=user.id+"|"+(profile?.avatar_path||"")+"|"+fallback;
+   if(el.dataset.avatarKey!==avatarKey){
+    el.innerHTML=photo?'<img src="'+esc(photo)+'" alt="Fotografia de perfil" loading="lazy">':'<span>'+fallback+'</span>';
+    el.dataset.avatarKey=avatarKey;
+   }
    el.title="Ver perfil";
- }else{el.innerHTML="<span>E</span>";el.title="Iniciar sessão para ver o perfil"}
+ }else{
+   if(el.dataset.avatarKey!=="guest"){el.innerHTML="<span>E</span>";el.dataset.avatarKey="guest"}
+   el.title="Iniciar sessão para ver o perfil";
+ }
  const notices=gymNotificationItems(),read=gymReadNotices();
  const unread=notices.filter(n=>!read.has(n.id)).length;
  const badge=document.getElementById("gymBellBadge");
