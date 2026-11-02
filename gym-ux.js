@@ -83,7 +83,7 @@ function gymUXExerciseRow(ex,mode){
  return '<div class="gymUXExerciseRow"><button type="button" class="gymUXExMain" '+(mode==="pick"?'data-ux-add-ex="'+ex.id+'"':'data-view-ex="'+ex.id+'"')+'><strong>'+esc(ex.name)+'</strong><small>'+esc(ex.muscle)+' <span>·</span> '+esc(ex.equipment)+'</small></button><button type="button" class="gymUXFav '+(fav?"is-fav":"")+'" data-ux-fav="'+ex.id+'" aria-label="'+(fav?"Remover favorito":"Adicionar favorito")+'">'+(fav?"★":"☆")+'</button></div>';
 }
 function gymUXPickerContent(){
- const rows=gymUXExerciseFilter(exercises,gymUXPickerSearch,gymUXPickerMuscle,gymUXPickerEquipment,"recentes").slice(0,120);
+ const rows=gymUXExerciseFilter(exercises,gymUXPickerSearch,gymUXPickerMuscle,gymUXPickerEquipment,"recentes");
  return '<div class="gymUXPickerControls">'+
  '<input class="gymUXInput" id="gymUXPickerSearch" placeholder="Pesquisar 158+ exercícios…" value="'+esc(gymUXPickerSearch)+'" autocomplete="off">'+
  '<div class="gymUXTwo"><select class="gymUXInput" id="gymUXPickerMuscle">'+gymUXLabels(gymUXMuscles)+'</select><select class="gymUXInput" id="gymUXPickerEquipment">'+gymUXLabels(gymUXEquip)+'</select></div></div>'+
@@ -97,7 +97,7 @@ function gymUXPickExercise(){
 function gymUXSetSelect(id,value){const x=document.getElementById(id);if(x)x.value=value}
 function gymUXRefreshPicker(){
  const list=document.getElementById("gymUXPickerList");if(!list)return;
- list.innerHTML=gymUXExerciseFilter(exercises,gymUXPickerSearch,gymUXPickerMuscle,gymUXPickerEquipment,"recentes").slice(0,120).map(x=>gymUXExerciseRow(x,"pick")).join("")||'<p class="muted">Nenhum resultado.</p>';
+ list.innerHTML=gymUXExerciseFilter(exercises,gymUXPickerSearch,gymUXPickerMuscle,gymUXPickerEquipment,"recentes").map(x=>gymUXExerciseRow(x,"pick")).join("")||'<p class="muted">Nenhum resultado.</p>';
 }
 const gymUXPriorExercises=renderExercises;
 renderExercises=function(){
@@ -109,7 +109,7 @@ renderExercises=function(){
  '<input id="gymUXExSearch" class="gymUXInput" value="'+esc(gymUXExSearch)+'" placeholder="Pesquisar exercício ou equipamento…">'+
  '<div class="gymUXTwo"><select id="gymUXExMuscle" class="gymUXInput">'+gymUXLabels(gymUXMuscles)+'</select><select id="gymUXExEquipment" class="gymUXInput">'+gymUXLabels(gymUXEquip)+'</select></div>'+
  '<div class="gymUXSort"><button data-ux-sort="recentes" class="'+(gymUXExSort==="recentes"?"is-on":"")+'">Recentes</button><button data-ux-sort="favoritos" class="'+(gymUXExSort==="favoritos"?"is-on":"")+'">Favoritos</button><button data-ux-sort="alfabetico" class="'+(gymUXExSort==="alfabetico"?"is-on":"")+'">A–Z</button></div></div>'+
- '<div class="gymUXList">'+(filtered.length?filtered.slice(0,150).map(x=>gymUXExerciseRow(x,"browse")).join(""):'<div class="gymUXEmpty">Nenhum exercício encontrado.</div>')+'</div></div>';
+ '<div class="gymUXList">'+(filtered.length?filtered.map(x=>gymUXExerciseRow(x,"browse")).join(""):'<div class="gymUXEmpty">Nenhum exercício encontrado.</div>')+'</div></div>';
 };
 function gymUXFindUsers(title,people){
  gymUXShow(title,"Atletas da comunidade EDGY Gym.",
