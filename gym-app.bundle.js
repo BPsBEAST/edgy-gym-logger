@@ -1,10 +1,11 @@
-/* EDGY Gym Logger · consolidated v9 */
+/* EDGY — Gym Logger · integrated v10 */
 (function(){
 
-/* app.js */
+/* MODULE app.js */
 const URL='https://okzpfhjdckmoawmwmydu.supabase.co',KEY='sb_publishable_hF29Hv9P7Snfj2utKL-XjA_PvE0oK5a';
 const db=window.supabase.createClient(URL,KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storageKey:'sb-okzpfhjdckmoawmwmydu-auth-token'}}), screen=document.querySelector('#screen');
 let user=null,profile=null,page='treino',active=null,exercises=[],history=[],measurements=[],search='',filter='Todos';
+let gymAuthReady=false;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=n=>Number(n||0).toLocaleString('pt-PT',{maximumFractionDigits:1});
 const date=s=>new Date(s).toLocaleDateString('pt-PT',{day:'2-digit',month:'short',year:'numeric'});
@@ -24,7 +25,7 @@ const volume=w=>(w.gym_workout_exercises||[]).flatMap(x=>x.gym_sets||[]).filter(
 function previousFor(exerciseId){for(const w of history){if(!w.finished_at)continue;const we=(w.gym_workout_exercises||[]).find(x=>x.exercise_id===exerciseId);if(we){const sets=(we.gym_sets||[]).filter(x=>x.completed&&x.set_type!=='warmup').sort((a,b)=>a.position-b.position);if(sets.length)return sets}}return []}
 const count=w=>(w.gym_workout_exercises||[]).flatMap(x=>x.gym_sets||[]).filter(s=>s.completed).length;
 const duration=w=>Math.round((new Date(w.finished_at||Date.now())-new Date(w.started_at))/60000);
-function render(){nav();document.querySelector('#status').textContent=user?'Conta EDGY':'Sem sessão';if(!user){screen.innerHTML='<section class="card hero"><h1>O teu progresso começa aqui.</h1><p class="muted">Entra com a mesma conta que utilizas na EDGY Games.</p><form id="login" class="stack"><input class="input" name="email" type="email" required placeholder="Email"><input class="input" name="password" type="password" required placeholder="Password"><button class="btn">Entrar com EDGY</button></form><p class="muted">Ainda não tens conta? Cria-a na EDGY Games.</p></section>';return}
+function render(){nav();document.querySelector('#status').textContent=!gymAuthReady?'A confirmar a sessão EDGY':user?'Conta EDGY':'Sem sessão';if(!gymAuthReady){screen.innerHTML='<section class="card hero gymAuthLoading" aria-busy="true"><span class="gymAuthSpinner" aria-hidden="true"></span><h2>A entrar na EDGY…</h2><p class="muted">A recuperar a tua sessão guardada.</p></section>';return}if(!user){screen.innerHTML='<section class="card hero"><h1>O teu progresso começa aqui.</h1><p class="muted">Entra com a mesma conta que utilizas na EDGY Games.</p><form id="login" class="stack"><input class="input" name="email" type="email" required placeholder="Email"><input class="input" name="password" type="password" required placeholder="Password"><button class="btn">Entrar com EDGY</button></form><p class="muted">Ainda não tens conta? Cria-a na EDGY Games.</p></section>';return}
 screen.innerHTML=({treino:renderWorkout,historico:renderHistory,exercicios:renderExercises,perfil:renderProfile,feed:renderFeed}[page])()}
 const workoutCard=w=>'<div class="card"><div class="row"><div><h3>'+esc(w.name)+'</h3><small class="muted">'+date(w.started_at)+'</small></div><span class="pill">'+(w.finished_at?'Concluído':'Em curso')+'</span></div><div class="grid" style="margin:16px 0"><div class="stat"><strong>'+duration(w)+'m</strong><small>Duração</small></div><div class="stat"><strong>'+fmt(volume(w))+'</strong><small>kg volume</small></div><div class="stat"><strong>'+count(w)+'</strong><small>Séries</small></div></div><div class="muted" style="font-size:13px">'+(w.gym_workout_exercises||[]).map(x=>esc(x.gym_exercises?.name)).join(' · ')+'</div></div>';
 function gymSetEditor(we,s,i){
@@ -55,9 +56,9 @@ function renderWorkout(){
   '<div class="gymSetList">'+(we.gym_sets||[]).slice().sort((a,b)=>a.position-b.position).map((s,i)=>gymSetEditor(we,s,i)).join('')+'</div>'+
   '<button type="button" class="gymAddSet" data-add-set="'+we.id+'">＋ Adicionar série</button></section>'
  ).join('');
- return '<div class="gymWorkoutHero"><div class="gymWorkoutHeroTitle"><div><span class="gymWorkoutLive"><i></i> Em curso</span><h1>'+esc(active.name)+'</h1></div><button class="btn ghost small" id="rename">Renomear</button></div>'+
+ return '<div class="gymWorkoutHero"><div class="gymWorkoutHeroTitle"><div><span class="gymWorkoutLive"><i></i> Em curso</span><h1>'+esc(active.name)+'</h1></div><div class="gymWorkoutHeaderActions"><button class="btn ghost small" id="rename">Renomear</button><button class="gymWorkoutCancelTop" type="button" id="cancelWorkout">Cancelar treino</button></div></div>'+
   '<div class="gymWorkoutStats"><div class="stat"><strong>'+duration(active)+'m</strong><small>Duração</small></div><div class="stat"><strong>'+fmt(volume(active))+' <em>kg</em></strong><small>Volume</small></div><div class="stat"><strong>'+count(active)+'</strong><small>Séries feitas</small></div></div></div>'+
-  cards+'<div class="gymWorkoutFooterActions"><button type="button" class="btn secondary full gymAddExerciseButton" id="pick">＋ Adicionar exercício</button><div class="gymWorkoutFinishRow"><button type="button" class="btn full gymFinishWorkoutButton" id="finish">Terminar treino</button><button type="button" class="gymCancelWorkoutButton" id="cancelWorkout">Cancelar treino</button></div></div><div id="picker"></div>';
+  cards+'<div class="gymWorkoutFooterActions"><button type="button" class="btn secondary full gymAddExerciseButton" id="pick">＋ Adicionar exercício</button><div class="gymWorkoutFinishRow"><button type="button" class="btn full gymFinishWorkoutButton" id="finish">Terminar treino</button><button type="button" class="gymCancelWorkoutButton" id="cancelWorkoutBottom">Cancelar treino</button></div></div><div id="picker"></div>';
 }
 function renderHistory(){const done=history.filter(w=>w.finished_at);return '<h1>Histórico</h1><p class="muted">As tuas sessões e cargas guardadas.</p>'+(done.length?done.map(w=>workoutCard(w)).join(''):'<div class="card">Ainda não tens treinos concluídos.</div>')}
 function renderExercises(){const groups=['Todos',...new Set(exercises.map(e=>e.muscle))];const list=exercises.filter(e=>(filter==='Todos'||e.muscle===filter)&&e.name.toLowerCase().includes(search.toLowerCase()));return '<h1>Exercícios</h1><input class="input" id="search" value="'+esc(search)+'" placeholder="Pesquisar exercício…"><div class="filters">'+groups.map(g=>'<button class="btn small '+(filter===g?'':'secondary')+'" data-filter="'+esc(g)+'">'+esc(g)+'</button>').join('')+'</div><button class="btn secondary full" id="new-ex">＋ Criar exercício</button><div class="card">'+list.map(e=>'<div class="item"><strong>'+esc(e.name)+'</strong><div class="muted" style="font-size:12px">'+esc(e.muscle)+' · '+esc(e.equipment)+'</div></div>').join('')+'</div>'}
@@ -99,34 +100,49 @@ document.addEventListener('change',e=>{
   if(error)throw error;
  });
 });
-document.addEventListener('submit',e=>{e.preventDefault();if(e.target.id==='login')action(async()=>{const data=new FormData(e.target),{error}=await db.auth.signInWithPassword({email:data.get('email'),password:data.get('password')});if(error)throw error;user=(await db.auth.getUser()).data.user;await load()});if(e.target.id==='measure')action(async()=>{const data=new FormData(e.target),row={user_id:user.id,recorded_at:data.get('recorded_at')};for(const key of ['body_weight','waist','abdomen','chest','shoulders','arm','left_arm','thigh','calf','glutes'])if(data.get(key)!=='')row[key]=Number(data.get(key));const {error}=await db.from('gym_measurements').insert(row);if(error)throw error})});
+document.addEventListener('submit',e=>{e.preventDefault();if(e.target.id==='login')action(async()=>{const data=new FormData(e.target),{error}=await db.auth.signInWithPassword({email:data.get('email'),password:data.get('password')});if(error)throw error;user=(await db.auth.getUser()).data.user;gymAuthReady=true;await load()});if(e.target.id==='measure')action(async()=>{const data=new FormData(e.target),row={user_id:user.id,recorded_at:data.get('recorded_at')};for(const key of ['body_weight','waist','abdomen','chest','shoulders','arm','left_arm','thigh','calf','glutes'])if(data.get(key)!=='')row[key]=Number(data.get(key));const {error}=await db.from('gym_measurements').insert(row);if(error)throw error})});
 // Keep the server-rendered loading screen until session validation completes.
 document.querySelector('#status').textContent='A verificar a sessão EDGY…';
 window.EDGY_GYM_START=async function(){
+ // Never display the login screen until saved auth state has been checked completely.
+ gymAuthReady=false;
+ render();
  try{
-  // Let Supabase restore/refresh its persistent session before verifying the user.
-  const stored=await db.auth.getSession();
+  let stored=await db.auth.getSession();
   if(stored.error)throw stored.error;
-  if(!stored.data?.session){user=null;render();return}
+  const key='sb-okzpfhjdckmoawmwmydu-auth-token';
+  // An existing token can be temporarily unavailable while another tab refreshes it.
+  if(!stored.data?.session&&localStorage.getItem(key)){
+   for(const pause of [400,850,1250]){
+    await new Promise(resolve=>setTimeout(resolve,pause));
+    stored=await db.auth.getSession();
+    if(stored.error)throw stored.error;
+    if(stored.data?.session)break;
+   }
+  }
+  if(!stored.data?.session){
+   user=null;gymAuthReady=true;render();return;
+  }
   let check=await db.auth.getUser();
   if(check.error){
-   // Retry once on transient network failures without discarding a saved session.
-   await new Promise(resolve=>setTimeout(resolve,750));
+   await new Promise(resolve=>setTimeout(resolve,500));
    check=await db.auth.getUser();
   }
   if(check.error)throw check.error;
   user=check.data?.user||null;
   if(user)await load();
+  gymAuthReady=true;
   render();
  }catch(error){
   console.warn('EDGY Gym authentication:',error);
-  if(user){render();toast('A ligação foi interrompida; tenta atualizar a página.');return}
-  screen.innerHTML='<section class="card hero" role="alert"><h1>Não foi possível confirmar a sessão</h1><p class="muted">A tua sessão guardada não foi eliminada. Verifica a ligação e volta a tentar.</p><button type="button" class="btn" onclick="location.reload()">Tentar novamente</button></section>';
+  if(user){gymAuthReady=true;render();toast('Falha temporária na ligação.');return}
+  screen.innerHTML='<section class="card hero" role="alert"><h1>Não foi possível confirmar a sessão</h1><p class="muted">Não encerrámos a tua sessão. Verifica a ligação e tenta novamente.</p><button type="button" class="btn" id="gymAuthRetry">Tentar novamente</button></section>';
+  document.getElementById('gymAuthRetry')?.addEventListener('click',()=>window.EDGY_GYM_START());
  }
 };
 
 
-/* enhancements.js */
+/* MODULE enhancements.js */
 /* EDGY Gym · analytics, exercise records and opt-in community */
 "use strict";
 let gymSelectedExercise=null,gymCalendarMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1);
@@ -278,7 +294,7 @@ document.addEventListener("submit",event=>{
 });
 
 
-/* edgy-shell.js */
+/* MODULE edgy-shell.js */
 /* EDGY Gym - unified header, identity and real event notifications. */
 "use strict";
 const gymShellRender=render;
@@ -360,7 +376,7 @@ db.auth.onAuthStateChange((event)=>{
 gymUpdateHeader();
 
 
-/* gym-templates.js */
+/* MODULE gym-templates.js */
 /* Reusable workout templates for EDGY Gym Logger */
 "use strict";
 let gymTemplates=[],gymTemplateBusy=false;
@@ -457,7 +473,7 @@ document.addEventListener("click",event=>{
 });
 
 
-/* gym-rest.js */
+/* MODULE gym-rest.js */
 /* Rest timer: local to the athlete, survives page reloads */
 "use strict";
 const gymRestWorkoutBase=renderWorkout;
@@ -510,7 +526,7 @@ document.addEventListener("change",event=>{
 });
 
 
-/* gym-ux.js */
+/* MODULE gym-ux.js */
 /* EDGY Gym Logger · profile, feed, modal and exercise UX */
 "use strict";
 let gymUXModalOpen=false,gymUXPickerSearch="",gymUXPickerMuscle="Todos",gymUXPickerEquipment="Todos";
@@ -702,6 +718,7 @@ async function gymUXUploadPhoto(file){
  }catch(error){console.error(error);toast(error.message||"Não foi possível guardar a fotografia")}
 }
 async function gymUXAddExercise(id){
+ gymPrepareMotion("exercise",id);
  gymUXClose();
  action(async()=>{
   const {data:we,error:e}=await db.from("gym_workout_exercises").insert({workout_id:active.id,exercise_id:id,position:(active.gym_workout_exercises||[]).length}).select("id").single();
@@ -803,7 +820,7 @@ const gymUXOldRender=render;
 render=function(){gymUXOldRender();if(page==="exercicios"&&!gymSelectedExercise){gymUXSetSelect("gymUXExMuscle",gymUXExMuscle);gymUXSetSelect("gymUXExEquipment",gymUXExEquipment)}};
 
 
-/* gym-community.js */
+/* MODULE gym-community.js */
 /* EDGY Gym · post conversations, public athlete profiles, personal feed */
 "use strict";
 let gymPostComments=[],gymExpandedComments=new Set();
@@ -935,7 +952,7 @@ gymNotificationItems=function(){
 };
 
 
-/* gym-confirm.js */
+/* MODULE gym-confirm.js */
 /* EDGY Gym · branded confirmation dialogs */
 "use strict";
 let gymConfirmCallback=null;
@@ -955,7 +972,7 @@ document.addEventListener("click",event=>{
   event.preventDefault();event.stopImmediatePropagation();
   gymConfirmDialog(title,message,button,callback,danger);
  };
- if(b.id==="cancelWorkout"&&active){
+ if((b.id==="cancelWorkout"||b.id==="cancelWorkoutBottom")&&active){
   const workoutId=active.id;
   confirmAction("Cancelar treino","Vais eliminar definitivamente este treino em curso, incluindo os exercícios, as séries e as cargas registadas. Não serão atribuídos XP e o treino não aparecerá no Histórico.","Eliminar treino",()=>{
    action(async()=>{
@@ -1037,7 +1054,7 @@ document.addEventListener("click",event=>{
 },true);
 
 
-/* gym-polish.js */
+/* MODULE gym-polish.js */
 /* EDGY Gym · fast set steppers, likes totals and reactive notifications */
 "use strict";
 let gymLikeTotals=[];
@@ -1215,7 +1232,7 @@ db.auth.onAuthStateChange(event=>{
 });
 
 
-/* gym-xp.js */
+/* MODULE gym-xp.js */
 /* EDGY Gym: XP uses the single profile XP balance, awarded only by Supabase triggers. */
 "use strict";
 let gymXPAwards=[];
@@ -1240,7 +1257,7 @@ renderProfile=function(){
 };
 
 
-/* gym-experience.js */
+/* MODULE gym-experience.js */
 /* EDGY Gym · social activity count, smooth workout interactions and page transitions */
 "use strict";
 let gymOwnPublishedCount=0,gymOwnReplyCount=0;
@@ -1307,7 +1324,11 @@ document.addEventListener("click",event=>{
  const button=event.target.closest("button");
  if(!button||!user)return;
  if(button.dataset.addSet)gymPrepareMotion("set",button.dataset.addSet);
- if(button.dataset.cycleSet)gymPrepareMotion("type",button.dataset.cycleSet);
+ if(button.dataset.cycleSet){
+  gymPrepareMotion("type",button.dataset.cycleSet);
+  button.classList.add("gymTypePressed");
+ }
+ if(button.dataset.addSet)button.classList.add("gymAddPressed");
  if(button.dataset.uxAddEx)gymPrepareMotion("exercise",button.dataset.uxAddEx);
 },true);
 document.addEventListener("change",event=>{
@@ -1318,6 +1339,77 @@ document.addEventListener("change",event=>{
   t.closest?.(".gymSetItem")?.classList.add("gymTapFeedback");
  }
 },true);
+
+
+/* MODULE gym-trends.js */
+/* EDGY Gym charts — weekly summary and 12-week activity trajectory */
+"use strict";
+function gymMondayOf(input){
+ const d=new Date(input.getFullYear(),input.getMonth(),input.getDate());
+ d.setDate(d.getDate()-((d.getDay()+6)%7));
+ return d;
+}
+function gymWeekDataset(){
+ const today=new Date(),current=gymMondayOf(today);
+ return Array.from({length:12},(_,i)=>{
+  const start=new Date(current);start.setDate(start.getDate()-(11-i)*7);
+  const end=new Date(start);end.setDate(end.getDate()+7);
+  const sessions=gymDone().filter(w=>{
+   const when=new Date(w.started_at);return when>=start&&when<end;
+  });
+  return {start,end,count:sessions.length,minutes:sessions.reduce((sum,w)=>sum+duration(w),0)};
+ });
+}
+function gymWeeklyCurvePath(points){
+ if(points.length===1)return "M "+points[0].x+" "+points[0].y;
+ let path="M "+points[0].x.toFixed(2)+" "+points[0].y.toFixed(2);
+ // Catmull-Rom to cubic Beziers, with bounded y coordinates for a controlled smooth curve.
+ for(let i=0;i<points.length-1;i++){
+  const p0=points[Math.max(0,i-1)],p1=points[i],p2=points[i+1],p3=points[Math.min(points.length-1,i+2)];
+  let c1x=p1.x+(p2.x-p0.x)/6,c2x=p2.x-(p3.x-p1.x)/6;
+  const low=Math.min(p1.y,p2.y),high=Math.max(p1.y,p2.y);
+  let c1y=Math.max(low,Math.min(high,p1.y+(p2.y-p0.y)/6));
+  let c2y=Math.max(low,Math.min(high,p2.y-(p3.y-p1.y)/6));
+  path+=" C "+c1x.toFixed(2)+" "+c1y.toFixed(2)+" "+c2x.toFixed(2)+" "+c2y.toFixed(2)+" "+p2.x.toFixed(2)+" "+p2.y.toFixed(2);
+ }
+ return path;
+}
+function gymWeekCard(){
+ const weeks=gymWeekDataset(),today=new Date();
+ const monday=gymMondayOf(today),tomorrow=new Date(monday);tomorrow.setDate(tomorrow.getDate()+7);
+ const days=Array.from({length:7},(_,i)=>{
+  const start=new Date(monday);start.setDate(start.getDate()+i);
+  const end=new Date(start);end.setDate(end.getDate()+1);
+  const sessions=gymDone().filter(w=>new Date(w.started_at)>=start&&new Date(w.started_at)<end);
+  return {day:["Seg","Ter","Qua","Qui","Sex","Sáb","Dom"][i],count:sessions.length,minutes:sessions.reduce((n,w)=>n+duration(w),0),today:start.toDateString()===today.toDateString(),future:start>today};
+ });
+ const total=days.reduce((n,d)=>n+d.count,0),minutes=days.reduce((n,d)=>n+d.minutes,0),peak=Math.max(1,...days.map(d=>d.count));
+ const bars=days.map((d,i)=>'<div class="gymCurrentDay '+(d.today?'is-today':'')+' '+(d.future?'is-future':'')+'" style="--bar-order:'+i+'" title="'+d.count+' treinos · '+d.minutes+' minutos"><div class="gymCurrentBarTrack"><span class="gymCurrentBar" style="--bar-height:'+(d.count?Math.max(12,Math.round(d.count/peak*100)):0)+'%"></span></div><b>'+d.day+'</b><small>'+d.count+'</small></div>').join("");
+ const grid='<div class="gymCurrentChart" role="img" aria-label="Treinos na semana atual, de segunda a domingo: '+days.map(d=>d.day+' '+d.count).join(', ')+'">'+bars+'</div>';
+ const current='<section class="card gymChartCard gymCurrentCard"><div class="gymChartHead"><div><span class="gymChartEyebrow">ESTA SEMANA</span><h3>Treinos da semana atual</h3><p>Segunda a domingo · '+monday.toLocaleDateString("pt-PT",{day:"numeric",month:"short"})+' – '+new Date(tomorrow.getTime()-86400000).toLocaleDateString("pt-PT",{day:"numeric",month:"short"})+'</p></div><div class="gymWeekSummary"><strong>'+total+'</strong><span>'+ (total===1?'treino':'treinos') +' · '+(minutes>=60?fmt(minutes/60)+' h':minutes+' min')+'</span></div></div>'+grid+'</section>';
+
+ const width=720,top=20,bottom=196,left=27,right=699,high=Math.max(1,...weeks.map(w=>w.count));
+ const points=weeks.map((w,i)=>({x:left+i*(right-left)/11,y:bottom-(w.count/high)*(bottom-top-18),...w}));
+ const line=gymWeeklyCurvePath(points),area=line+' L '+right+' '+bottom+' L '+left+' '+bottom+' Z';
+ const guides=[0,.5,1].map(f=>{const y=bottom-(bottom-top-18)*f;return '<line x1="'+left+'" x2="'+right+'" y1="'+y.toFixed(1)+'" y2="'+y.toFixed(1)+'" stroke="#5e3c61" stroke-width=".8" stroke-dasharray="4 6" opacity=".6"/>';}).join("");
+ const dots=points.map((p,i)=>'<g class="gymLineDot" style="--dot-order:'+i+'" tabindex="0"><title>'+p.count+' treinos · '+p.minutes+' minutos · semana de '+p.start.toLocaleDateString("pt-PT",{day:"numeric",month:"short"})+'</title><circle class="gymDotHalo" cx="'+p.x.toFixed(2)+'" cy="'+p.y.toFixed(2)+'" r="8" fill="#f81c8b" opacity="'+(i===11?'.18':'.09')+'"/><circle cx="'+p.x.toFixed(2)+'" cy="'+p.y.toFixed(2)+'" r="'+(i===11?5.2:3.4)+'" fill="'+(i===11?'#ff59ac':'#ffd2eb')+'" stroke="#3d2046" stroke-width="2"/></g>').join("");
+ const labels=weeks.map((w,i)=>i%2===0||i===11?'<text x="'+points[i].x.toFixed(2)+'" y="223" text-anchor="middle" fill="#b49cbf" font-size="12">'+w.start.toLocaleDateString("pt-PT",{day:"2-digit",month:"short"})+'</text>':'').join("");
+ const chart='<svg class="gymTrendSVG" viewBox="0 0 720 236" role="img" aria-label="Evolução de treinos concluídos por semana, últimas doze semanas"><defs><linearGradient id="gym-week-area" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#f20a87" stop-opacity=".76"/><stop offset="80%" stop-color="#aa277f" stop-opacity=".26"/><stop offset="100%" stop-color="#7b2a77" stop-opacity=".04"/></linearGradient><linearGradient id="gym-week-line" x1="0" x2="1"><stop offset="0%" stop-color="#b7309c"/><stop offset="100%" stop-color="#ff4fa3"/></linearGradient></defs>'+guides+'<path d="'+area+'" fill="url(#gym-week-area)" class="gymTrendArea"/><path d="'+line+'" class="gymTrendLine" stroke="url(#gym-week-line)" stroke-width="4" stroke-linecap="round" fill="none"/>'+dots+labels+'</svg>';
+ const average=weeks.reduce((n,w)=>n+w.count,0)/12;
+ const trend='<section class="card gymChartCard gymTrendCard"><div class="gymChartHead"><div><span class="gymChartEyebrow">EVOLUÇÃO</span><h3>Treinos por semana</h3><p>Últimas 12 semanas · cada ponto é uma semana</p></div><div class="gymTrendAverage"><strong>'+fmt(average)+'</strong><span>média / semana</span></div></div><div class="gymTrendCanvas">'+chart+'</div><div class="gymTrendLegend"><i></i> Treinos concluídos <span>·</span> '+weeks.reduce((n,w)=>n+w.count,0)+' treinos no período</div></section>';
+ return current+trend;
+}
+const gymGraphsBaseProfileMarkup=gymProfileMarkup;
+gymProfileMarkup=function(){
+ const html=gymGraphsBaseProfileMarkup();
+ const begin='<div class="card"><div class="row"><h3>Treinos por semana</h3>';
+ const i=html.indexOf(begin);
+ if(i<0)return html;
+ const endMarker='Cada coluna representa uma semana, de segunda a domingo.</small></div>';
+ const j=html.indexOf(endMarker,i);
+ if(j<0)return html;
+ return html.slice(0,i)+gymWeekCard()+html.slice(j+endMarker.length);
+};
 
 
 })();
