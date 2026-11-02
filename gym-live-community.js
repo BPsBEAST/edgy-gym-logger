@@ -178,6 +178,12 @@ async function gymLiveRefresh(){
  if(!user||gymLiveBusy){gymLiveQueued=true;return}
  gymLiveBusy=true;const id=user.id;
  try{
+  // Logging sets must stay fast: only sync inbox data when the social UI is not visible.
+  if(page!=="perfil"&&page!=="feed"&&!gymPublicProfileId){
+   await gymFetchActivity();
+   if(user?.id===id)gymUpdateHeader();
+   return;
+  }
   const [social,comments,totals,postCount,replyCount]=await Promise.all([
    gymRefreshSocial(),
    db.from("gym_post_comments").select("id,post_id,user_id,body,created_at").order("created_at",{ascending:false}).limit(1000),
