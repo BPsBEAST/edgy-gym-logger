@@ -144,25 +144,7 @@ document.addEventListener("visibilitychange",()=>{
 });
 document.addEventListener("click",event=>{
  const btn=event.target.closest("button[data-step-set]");
- if(!btn||!user||!active)return;
- event.preventDefault();
- const id=btn.dataset.stepSet,field=btn.dataset.stepField,direction=Number(btn.dataset.stepDir)||1;
- if(!["weight","reps"].includes(field))return;
- const input=document.querySelector('input[data-set="'+id+'"][data-field="'+field+'"]');
- if(!input)return;
- const step=field==="weight"?2.5:1;
- const current=Number(input.value)||0;
- const next=Math.max(0,Math.round((current+step*direction)*100)/100);
- input.value=String(next);
- input.classList.remove("gymStepUpdated");
- void input.offsetWidth;
- input.classList.add("gymStepUpdated");
- const key=id+":"+field;
- if(gymStepTimers.has(key))clearTimeout(gymStepTimers.get(key));
- gymStepTimers.set(key,setTimeout(()=>{
-  gymStepTimers.delete(key);
-  input.dispatchEvent(new Event("change",{bubbles:true}));
- },280));
+ if(btn&&user&&active){event.preventDefault();gymFastStepper(btn)}
 });
 db.auth.onAuthStateChange(event=>{
  if(event==="SIGNED_IN"){
