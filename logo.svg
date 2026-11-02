@@ -1,5 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 235" role="img" aria-label="EDGY Gym Logger">
-<defs><linearGradient id="brand" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#ff075c"/><stop offset="1" stop-color="#c300a7"/></linearGradient></defs>
-<text x="400" y="139" text-anchor="middle" font-family="Inter,Arial,Helvetica,sans-serif" font-size="154" font-weight="950" letter-spacing="-8" fill="url(#brand)">EDGY</text>
-<text x="400" y="194" text-anchor="middle" font-family="Inter,Arial,Helvetica,sans-serif" font-size="27" font-weight="700" letter-spacing="14" fill="#aaa0ba">GYM LOGGER</text>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 250" role="img" aria-label="E Gym Logger"><defs><linearGradient id="e" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#ff075c"/><stop offset="1" stop-color="#c300a7"/></linearGradient></defs><path d="M177 20h146v40H220v42h87v40h-87v42h103v40H177z" fill="url(#e)"/><text x="250" y="244" font-family="Inter,Arial,Helvetica,sans-serif" font-size="20" letter-spacing="7" text-anchor="middle" font-weight="800" fill="#bcaacb">GYM LOGGER</text></svg>
