@@ -129,7 +129,12 @@ document.addEventListener("click",event=>{
   })();
   return;
  }
- if(b.dataset.gymAthlete){gymAthleteDialog(b.dataset.gymAthlete);return}
+ if(b.dataset.gymAthlete){
+  const id=b.dataset.gymAthlete;
+  if(gymNotificationOpen){gymCloseNotifications();setTimeout(()=>gymAthleteDialog(id),230)}
+  else gymAthleteDialog(id);
+  return;
+ }
  if(b.dataset.gymComments){
   const id=b.dataset.gymComments;
   gymExpandedComments.add(id);render();
