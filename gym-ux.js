@@ -136,11 +136,12 @@ function gymUXEditProfile(){
  gymUXShow("Editar perfil","A tua identidade é partilhada com a EDGY Game Hub.",
  '<form class="gymUXForm" data-ux-form="profile">'+
  '<div class="gymUXPhoto"><div class="gymUXPhotoPreview" id="gymUXPhotoPreview">'+(profile?.avatar_path?'<img src="'+esc(db.storage.from("edgy-avatars").getPublicUrl(profile.avatar_path).data.publicUrl)+'" alt="Fotografia atual">':esc((profile?.display_name||"E").charAt(0)))+'</div><div><strong>Fotografia de perfil</strong><small>JPG, PNG ou WEBP. Podes recortar e ajustar antes de guardar.</small><label class="gymUXUpload">Alterar fotografia<input type="file" id="gymUXPhotoFile" accept="image/png,image/jpeg,image/webp" hidden></label></div></div>'+
- gymUXField("display_name","Nome","O teu nome",profile?.display_name||"", 'required maxlength="50"')+
- gymUXField("username","Identificador @","O teu identificador",profile?.username||"", 'required minlength="3" maxlength="30" pattern="[a-zA-Z0-9_.-]+"')+
- '<label class="gymUXField"><span>Descrição</span><textarea name="bio" class="gymUXInput" rows="3" maxlength="240" placeholder="Sobre ti…">'+esc(profile?.bio||"")+'</textarea></label>'+
+ gymUXField("display_name","Nome","O teu nome",profile?.display_name||"", 'required maxlength="22" minlength="1" autocomplete="nickname"')+
+ gymUXField("username","Identificador @","O teu identificador",profile?.username||"", 'required minlength="3" maxlength="20" pattern="[a-zA-Z0-9_]+" title="3 a 20 caracteres: letras, números ou _" autocapitalize="none" spellcheck="false"')+
+ '<p class="gymUXProfileHint">O @ tem entre 3 e 20 caracteres: letras, números e _ (sem espaços, pontos ou hífenes).</p>'+
+ '<label class="gymUXField"><span>Descrição</span><textarea name="bio" class="gymUXInput" rows="3" maxlength="160" placeholder="Sobre ti…">'+esc(profile?.bio||"")+'</textarea></label>'+
  '<label class="gymUXPrivacy"><span><strong>Perfil público no Gym</strong><small>Permite que outros atletas vejam o teu nome, @ e publicações. As medidas e os treinos completos permanecem privados.</small></span><input name="is_public" type="checkbox" '+(social?.is_public?"checked":"")+'></label>'+
- '<p class="gymUXFine">Email: '+esc(user.email||"")+' · Alterar a visibilidade aqui não altera a visibilidade do teu perfil na EDGY Games.</p>'+gymUXActions("Guardar perfil")+'</form>',true);
+ '<p class="gymUXFine">Email: '+esc(user.email||"")+' · Alterar a visibilidade aqui não altera a visibilidade do teu perfil na EDGY Games.</p><p class="gymUXProfileStatus" data-gym-profile-status role="status" aria-live="polite" hidden></p>'+gymUXActions("Guardar perfil")+'</form>',true);
 }
 const gymUXPriorFeed=renderFeed;
 renderFeed=function(){
@@ -162,16 +163,54 @@ function gymUXPostModal(){
  '<label class="gymUXField"><span>Detalhes adicionais (opcional)</span><textarea name="details" class="gymUXInput" rows="2" maxlength="450" placeholder="Mais contexto…"></textarea></label>'+gymUXActions("Publicar no Feed")+'</form>',true);
 }
 function gymUXAfterSave(){return load().then(()=>{render()})}
-function gymUXProfileSave(form){
- const data=new FormData(form),name=String(data.get("display_name")||"").trim(),username=String(data.get("username")||"").trim(),bio=String(data.get("bio")||"").trim(),is_public=data.get("is_public")==="on";
- if(!name||!username||!/^[a-zA-Z0-9_.-]{3,30}$/.test(username)){toast("Verifica o nome e o identificador @.");return}
- action(async()=>{
-  const {error}=await db.from("profiles").update({display_name:name,username,bio}).eq("id",user.id);
+let gymUXProfileSaving=false;
+async function gymUXProfileSave(form){
+ if(gymUXProfileSaving||!user)return;
+ const fields=new FormData(form);
+ const name=String(fields.get("display_name")||"").trim();
+ const username=String(fields.get("username")||"").trim().toLowerCase();
+ const bio=String(fields.get("bio")||"").trim();
+ const isPublic=fields.get("is_public")==="on";
+ const status=form.querySelector("[data-gym-profile-status]");
+ const button=form.querySelector('button[type="submit"]');
+ const show=(message,error=false)=>{
+  if(status){status.hidden=false;status.textContent=message;status.classList.toggle("is-error",error);status.classList.toggle("is-saving",!error)}
+  else toast(message);
+ };
+ if(!name||name.length>22){show("O nome deve ter entre 1 e 22 caracteres.",true);return}
+ if(!/^[a-z0-9_]{3,20}$/.test(username)){show("O @ deve ter 3 a 20 caracteres: letras, números ou _. Não são permitidos espaços, pontos ou hífenes.",true);return}
+ if(bio.length>160){show("A descrição deve ter no máximo 160 caracteres.",true);return}
+ gymUXProfileSaving=true;
+ if(button){button.disabled=true;button.textContent="A guardar…"}
+ show("A guardar o perfil EDGY…");
+ try{
+  const {data:saved,error}=await db.rpc("gym_update_my_profile",{
+   p_display_name:name,
+   p_username:username,
+   p_bio:bio,
+   p_is_public:isPublic
+  });
   if(error)throw error;
-  const {error:se}=await db.from("gym_social_profiles").upsert({user_id:user.id,display_name:name,username,is_public},{onConflict:"user_id"});
-  if(se){toast("Identidade guardada, mas houve um erro na privacidade: "+se.message);return}
-  gymUXClose();toast("Perfil atualizado!");
- });
+  if(!saved?.saved)throw new Error("Não foi possível confirmar a gravação do perfil.");
+  profile={...profile,display_name:name,username,bio};
+  const own=gymSocialProfiles.find(p=>p.user_id===user.id);
+  if(own)Object.assign(own,{display_name:name,username,is_public:isPublic});
+  else gymSocialProfiles.push({user_id:user.id,display_name:name,username,is_public:isPublic,avatar_path:profile?.avatar_path||null});
+  gymUXClose();
+  render();
+  toast("Perfil guardado com sucesso!");
+  try{await load();render()}catch(refreshError){console.warn("Profile saved but refresh failed:",refreshError)}
+ }catch(error){
+  console.error("Gym profile update:",error);
+  const message=error?.code==="23505"?"Esse identificador @ já está a ser utilizado. Escolhe outro.":
+   error?.code==="23514"?"Os dados ultrapassam os limites permitidos pela EDGY.":
+   error?.code==="PGRST202"?"Não foi possível aceder à atualização do perfil. Atualiza a aplicação e tenta novamente.":
+   error?.message||"Não foi possível guardar. Verifica a ligação e tenta novamente.";
+  show(message,true);
+ }finally{
+  gymUXProfileSaving=false;
+  if(button?.isConnected){button.disabled=false;button.textContent="Guardar perfil"}
+ }
 }
 async function gymUXUploadPhoto(file){
  if(!file)return;
