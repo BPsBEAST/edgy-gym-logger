@@ -69,3 +69,33 @@
 .gymConfirmDanger{background:linear-gradient(115deg,#e02a65,#a62356)!important}
 .gymUXDialog .gymUXActions{margin-top:12px}
 @media(max-width:500px){.gymUXFeedHeadActions{gap:6px}.gymUXFeedHeadActions>.btn{font-size:10px;padding:10px 8px}.gymPersonalFeedHead .btn{padding:9px 10px}}
+
+/* Real EDGY avatars and clickable public athlete profiles */
+.gymPostInitial{position:relative;overflow:hidden;isolation:isolate;flex-shrink:0}
+.gymAvatarFallback{position:relative;display:grid;place-items:center;width:100%;height:100%;z-index:0}
+.gymPostPhoto img[data-gym-avatar]{
+ position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center center;
+ display:block;z-index:1;border-radius:inherit;background:#29213d;
+ animation:gymAvatarReveal .22s ease both;
+}
+@keyframes gymAvatarReveal{from{opacity:.25;transform:scale(1.08)}to{opacity:1;transform:scale(1)}}
+.gymPostAuthor .gymPostInitial,.gymUXAthleteLink .gymPostInitial{transition:box-shadow .2s,transform .2s}
+.gymPostAuthor:hover .gymPostInitial,.gymUXAthleteLink:hover .gymPostInitial{box-shadow:0 0 0 3px #ed368c44;transform:scale(1.045)}
+.gymCommentAvatarButton{padding:0;background:none;border:0;cursor:pointer;align-self:flex-start;display:grid;place-items:center;flex-shrink:0;border-radius:50%}
+.gymCommentAvatarButton:focus-visible,.gymUXAthleteLink:focus-visible,.gymPostAuthor:focus-visible,.gymCommentName:focus-visible{outline:2px solid #ff6db0;outline-offset:3px}
+.gymCommentAvatarButton .gymPostInitial{transition:transform .16s}
+.gymCommentAvatarButton:hover .gymPostInitial{transform:scale(1.08);border-color:#ed4599}
+.gymCommentName{font-size:11px;font-weight:800;color:#f4eafa;background:none;padding:0;border:0;text-align:left;cursor:pointer}
+.gymCommentName:hover{color:#ff89bf}
+.gymUXAthleteLink{display:flex;align-items:center;gap:11px;flex:1;min-width:0;text-align:left;background:none;border:0;color:inherit;padding:5px 0;cursor:pointer}
+.gymUXAthleteLink>span:last-child{min-width:0}
+.gymUXAthleteLink strong{display:block;color:#f6e8f6;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gymUXAthleteLink small{display:block;font-size:11px;color:#b7a1c0;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gymUXAthleteLink:hover strong{color:#ff8cc4}
+.gymUXPeopleRow{gap:13px}
+.gymUXPeopleRow>.btn{flex:0 0 auto}
+.gymAthleteHeader .gymPostInitial{width:62px;height:62px;flex-basis:62px;font-size:24px}
+.gymAthleteHeader h3{font-size:20px;margin:0 0 4px}
+.gymAthletePost p{overflow-wrap:anywhere}
+@media(max-width:480px){.gymUXPeopleRow{gap:8px}.gymUXAthleteLink{gap:8px}.gymUXAthleteLink .gymPostInitial{width:33px;height:33px;flex-basis:33px}.gymUXPeopleRow>.btn{font-size:10px;padding:9px}}
+@media(prefers-reduced-motion:reduce){.gymPostPhoto img[data-gym-avatar]{animation:none!important}.gymPostAuthor .gymPostInitial,.gymUXAthleteLink .gymPostInitial,.gymCommentAvatarButton .gymPostInitial{transition:none!important}}
