@@ -19,3 +19,8 @@
 @keyframes gymNotifItemIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:520px){#gymNotifBackdrop{align-items:flex-end;padding:0} .gymNotifPanel{width:100%!important;max-width:none!important;border-radius:12px 12px 0 0!important;padding:22px 18px calc(22px + env(safe-area-inset-bottom))!important;max-height:88dvh}}
 @media(prefers-reduced-motion:reduce){#gymNotifBackdrop,.gymNotifPanel,.gymNotice,.gymBellPulse{animation:none!important;transition:none!important}}
+
+
+.gymNoticeProfileLink{display:inline-flex;align-items:center;min-height:30px;margin-top:7px;padding:6px 10px;border:1px solid #85507a;border-radius:3px;background:#4b2a4e;color:#ffb1d7;font-size:11px;font-weight:800;cursor:pointer;transition:background .18s,border-color .18s}
+.gymNoticeProfileLink:hover{background:#693761;border-color:#e94eaa;color:#fff}
+.gymNoticeProfileLink:focus-visible{outline:2px solid #fb5da6;outline-offset:2px}
