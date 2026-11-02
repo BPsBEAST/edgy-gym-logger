@@ -1,7 +1,7 @@
-/* EDGY Gym Logger · all modules */
+/* EDGY Gym Logger: integrated app v6 */
 (function(){
 
-/* app.js */
+/* MODULE app.js */
 const URL='https://okzpfhjdckmoawmwmydu.supabase.co',KEY='sb_publishable_hF29Hv9P7Snfj2utKL-XjA_PvE0oK5a';
 const db=window.supabase.createClient(URL,KEY), screen=document.querySelector('#screen');
 let user=null,profile=null,page='treino',active=null,exercises=[],history=[],measurements=[],search='',filter='Todos';
@@ -27,8 +27,38 @@ const duration=w=>Math.round((new Date(w.finished_at||Date.now())-new Date(w.sta
 function render(){nav();document.querySelector('#status').textContent=user?'Conta EDGY':'Sem sessão';if(!user){screen.innerHTML='<section class="card hero"><h1>O teu progresso começa aqui.</h1><p class="muted">Entra com a mesma conta que utilizas na EDGY Games.</p><form id="login" class="stack"><input class="input" name="email" type="email" required placeholder="Email"><input class="input" name="password" type="password" required placeholder="Password"><button class="btn">Entrar com EDGY</button></form><p class="muted">Ainda não tens conta? Cria-a na EDGY Games.</p></section>';return}
 screen.innerHTML=({treino:renderWorkout,historico:renderHistory,exercicios:renderExercises,perfil:renderProfile,feed:renderFeed}[page])()}
 const workoutCard=w=>'<div class="card"><div class="row"><div><h3>'+esc(w.name)+'</h3><small class="muted">'+date(w.started_at)+'</small></div><span class="pill">'+(w.finished_at?'Concluído':'Em curso')+'</span></div><div class="grid" style="margin:16px 0"><div class="stat"><strong>'+duration(w)+'m</strong><small>Duração</small></div><div class="stat"><strong>'+fmt(volume(w))+'</strong><small>kg volume</small></div><div class="stat"><strong>'+count(w)+'</strong><small>Séries</small></div></div><div class="muted" style="font-size:13px">'+(w.gym_workout_exercises||[]).map(x=>esc(x.gym_exercises?.name)).join(' · ')+'</div></div>';
-function renderWorkout(){if(!active)return '<div class="card hero"><span class="pill">Pronto para treinar?</span><h1>Vamos superar o último treino.</h1><p class="muted">Regista séries, consulta as cargas anteriores e acompanha o teu progresso.</p><button class="btn full" id="start">＋ Começar treino</button></div>'+(history.filter(w=>w.finished_at).length?'<h2>Última sessão</h2>'+workoutCard(history.find(w=>w.finished_at)):'');
-return '<div class="row"><div><span class="pill">● Em curso</span><h1>'+esc(active.name)+'</h1></div><button class="btn ghost small" id="rename">Renomear</button></div><div class="grid"><div class="stat"><strong>'+duration(active)+'m</strong><small>Duração</small></div><div class="stat"><strong>'+fmt(volume(active))+'</strong><small>Volume</small></div><div class="stat"><strong>'+count(active)+'</strong><small>Séries feitas</small></div></div>'+(active.gym_workout_exercises||[]).sort((a,b)=>a.position-b.position).map(we=>'<div class="card"><div class="row"><h3>'+esc(we.gym_exercises?.name)+'</h3><button class="btn ghost small" data-remove-ex="'+we.id+'">Remover</button></div><div class="sethead muted" style="font-size:11px"><span>Série</span><span>Anterior</span><span>kg</span><span>Reps</span><span>RPE</span><span>✓</span></div>'+(we.gym_sets||[]).sort((a,b)=>a.position-b.position).map((s,i)=>'<div class="setrow"><button class="gymSetType" data-cycle-set="'+s.id+'" title="Alternar série: normal / aquecimento / dropset">'+(s.set_type==='warmup'?'W':s.set_type==='dropset'?'D':(i+1))+'</button><small class="muted" data-previous="'+s.id+'">'+(previousFor(we.exercise_id)[i]?fmt(previousFor(we.exercise_id)[i].weight)+' × '+previousFor(we.exercise_id)[i].reps:'—')+'</small><input class="input" type="number" min="0" step="0.5" data-set="'+s.id+'" data-field="weight" value="'+s.weight+'"><input class="input" type="number" min="0" step="1" data-set="'+s.id+'" data-field="reps" value="'+s.reps+'"><input class="input" type="number" min="1" max="10" step="0.5" placeholder="—" data-set="'+s.id+'" data-field="rpe" value="'+(s.rpe??'')+'"><input class="done" type="checkbox" data-set="'+s.id+'" data-field="completed" '+(s.completed?'checked':'')+'></div>').join('')+'<button class="btn secondary full" data-add-set="'+we.id+'">＋ Adicionar série</button></div>').join('')+'<button class="btn secondary full" id="pick">＋ Adicionar exercício</button><br><br><button class="btn full" id="finish">Terminar treino</button><div id="picker"></div>'}
+function gymSetEditor(we,s,i){
+ const prev=previousFor(we.exercise_id)[i],previous=prev?fmt(prev.weight)+' kg × '+prev.reps:'—';
+ const kind=s.set_type==='warmup'?'W':s.set_type==='dropset'?'D':String(i+1);
+ const stepper=(field,label,increment,unit)=>{
+   const value=field==='weight'?s.weight:s.reps;
+   return '<div class="gymInputGroup gymGroup'+field+'"><span class="gymSetLabel">'+label+'</span><div class="gymStepper">'+
+    '<button type="button" class="gymStepBtn" data-step-set="'+s.id+'" data-step-field="'+field+'" data-step-dir="-1" aria-label="Diminuir '+label+'" title="Diminuir '+increment+'">−</button>'+
+    '<input class="gymStepValue" type="number" min="0" step="'+increment+'" inputmode="decimal" data-set="'+s.id+'" data-field="'+field+'" value="'+value+'" aria-label="'+label+(unit?' em '+unit:'')+'">'+
+    '<button type="button" class="gymStepBtn" data-step-set="'+s.id+'" data-step-field="'+field+'" data-step-dir="1" aria-label="Aumentar '+label+'" title="Aumentar '+increment+'">+</button>'+
+    '</div></div>';
+ };
+ return '<div class="gymSetItem" data-set-item="'+s.id+'">'+
+   '<div class="gymSetTop"><div class="gymSetIdentity"><button type="button" class="gymSetType gymSetType-'+esc(s.set_type)+'" data-cycle-set="'+s.id+'" title="Alternar tipo de série: normal, aquecimento, dropset" aria-label="Alterar tipo de série">'+kind+'</button><span class="gymSetOrdinal">Série '+(i+1)+'</span><span class="gymPrevLabel">Anterior: <strong>'+previous+'</strong></span></div><span class="gymSetState">'+(s.completed?'Concluída':'Por fazer')+'</span></div>'+
+   '<div class="gymSetControls">'+
+     stepper('weight','Peso',2.5,'kg')+
+     stepper('reps','Reps',1,'')+
+     '<label class="gymInputGroup gymGroupRpe"><span class="gymSetLabel">RPE</span><input class="gymRpeValue" type="number" min="1" max="10" step=".5" inputmode="decimal" placeholder="—" data-set="'+s.id+'" data-field="rpe" value="'+(s.rpe??'')+'"></label>'+
+     '<label class="gymToggleGroup gymFailureGroup"><span class="gymSetLabel">Falha</span><input type="checkbox" class="gymSetToggleNative" data-set="'+s.id+'" data-field="to_failure" '+(s.to_failure?'checked':'')+'><span class="gymFailureToggle" title="Série realizada até à falha muscular">F</span></label>'+
+     '<label class="gymToggleGroup gymDoneGroup"><span class="gymSetLabel">Feita</span><input type="checkbox" class="gymSetToggleNative" data-set="'+s.id+'" data-field="completed" '+(s.completed?'checked':'')+'><span class="gymDoneToggle" aria-label="Série concluída">✓</span></label>'+
+   '</div></div>';
+}
+function renderWorkout(){
+ if(!active)return '<div class="card hero gymWorkoutEmpty"><span class="pill">Pronto para treinar?</span><h1>Vamos superar o último treino.</h1><p class="muted">Regista séries, consulta as cargas anteriores e acompanha o teu progresso.</p><button class="btn full" id="start">＋ Começar treino</button></div>'+(history.filter(w=>w.finished_at).length?'<h2>Última sessão</h2>'+workoutCard(history.find(w=>w.finished_at)):'');
+ const cards=(active.gym_workout_exercises||[]).slice().sort((a,b)=>a.position-b.position).map(we=>
+  '<section class="card gymExerciseWorkoutCard"><header class="gymExerciseWorkoutHead"><div class="gymExerciseHeading"><span class="gymExerciseAccent"></span><div><h3>'+esc(we.gym_exercises?.name||"Exercício")+'</h3><small>'+((we.gym_sets||[]).length)+' séries</small></div></div><button type="button" class="gymRemoveExercise" data-remove-ex="'+we.id+'" aria-label="Remover exercício '+esc(we.gym_exercises?.name||"")+'">Remover</button></header>'+
+  '<div class="gymSetList">'+(we.gym_sets||[]).slice().sort((a,b)=>a.position-b.position).map((s,i)=>gymSetEditor(we,s,i)).join('')+'</div>'+
+  '<button type="button" class="gymAddSet" data-add-set="'+we.id+'">＋ Adicionar série</button></section>'
+ ).join('');
+ return '<div class="gymWorkoutHero"><div class="gymWorkoutHeroTitle"><div><span class="gymWorkoutLive"><i></i> Em curso</span><h1>'+esc(active.name)+'</h1></div><button class="btn ghost small" id="rename">Renomear</button></div>'+
+  '<div class="gymWorkoutStats"><div class="stat"><strong>'+duration(active)+'m</strong><small>Duração</small></div><div class="stat"><strong>'+fmt(volume(active))+' <em>kg</em></strong><small>Volume</small></div><div class="stat"><strong>'+count(active)+'</strong><small>Séries feitas</small></div></div></div>'+
+  cards+'<div class="gymWorkoutFooterActions"><button type="button" class="btn secondary full gymAddExerciseButton" id="pick">＋ Adicionar exercício</button><button type="button" class="btn full gymFinishWorkoutButton" id="finish">Terminar treino</button></div><div id="picker"></div>';
+}
 function renderHistory(){const done=history.filter(w=>w.finished_at);return '<h1>Histórico</h1><p class="muted">As tuas sessões e cargas guardadas.</p>'+(done.length?done.map(w=>workoutCard(w)).join(''):'<div class="card">Ainda não tens treinos concluídos.</div>')}
 function renderExercises(){const groups=['Todos',...new Set(exercises.map(e=>e.muscle))];const list=exercises.filter(e=>(filter==='Todos'||e.muscle===filter)&&e.name.toLowerCase().includes(search.toLowerCase()));return '<h1>Exercícios</h1><input class="input" id="search" value="'+esc(search)+'" placeholder="Pesquisar exercício…"><div class="filters">'+groups.map(g=>'<button class="btn small '+(filter===g?'':'secondary')+'" data-filter="'+esc(g)+'">'+esc(g)+'</button>').join('')+'</div><button class="btn secondary full" id="new-ex">＋ Criar exercício</button><div class="card">'+list.map(e=>'<div class="item"><strong>'+esc(e.name)+'</strong><div class="muted" style="font-size:12px">'+esc(e.muscle)+' · '+esc(e.equipment)+'</div></div>').join('')+'</div>'}
 function renderProfile(){const done=history.filter(w=>w.finished_at),tot=done.reduce((a,w)=>a+volume(w),0);const weeks=Array.from({length:8},(_,i)=>{const end=Date.now()-(7-i)*604800000,start=end-604800000;return done.filter(w=>+new Date(w.started_at)>=start&&+new Date(w.started_at)<end).length});const max=Math.max(1,...weeks);return '<div class="card hero"><h1>'+esc(profile?.display_name||user.email?.split('@')[0])+'</h1><p class="muted">@'+esc(profile?.username||'edgy')+'</p><p class="muted">'+esc(user.email)+'</p></div><div class="grid"><div class="stat"><strong>'+done.length+'</strong><small>Treinos</small></div><div class="stat"><strong>'+fmt(tot)+'</strong><small>kg volume</small></div><div class="stat"><strong>'+done.reduce((a,w)=>a+duration(w),0)+'</strong><small>Minutos</small></div></div><div class="card"><h3>Treinos por semana</h3><div class="chart">'+weeks.map((v,i)=>'<div class="barslot"><div class="bar" style="height:'+Math.max(3,v/max*100)+'%"></div><small>S'+(i+1)+'</small></div>').join('')+'</div></div><div class="card"><h3>Medidas corporais</h3><form id="measure" class="stack"><input class="input" type="date" name="recorded_at" value="'+new Date().toLocaleDateString('en-CA')+'" required>'+[['body_weight','Peso (kg)'],['waist','Cintura (cm)'],['chest','Peito (cm)'],['shoulders','Ombros (cm)'],['arm','Braço (cm)'],['thigh','Coxa (cm)']].map(([key,label])=>'<label class="muted">'+label+'<input class="input" name="'+key+'" type="number" min="0" step="0.1" placeholder="—"></label>').join('')+'<button class="btn">Guardar medição</button></form>'+measurements.map(m=>'<div class="item"><strong>'+esc(m.recorded_at)+'</strong><div class="muted">'+[['body_weight','Peso','kg'],['waist','Cintura','cm'],['chest','Peito','cm'],['shoulders','Ombros','cm'],['arm','Braço','cm'],['thigh','Coxa','cm']].filter(x=>m[x[0]]!=null).map(x=>x[1]+': '+fmt(m[x[0]])+' '+x[2]).join(' · ')+'</div></div>').join('')+'</div><button class="btn ghost full" id="logout">Terminar sessão</button>'}
@@ -47,7 +77,28 @@ if(b.id==='new-ex')gymUXCreateExercise();
 if(b.id==='logout')action(async()=>{await db.auth.signOut();user=null;profile=null;render()});
 if(b.dataset.filter){filter=b.dataset.filter;render()}});
 document.addEventListener('input',e=>{if(e.target.id==='search'){search=e.target.value;const caret=e.target.selectionStart;render();const input=document.querySelector('#search');input.focus();input.setSelectionRange(caret,caret)}if(e.target.id==='pick-search'){const q=e.target.value.toLowerCase();document.querySelectorAll('#pick-list button').forEach(b=>b.style.display=b.textContent.toLowerCase().includes(q)?'block':'none')}});
-document.addEventListener('change',e=>{const el=e.target;if(!el.dataset.set)return;const field=el.dataset.field,value=field==='completed'?el.checked:(field==='rpe'&&el.value==='')?null:Number(el.value);action(async()=>{const {error}=await db.from('gym_sets').update({[field]:value}).eq('id',el.dataset.set);if(error)throw error})});
+document.addEventListener('change',e=>{
+ const el=e.target;if(!el.dataset?.set)return;
+ const field=el.dataset.field,id=el.dataset.set;
+ if(!['weight','reps','rpe','completed','to_failure'].includes(field))return;
+ const sets=active?.gym_workout_exercises?.flatMap(x=>x.gym_sets||[])||[],record=sets.find(s=>s.id===id);
+ let value;
+ if(field==='completed'||field==='to_failure')value=el.checked;
+ else if(field==='rpe'&&String(el.value).trim()==='')value=null;
+ else {
+  value=Number(el.value);
+  if(!Number.isFinite(value)||value<0||(field==='reps'&&!Number.isInteger(value))||(field==='rpe'&&(value<1||value>10))){
+   toast('Introduz um valor válido.');if(record)el.value=record[field]??'';return;
+  }
+ }
+ const patch={[field]:value};
+ if(field==='to_failure'&&value&&(record?.rpe==null))patch.rpe=10;
+ if(record)Object.assign(record,patch);
+ action(async()=>{
+  const {error}=await db.from('gym_sets').update(patch).eq('id',id);
+  if(error)throw error;
+ });
+});
 document.addEventListener('submit',e=>{e.preventDefault();if(e.target.id==='login')action(async()=>{const data=new FormData(e.target),{error}=await db.auth.signInWithPassword({email:data.get('email'),password:data.get('password')});if(error)throw error;user=(await db.auth.getUser()).data.user;await load()});if(e.target.id==='measure')action(async()=>{const data=new FormData(e.target),row={user_id:user.id,recorded_at:data.get('recorded_at')};for(const key of ['body_weight','waist','abdomen','chest','shoulders','arm','left_arm','thigh','calf','glutes'])if(data.get(key)!=='')row[key]=Number(data.get(key));const {error}=await db.from('gym_measurements').insert(row);if(error)throw error})});
 // Present the application immediately. Authentication must never leave the UI blank.
 render();
@@ -69,7 +120,7 @@ window.EDGY_GYM_START=async function(){
 };
 
 
-/* enhancements.js */
+/* MODULE enhancements.js */
 /* EDGY Gym · analytics, exercise records and opt-in community */
 "use strict";
 let gymSelectedExercise=null,gymCalendarMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1);
@@ -149,7 +200,7 @@ function gymHistoryMarkup(){
  const done=gymDone(),ach=gymPRData().events;
  return '<h1>Histórico</h1><p class="muted">'+done.length+' treinos concluídos. Todos os registos ficam na tua conta.</p>'+(done.length?done.map(w=>{
   const prs=ach.get(w.id)||[];
-  return '<div class="card"><div class="row"><div><h3>'+esc(w.name)+'</h3><small class="muted">'+date(w.started_at)+'</small></div>'+(prs.length?'<span class="pill">🏆 '+prs.length+' PR</span>':'<span class="pill">Concluído</span>')+'</div><div class="grid" style="margin:13px 0"><div class="stat"><strong>'+duration(w)+'m</strong><small>Duração</small></div><div class="stat"><strong>'+fmt(volume(w))+'</strong><small>Volume kg</small></div><div class="stat"><strong>'+count(w)+'</strong><small>Séries</small></div></div><details><summary>Ver exercício e séries</summary>'+(w.gym_workout_exercises||[]).sort((a,b)=>a.position-b.position).map(we=>'<div class="item"><strong>'+esc(we.gym_exercises?.name)+'</strong><div class="muted" style="font-size:12px">'+(we.gym_sets||[]).sort((a,b)=>a.position-b.position).map(s=>(s.completed?"✓ ":"○ ")+fmt(s.weight)+" kg × "+s.reps).join(" · ")+'</div></div>').join("")+'</details>'+(prs.length?'<p class="muted" style="font-size:12px">🏆 '+prs.map(x=>esc(x.name)).join(", ")+'</p>':'')+(gymOwnSocial()?.is_public?(gymFeedPosts.some(p=>p.workout_id===w.id&&p.user_id===user.id)?'<span class="pill">✓ Partilhado</span>':'<button class="btn secondary full" data-share-workout="'+w.id+'">Partilhar no Feed</button>'):'')+'</div>';
+  return '<div class="card"><div class="row"><div><h3>'+esc(w.name)+'</h3><small class="muted">'+date(w.started_at)+'</small></div>'+(prs.length?'<span class="pill">🏆 '+prs.length+' PR</span>':'<span class="pill">Concluído</span>')+'</div><div class="grid" style="margin:13px 0"><div class="stat"><strong>'+duration(w)+'m</strong><small>Duração</small></div><div class="stat"><strong>'+fmt(volume(w))+'</strong><small>Volume kg</small></div><div class="stat"><strong>'+count(w)+'</strong><small>Séries</small></div></div><details><summary>Ver exercício e séries</summary>'+(w.gym_workout_exercises||[]).sort((a,b)=>a.position-b.position).map(we=>'<div class="item"><strong>'+esc(we.gym_exercises?.name)+'</strong><div class="muted" style="font-size:12px">'+(we.gym_sets||[]).sort((a,b)=>a.position-b.position).map(s=>(s.completed?"✓ ":"○ ")+fmt(s.weight)+" kg × "+s.reps+(s.to_failure?" · Falha":"")).join(" · ")+'</div></div>').join("")+'</details>'+(prs.length?'<p class="muted" style="font-size:12px">🏆 '+prs.map(x=>esc(x.name)).join(", ")+'</p>':'')+(gymOwnSocial()?.is_public?(gymFeedPosts.some(p=>p.workout_id===w.id&&p.user_id===user.id)?'<span class="pill">✓ Partilhado</span>':'<button class="btn secondary full" data-share-workout="'+w.id+'">Partilhar no Feed</button>'):'')+'</div>';
  }).join(""):'<div class="card">Ainda não tens treinos concluídos.</div>');
 }
 function gymOwnSocial(){return gymSocialProfiles.find(p=>p.user_id===user?.id)}
@@ -221,7 +272,7 @@ document.addEventListener("submit",event=>{
 });
 
 
-/* edgy-shell.js */
+/* MODULE edgy-shell.js */
 /* EDGY Gym - unified header, identity and real event notifications. */
 "use strict";
 const gymShellRender=render;
@@ -303,7 +354,7 @@ db.auth.onAuthStateChange((event)=>{
 gymUpdateHeader();
 
 
-/* gym-templates.js */
+/* MODULE gym-templates.js */
 /* Reusable workout templates for EDGY Gym Logger */
 "use strict";
 let gymTemplates=[],gymTemplateBusy=false;
@@ -400,15 +451,18 @@ document.addEventListener("click",event=>{
 });
 
 
-/* gym-rest.js */
+/* MODULE gym-rest.js */
 /* Rest timer: local to the athlete, survives page reloads */
 "use strict";
 const gymRestWorkoutBase=renderWorkout;
 renderWorkout=function(){
  const body=gymRestWorkoutBase();
  if(!user||!active)return body;
- const rest='<div class="card gymRestCard"><div class="row"><div><small class="muted">Descanso entre séries</small><div class="gymRestClock" id="gymRestClock">01:30</div></div><select class="input gymRestSelect" id="gymRestPreset" aria-label="Duração do descanso"><option value="45">45 s</option><option value="60">60 s</option><option value="90">90 s</option><option value="120">120 s</option><option value="180">180 s</option></select></div><div class="row" style="margin-top:12px"><button type="button" class="btn small" id="gymRestStart">Iniciar descanso</button><button type="button" class="btn secondary small" id="gymRestStop">Parar</button></div></div>';
- return rest+body;
+ const rest='<section class="card gymRestCard"><div class="gymRestTop"><div><span class="gymRestEyebrow">RECUPERAÇÃO</span><h3>Descanso entre séries</h3><div class="gymRestClock" id="gymRestClock">01:30</div></div><label class="gymRestSelectGroup"><span>Duração</span><select class="input gymRestSelect" id="gymRestPreset" aria-label="Duração do descanso"><option value="45">45 s</option><option value="60">60 s</option><option value="90">90 s</option><option value="120">120 s</option><option value="180">180 s</option></select></label></div><div class="gymRestTrack" role="progressbar" aria-label="Descanso restante"><span id="gymRestProgress"></span></div><div class="gymRestActions"><button type="button" class="btn small" id="gymRestStart">▶ Iniciar descanso</button><button type="button" class="btn secondary small" id="gymRestStop">Parar</button></div></section>';
+ const place=body.indexOf('<section class="card gymExerciseWorkoutCard">');
+ const fallback=body.indexOf('<div class="gymWorkoutFooterActions">');
+ const at=place>=0?place:(fallback>=0?fallback:0);
+ return body.slice(0,at)+rest+body.slice(at);
 };
 function gymRestKey(type){return "edgy-gym-rest-"+(user?.id||"guest")+"-"+type}
 function gymRestPresetSeconds(){return Number(localStorage.getItem(gymRestKey("preset")))||90}
@@ -419,6 +473,10 @@ function gymPaintRest(){
  const display=remain||preset;
  clock.textContent=String(Math.floor(display/60)).padStart(2,"0")+":"+String(display%60).padStart(2,"0");
  clock.classList.toggle("gymRestRunning",remain>0);
+ const bar=document.getElementById("gymRestProgress");
+ if(bar)bar.style.width=(end&&remain>0?Math.max(0,Math.min(100,(1-remain/preset)*100)):0)+"%";
+ const track=bar?.parentElement;
+ if(track)track.setAttribute("aria-valuenow",String(end&&remain>0?Math.round((1-remain/preset)*100):0));
  const select=document.getElementById("gymRestPreset");
  if(select&&select.value!==String(preset))select.value=String(preset);
  if(end&&remain===0){
@@ -446,7 +504,7 @@ document.addEventListener("change",event=>{
 });
 
 
-/* gym-ux.js */
+/* MODULE gym-ux.js */
 /* EDGY Gym Logger · profile, feed, modal and exercise UX */
 "use strict";
 let gymUXModalOpen=false,gymUXPickerSearch="",gymUXPickerMuscle="Todos",gymUXPickerEquipment="Todos";
@@ -574,7 +632,7 @@ renderProfile=function(){
  let base=gymUXPriorProfile();
  if(!user)return base;
  const own=gymOwnSocial(),social=gymUXSocialStats();
- const controls='<div class="card gymUXProfileActions"><div class="gymUXProfileTop"><div><strong>A tua identidade EDGY</strong><small>As alterações de nome, @, descrição e fotografia também aparecem na EDGY Games.</small></div><button id="gymUXEditProfile" class="btn small">Editar perfil</button></div><div class="gymUXSocialStats"><button id="gymUXFollowers"><strong>'+social.followers.length+'</strong><span>Seguidores</span></button><button id="gymUXFollowing"><strong>'+social.following.length+'</strong><span>A seguir</span></button><div class="gymUXVisibility"><span class="gymUXDot '+(own?.is_public?"public":"")+'"></span>'+(own?.is_public?"Perfil público":"Perfil privado")+'</div></div></div>';
+ const controls='<div class="card gymUXProfileActions"><div class="gymUXProfileTop"><div><strong>A tua identidade EDGY</strong><small>As alterações de nome, @, descrição e fotografia também aparecem na EDGY Games.</small></div><button id="gymUXEditProfile" class="btn small">Editar perfil</button></div><div class="gymUXSocialStats"><button id="gymUXFollowers"><strong>'+social.followers.length+'</strong><span>Seguidores</span></button><button id="gymUXFollowing"><strong>'+social.following.length+'</strong><span>A seguir</span></button><div class="gymUXStatLikes"><strong>'+fmt(gymTotalLikesFor(user.id))+'</strong><span>Likes recebidos</span></div><div class="gymUXVisibility"><span class="gymUXDot '+(own?.is_public?"public":"")+'"></span>'+(own?.is_public?"Perfil público":"Perfil privado")+'</div></div></div>';
  const marker='<div class="grid gymGrid4">';
  if(base.includes(marker))base=base.replace(marker,controls+marker);else base=controls+base;
  base=base.replace('<details><summary>＋ Adicionar medição</summary>','<details><summary>＋ Adicionar medição</summary><p class="muted" style="font-size:12px">Preenche só o que quiseres. Podes guardar apenas o peso, por exemplo.</p>');
@@ -739,7 +797,7 @@ const gymUXOldRender=render;
 render=function(){gymUXOldRender();if(page==="exercicios"&&!gymSelectedExercise){gymUXSetSelect("gymUXExMuscle",gymUXExMuscle);gymUXSetSelect("gymUXExEquipment",gymUXExEquipment)}};
 
 
-/* gym-community.js */
+/* MODULE gym-community.js */
 /* EDGY Gym · post conversations, public athlete profiles, personal feed */
 "use strict";
 let gymPostComments=[],gymExpandedComments=new Set();
@@ -809,7 +867,7 @@ function gymAthleteDialog(id){
  const following=gymFollowRows.some(f=>f.follower_id===user.id&&f.followed_id===id);
  const content='<div class="gymAthleteHeader">'+gymCommunityAvatar(athlete.display_name)+'<div><h3>'+esc(athlete.display_name)+'</h3><span>@'+esc(athlete.username||"edgy")+'</span></div></div>'+
  '<div class="gymAthleteActions"><button type="button" class="btn small '+(following?"secondary":"")+'" data-follow="'+id+'">'+(following?"A seguir ✓":"Seguir atleta")+'</button></div>'+
- '<h3 class="gymAthleteFeedTitle">Publicações</h3>'+
+ '<div class="gymAthleteStats"><span><strong>'+fmt(gymTotalLikesFor(id))+'</strong> likes recebidos</span><span><strong>'+posts.length+'</strong> publicações recentes</span></div>'+ '<h3 class="gymAthleteFeedTitle">Publicações</h3>'+
  (posts.length?posts.map(p=>'<div class="gymAthletePost"><strong>'+esc(p.kind==="goal"?"Meta":p.kind==="workout"?"Treino":p.kind==="pr"?"Recorde":"Publicação")+'</strong><p>'+esc(p.kind==="post"?(p.body||p.title):p.title)+'</p><small>'+date(p.created_at)+'</small></div>').join(""):'<p class="muted">Ainda não tem publicações.</p>');
  gymUXShow("Perfil EDGY Gym","O Feed público deste atleta.",content,true);
 }
@@ -871,7 +929,7 @@ gymNotificationItems=function(){
 };
 
 
-/* gym-confirm.js */
+/* MODULE gym-confirm.js */
 /* EDGY Gym · branded confirmation dialogs */
 "use strict";
 let gymConfirmCallback=null;
@@ -953,6 +1011,184 @@ document.addEventListener("click",event=>{
   });return;
  }
 },true);
+
+
+/* MODULE gym-polish.js */
+/* EDGY Gym · fast set steppers, likes totals and reactive notifications */
+"use strict";
+let gymLikeTotals=[];
+let gymFreshOwnPosts=[],gymFreshOwnLikes=[],gymFreshOwnComments=[],gymFreshFollows=[],gymFreshActors=[];
+let gymRealtimeChannel=null,gymActivityRefreshing=false,gymNoticeRefreshTimer=null,gymLastUnread=null;
+const gymStepTimers=new Map();
+function gymTotalLikesFor(id){
+ const x=gymLikeTotals.find(row=>row.user_id===id);
+ return Number(x?.likes_received)||0;
+}
+const gymPolishBaseLoad=load;
+load=async function(){
+ await gymPolishBaseLoad();
+ if(!user){gymLikeTotals=[];return}
+ const {data,error}=await db.from("gym_like_totals").select("user_id,likes_received,post_count").limit(300);
+ if(error)console.warn("Gym likes totals:",error.message);
+ else gymLikeTotals=data||[];
+};
+const gymPolishBaseNotices=gymNotificationItems;
+gymNotificationItems=function(){
+ const original=gymPolishBaseNotices();
+ if(!user)return original;
+ const own=new Map(gymFreshOwnPosts.map(p=>[p.id,p]));
+ const actors=new Map([...gymSocialProfiles,...gymFreshActors].map(p=>[p.user_id,p.display_name]));
+ const incoming=[];
+ for(const l of gymFreshOwnLikes){
+  if(l.user_id===user.id||!own.has(l.post_id))continue;
+  incoming.push({id:"like:"+l.post_id+":"+l.user_id,title:"Gostaram da tua publicação",body:(actors.get(l.user_id)||"Um atleta")+" gostou de "+own.get(l.post_id).title+".",icon:"♥",when:l.created_at});
+ }
+ for(const c of gymFreshOwnComments){
+  if(c.user_id===user.id||!own.has(c.post_id))continue;
+  incoming.push({id:"reply:"+c.id,title:"Nova resposta à tua publicação",body:(actors.get(c.user_id)||"Um atleta")+" respondeu a "+own.get(c.post_id).title+".",icon:"✎",when:c.created_at});
+ }
+ for(const f of gymFreshFollows){
+  incoming.push({id:"follow:"+f.follower_id,title:"Novo seguidor",body:(actors.get(f.follower_id)||"Um atleta")+" começou a seguir-te.",icon:"♧",when:f.created_at});
+ }
+ const unique=new Map([...original,...incoming].filter(n=>n.when).map(n=>[n.id,n]));
+ return [...unique.values()].sort((a,b)=>new Date(b.when)-new Date(a.when)).slice(0,50);
+};
+const gymPolishBaseHeader=gymUpdateHeader;
+gymUpdateHeader=function(){
+ gymPolishBaseHeader();
+ const bell=document.getElementById("gymBell");if(!bell||!user)return;
+ const read=gymReadNotices();
+ const unseen=gymNotificationItems().filter(n=>!read.has(n.id)).length;
+ if(gymLastUnread!==null&&unseen>gymLastUnread){
+  bell.classList.remove("gymBellPulse");
+  void bell.offsetWidth;
+  bell.classList.add("gymBellPulse");
+  setTimeout(()=>bell.classList.remove("gymBellPulse"),750);
+ }
+ gymLastUnread=unseen;
+};
+function gymPaintNotificationList(){
+ const host=document.getElementById("gymNotifList");
+ if(!host||!gymNotificationOpen)return;
+ const notices=gymNotificationItems(),read=gymReadNotices();
+ host.innerHTML=notices.length?notices.map((n,i)=>
+  '<div class="gymNotice '+(read.has(n.id)?"":"unread")+'" style="--note-index:'+Math.min(i,10)+'"><span class="gymNoticeIcon" aria-hidden="true">'+n.icon+'</span><div><strong>'+esc(n.title)+'</strong><small>'+esc(n.body)+'</small><small class="gymNoticeDate">'+esc(new Date(n.when).toLocaleDateString("pt-PT",{day:"numeric",month:"short",year:"numeric"}))+'</small></div></div>'
+ ).join(""):'<div class="gymNoticeEmpty">Ainda não tens notificações. Os likes, respostas, seguidores e recordes aparecem aqui.</div>';
+ gymMarkRead(notices);
+ gymUpdateHeader();
+}
+async function gymFetchActivity(){
+ if(!user||gymActivityRefreshing)return;
+ gymActivityRefreshing=true;
+ try{
+  const uid=user.id;
+  const {data:posts,error:postError}=await db.from("gym_feed_posts").select("id,user_id,title,created_at").eq("user_id",uid).order("created_at",{ascending:false}).limit(500);
+  if(postError)throw postError;
+  if(!user||user.id!==uid)return;
+  gymFreshOwnPosts=posts||[];
+  const ids=gymFreshOwnPosts.map(p=>p.id);
+  const [likes,comments,follows,totals]=await Promise.all([
+   ids.length?db.from("gym_post_likes").select("post_id,user_id,created_at").in("post_id",ids).order("created_at",{ascending:false}).limit(600):Promise.resolve({data:[],error:null}),
+   ids.length?db.from("gym_post_comments").select("id,post_id,user_id,created_at").in("post_id",ids).order("created_at",{ascending:false}).limit(600):Promise.resolve({data:[],error:null}),
+   db.from("gym_follows").select("follower_id,followed_id,created_at").eq("followed_id",uid).order("created_at",{ascending:false}).limit(300),
+   db.from("gym_like_totals").select("user_id,likes_received,post_count").limit(300)
+  ]);
+  for(const res of [likes,comments,follows,totals])if(res.error)throw res.error;
+  if(!user||user.id!==uid)return;
+  gymFreshOwnLikes=likes.data||[];
+  gymFreshOwnComments=comments.data||[];
+  gymFreshFollows=follows.data||[];
+  gymLikeTotals=totals.data||gymLikeTotals;
+  const actorIds=[...new Set([...gymFreshOwnLikes.map(x=>x.user_id),...gymFreshOwnComments.map(x=>x.user_id),...gymFreshFollows.map(x=>x.follower_id)].filter(x=>x!==uid))].slice(0,200);
+  if(actorIds.length){
+   const {data}=await db.from("gym_social_profiles").select("user_id,display_name,username").in("user_id",actorIds);
+   gymFreshActors=data||[];
+  }else gymFreshActors=[];
+  gymUpdateHeader();gymPaintNotificationList();
+ }catch(error){console.warn("EDGY Gym notification sync:",error.message||error)}
+ finally{gymActivityRefreshing=false}
+}
+const gymPolishBaseOpen=gymOpenNotifications;
+gymOpenNotifications=function(){
+ gymPolishBaseOpen();
+ const layer=document.getElementById("gymNotifBackdrop");
+ if(gymCloseTimer){clearTimeout(gymCloseTimer);gymCloseTimer=null}
+ if(layer&&!layer.hidden){layer.classList.remove("gymNotifClosing");layer.classList.add("gymNotifOpening")}
+ gymFetchActivity();
+};
+const gymPolishBaseClose=gymCloseNotifications;
+let gymCloseTimer=null;
+gymCloseNotifications=function(){
+ const layer=document.getElementById("gymNotifBackdrop");
+ if(!layer||layer.hidden){gymPolishBaseClose();return}
+ layer.classList.remove("gymNotifOpening");
+ layer.classList.add("gymNotifClosing");
+ if(gymCloseTimer)clearTimeout(gymCloseTimer);
+ gymCloseTimer=setTimeout(()=>{
+  gymPolishBaseClose();
+  layer.classList.remove("gymNotifClosing");
+ },210);
+};
+function gymStartNotificationSync(){
+ if(!user)return;
+ if(gymRealtimeChannel){db.removeChannel?.(gymRealtimeChannel);gymRealtimeChannel=null}
+ if(typeof db.channel==="function"){
+  try{
+   gymRealtimeChannel=db.channel("edgy-gym-alerts-"+user.id);
+   for(const table of ["gym_post_likes","gym_post_comments","gym_follows"]){
+    gymRealtimeChannel.on("postgres_changes",{event:"*",schema:"public",table},()=>{
+     if(gymNoticeRefreshTimer)clearTimeout(gymNoticeRefreshTimer);
+     gymNoticeRefreshTimer=setTimeout(gymFetchActivity,350);
+    });
+   }
+   gymRealtimeChannel.subscribe(status=>{
+    if(status==="CHANNEL_ERROR"||status==="TIMED_OUT")console.warn("EDGY Gym realtime:",status);
+   });
+  }catch(err){console.warn("EDGY Gym realtime:",err.message)}
+ }
+}
+const gymPolishBaseStart=window.EDGY_GYM_START;
+window.EDGY_GYM_START=async function(){
+ await gymPolishBaseStart();
+ if(user){await gymFetchActivity();gymStartNotificationSync()}
+};
+setInterval(()=>{
+ if(user&&document.visibilityState!=="hidden")gymFetchActivity();
+},45000);
+document.addEventListener("visibilitychange",()=>{
+ if(user&&document.visibilityState==="visible")gymFetchActivity();
+});
+document.addEventListener("click",event=>{
+ const btn=event.target.closest("button[data-step-set]");
+ if(!btn||!user||!active)return;
+ event.preventDefault();
+ const id=btn.dataset.stepSet,field=btn.dataset.stepField,direction=Number(btn.dataset.stepDir)||1;
+ if(!["weight","reps"].includes(field))return;
+ const input=document.querySelector('input[data-set="'+id+'"][data-field="'+field+'"]');
+ if(!input)return;
+ const step=field==="weight"?2.5:1;
+ const current=Number(input.value)||0;
+ const next=Math.max(0,Math.round((current+step*direction)*100)/100);
+ input.value=String(next);
+ input.classList.remove("gymStepUpdated");
+ void input.offsetWidth;
+ input.classList.add("gymStepUpdated");
+ const key=id+":"+field;
+ if(gymStepTimers.has(key))clearTimeout(gymStepTimers.get(key));
+ gymStepTimers.set(key,setTimeout(()=>{
+  gymStepTimers.delete(key);
+  input.dispatchEvent(new Event("change",{bubbles:true}));
+ },280));
+});
+db.auth.onAuthStateChange(event=>{
+ if(event==="SIGNED_IN"){
+  setTimeout(()=>{if(user&&!gymRealtimeChannel){gymStartNotificationSync();gymFetchActivity()}},500);
+ }
+ if(event==="SIGNED_OUT"){
+  gymLastUnread=null;gymFreshOwnPosts=[];gymFreshOwnLikes=[];gymFreshOwnComments=[];gymFreshFollows=[];gymLikeTotals=[];
+  if(gymRealtimeChannel){db.removeChannel?.(gymRealtimeChannel);gymRealtimeChannel=null}
+ }
+});
 
 
 })();
