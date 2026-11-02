@@ -16,7 +16,7 @@ function gymUXShow(title,hint,content,wide=false){
  root.className="gymUXBackdrop is-open";root.setAttribute("aria-hidden","false");
  root.innerHTML='<section class="gymUXDialog '+(wide?'gymUXWide':'')+'" role="dialog" aria-modal="true" aria-label="'+esc(title)+'"><header class="gymUXHead"><div><span class="gymUXEyebrow">EDGY · GYM LOGGER</span><h2>'+esc(title)+'</h2><p>'+esc(hint)+'</p></div><button class="gymUXClose" type="button" data-ux-close aria-label="Fechar">×</button></header><div class="gymUXBody">'+content+'</div></section>';
  gymUXModalOpen=true;document.body.classList.add("gymDialogLocked");
- root.querySelector("input:not([type=hidden]),textarea,select,button")?.focus();
+ root.querySelector(title==="Perfil EDGY"?".gymUXClose":"input:not([type=hidden]),textarea,select,button")?.focus({preventScroll:true});
 }
 function gymUXField(name,label,placeholder,value="",attrs=""){
  return '<label class="gymUXField"><span>'+label+'</span><input class="gymUXInput" name="'+name+'" placeholder="'+esc(placeholder)+'" value="'+esc(value)+'" '+attrs+'></label>';
