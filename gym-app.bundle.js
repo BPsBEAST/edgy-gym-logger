@@ -1,4 +1,4 @@
-/* EDGY — Gym Logger · built-in account creation */
+/* EDGY — Gym Logger · register directly */
 (function(){
 
 /* app.js */
