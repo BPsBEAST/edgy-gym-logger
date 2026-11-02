@@ -1,0 +1,90 @@
+/* EDGY public athlete profile: matching Game Hub layout */
+.gymUXDialog.gymUXWide:has(.gymPublicProfile){max-width:840px;width:min(94vw,840px)}
+.gymUXDialog:has(.gymPublicProfile) .gymUXBody{padding:0 0 24px;overflow-y:auto;max-height:min(77dvh,820px)}
+.gymPublicProfile{color:#f4eaf7;display:grid;gap:16px;padding:0 22px 8px}
+.gymAthleteCover{background:linear-gradient(115deg,#37264c,#4d2350 70%,#64264d);border:1px solid #765175;border-left:3px solid #ff319b;border-radius:3px;padding:18px 18px 21px;position:relative;overflow:hidden}
+.gymAthleteCover:after{content:"✦";font-size:105px;line-height:1;color:#f651a10d;position:absolute;right:0;top:-12px;pointer-events:none}
+.gymPublicTag,.gymPublicEyebrow{display:block;color:#ff83bc;font-size:9px;font-weight:900;letter-spacing:2px;margin-bottom:15px}
+.gymPublicHeroRow{display:flex;align-items:center;gap:16px;position:relative;z-index:1}
+.gymPublicHeroRow>.gymPostInitial{width:84px;height:84px;flex:0 0 84px;font-size:31px;border:2px solid #c0559b}
+.gymPublicIdentity{flex:1;min-width:0}
+.gymPublicIdentity h2{font-size:28px;font-weight:900;letter-spacing:-.7px;margin:0 0 4px;overflow-wrap:anywhere}
+.gymPublicIdentity span{color:#c8b1d5;font-size:13px;display:block}
+.gymPublicIdentity small{display:block;margin-top:8px;color:#ae95bd;font-size:11px}
+.gymPublicFollowBtn{flex:0 0 auto;border:1px solid #ee3497;background:linear-gradient(110deg,#ef076c,#c00696);color:#fff;border-radius:3px;padding:11px 16px;font-size:12px;font-weight:850;transition:transform .17s,background .17s}
+.gymPublicFollowBtn:hover{transform:translateY(-1px);filter:brightness(1.12)}
+.gymPublicFollowBtn.following{background:#392c47;border-color:#805a82;color:#e9cee2}
+.gymPublicStats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.gymPublicStats>div{background:#2b203f;border:1px solid #503a60;border-radius:3px;padding:14px 9px;display:grid;gap:5px;text-align:center;align-content:center}
+.gymPublicStats strong{font-size:21px;font-weight:900;font-variant-numeric:tabular-nums}
+.gymPublicStats small{font-size:10px;color:#bba9c8}
+.gymPublicXp{padding:17px 18px;background:#302342;border:1px solid #5a3c67;border-radius:3px}
+.gymPublicXpTitle{display:flex;justify-content:space-between;align-items:end;gap:12px;margin-bottom:13px}
+.gymPublicXpTitle span:first-child{display:grid;gap:3px}
+.gymPublicXpTitle small{font-size:9px;color:#f45eae;letter-spacing:1.65px;font-weight:850}
+.gymPublicXpTitle strong{font-size:24px;font-weight:900}
+.gymPublicXpTitle>span:last-child{font-size:12px;font-weight:850;color:#ffa3d1}
+.gymPublicXpRail{height:9px;background:#543756;border-radius:3px;overflow:hidden}
+.gymPublicXpRail span{display:block;height:100%;background:linear-gradient(90deg,#f20b70,#cf1eaf);border-radius:3px;transition:width .55s}
+.gymPublicXp>small{display:block;margin-top:9px;font-size:10px;color:#b9a6c8}
+.gymPublicWeek{background:#271e3b;border:1px solid #533b60;border-radius:3px;padding:17px 18px 18px}
+.gymPublicSectionHead{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px}
+.gymPublicSectionHead .gymPublicEyebrow{margin:0 0 5px}
+.gymPublicSectionHead h3{font-size:17px;margin:0 0 4px}
+.gymPublicSectionHead small{color:#afa1bf;font-size:10px}
+.gymPublicSectionHead>strong{white-space:nowrap;background:#452c4d;border:1px solid #704576;border-radius:3px;padding:8px 10px;font-size:11px;color:#ffc1dd}
+.gymPublicWeekBars{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px}
+.gymPublicWeekDay{display:grid;justify-items:center;gap:7px;min-width:0}
+.gymPublicWeekTrack{height:100px;max-width:70px;width:100%;display:flex;align-items:end;background:#382943;border:1px solid #5b3d61;border-bottom:0;border-radius:3px 3px 0 0;overflow:hidden}
+.gymPublicWeekTrack>span{width:100%;display:block;background:linear-gradient(0deg,#b91488,#fa338d);animation:gymPublicBarIn .45s ease both}
+.gymPublicWeekDay b{font-size:10px;color:#d9bfdc}
+.gymPublicWeekDay small{color:#a894b8;font-size:10px}
+@keyframes gymPublicBarIn{from{transform:scaleY(.15);transform-origin:bottom;opacity:.25}to{transform:scaleY(1);opacity:1}}
+.gymPublicPosts{display:grid;gap:12px}
+.gymPublicPosts .gymPublicSectionHead{margin:3px 0 1px}
+.gymPublicPost{background:#261c38;border:1px solid #55395d;border-radius:3px;padding:15px 16px;display:grid;gap:10px}
+.gymPublicPost>header{display:flex;justify-content:space-between;align-items:center;gap:9px}
+.gymPublicPost>header>span{color:#ff8ec4;font-weight:850;font-size:10px;letter-spacing:.3px}
+.gymPublicPost>header small{font-size:10px;color:#a991b7}
+.gymPublicPostTitle{font-size:14px;line-height:1.55;color:#f6edf8;font-weight:700;margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
+.gymPublicPostBody{font-size:12px;color:#c8b7d1;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere;margin:0}
+.gymPublicPostActions{display:flex;align-items:center;gap:15px;border-top:1px solid #513955;border-bottom:1px solid #513955;padding:9px 0}
+.gymPublicPostActions button{border:0;background:none;color:#d9a7ca;font-size:12px;font-weight:750;cursor:pointer;padding:5px;transition:color .16s,transform .16s}
+.gymPublicPostActions button:hover{color:#ff6daf;transform:translateY(-1px)}
+.gymPublicReplies{display:grid;gap:9px}
+.gymPublicReply{display:flex;gap:8px;align-items:flex-start}
+.gymPublicReplyAvatar{border:0;padding:0;background:none;cursor:pointer}
+.gymPublicReplyAvatar .gymPostInitial{width:28px;height:28px;flex:0 0 28px;font-size:10px}
+.gymPublicReply>div{flex:1;min-width:0;background:#332641;border:1px solid #4e3856;border-radius:3px;padding:8px 10px}
+.gymPublicReplyName{border:0;padding:0;background:none;color:#f1e1ef;font-size:11px;font-weight:850;cursor:pointer}
+.gymPublicReplyName:hover{color:#ff82bb}
+.gymPublicReply p{margin:5px 0 0;color:#d4c3d9;font-size:12px;white-space:pre-wrap;overflow-wrap:anywhere}
+.gymPublicShowAll{color:#ff85c2;text-align:left;background:none;border:0;font-size:11px;font-weight:750;cursor:pointer}
+.gymPublicReplyForm{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}
+.gymPublicReplyForm input{border:1px solid #63476a;border-radius:3px;background:#1a132a;color:#f9eef7;min-height:39px;font-size:12px;padding:9px 11px;outline:none}
+.gymPublicReplyForm input:focus{border-color:#ec4596;box-shadow:0 0 0 3px #e91d9020}
+.gymPublicReplyForm button{border:0;border-radius:3px;background:#bd147e;color:white;padding:10px 14px;font-size:11px;font-weight:800;cursor:pointer}
+.gymPublicReplyForm button:disabled{opacity:.5}
+.gymPublicEmpty{padding:20px;color:#bba7c3;background:#2b223f;border:1px solid #51405a;border-radius:3px;font-size:12px}
+@media(max-width:570px){
+ .gymUXDialog.gymUXWide:has(.gymPublicProfile){width:100%;max-width:100%}
+ .gymUXDialog:has(.gymPublicProfile) .gymUXBody{max-height:calc(83dvh - env(safe-area-inset-bottom))}
+ .gymPublicProfile{padding:0 12px 12px;gap:11px}
+ .gymAthleteCover{padding:13px}
+ .gymPublicHeroRow{gap:10px;flex-wrap:wrap}
+ .gymPublicHeroRow>.gymPostInitial{width:65px;height:65px;flex-basis:65px;font-size:24px}
+ .gymPublicIdentity h2{font-size:20px}
+ .gymPublicIdentity span{font-size:11px}
+ .gymPublicFollowBtn{padding:9px 12px;font-size:11px}
+ .gymPublicStats{gap:5px;grid-template-columns:repeat(2,minmax(0,1fr))}
+ .gymPublicStats>div{padding:10px 7px}
+ .gymPublicStats strong{font-size:18px}
+ .gymPublicWeek,.gymPublicXp{padding:13px 11px}
+ .gymPublicWeekBars{gap:6px}
+ .gymPublicWeekTrack{height:83px}
+ .gymPublicPost{padding:12px 11px}
+ .gymPublicSectionHead h3{font-size:15px}
+ .gymPublicReplyForm{gap:5px}
+ .gymPublicReplyForm button{padding:9px 10px}
+}
+@media(prefers-reduced-motion:reduce){.gymPublicWeekTrack>span{animation:none!important}.gymPublicFollowBtn,.gymPublicPostActions button{transition:none!important}}
