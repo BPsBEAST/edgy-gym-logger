@@ -113,3 +113,16 @@ document.addEventListener("submit",event=>{
   toast("Resposta publicada!");
  });
 },true);
+
+/* Replies also appear in the EDGY Gym notification inbox. */
+const gymCommunityBaseNotifications=gymNotificationItems;
+gymNotificationItems=function(){
+ const original=gymCommunityBaseNotifications();
+ if(!user)return original;
+ const own=new Map(gymFeedPosts.filter(p=>p.user_id===user.id).map(p=>[p.id,p]));
+ const responses=gymPostComments.filter(c=>c.user_id!==user.id&&own.has(c.post_id)).map(c=>{
+  const author=gymSocialProfiles.find(p=>p.user_id===c.user_id);
+  return {id:"reply:"+c.id,title:"Nova resposta à tua publicação",body:(author?.display_name||"Um atleta")+" respondeu a "+own.get(c.post_id).title+".",icon:"✎",when:c.created_at};
+ });
+ return [...original,...responses].sort((a,b)=>new Date(b.when)-new Date(a.when)).slice(0,40);
+};
