@@ -3,9 +3,9 @@
   "short_name": "EDGY Gym",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#10111a",
-  "theme_color": "#10111a",
-  "description": "Regista treinos, cargas e evolução.",
+  "background_color": "#141126",
+  "theme_color": "#141126",
+  "description": "EDGY Gym Logger — treina, regista e evolui.",
   "icons": [
     {
       "src": "icon.svg",
@@ -13,5 +13,6 @@
       "type": "image/svg+xml",
       "purpose": "any maskable"
     }
-  ]
+  ],
+  "scope": "./"
 }
