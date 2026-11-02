@@ -36,9 +36,8 @@ render=function(){
  if(pageChanged){
   if(scrolling)scrolling.scrollTop=0;
   window.scrollTo?.(0,0);
+  // No opacity fade or forced layout flush on tab switches: keep navigation responsive.
   display.classList.remove("gymPageEnter");
-  void display.offsetWidth;
-  display.classList.add("gymPageEnter");
  }else{
   if(scrolling)scrolling.scrollTop=savedInside;
   if((window.scrollY||0)!==savedWindow)window.scrollTo?.(0,savedWindow);
