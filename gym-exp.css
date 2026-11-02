@@ -1,0 +1,29 @@
+/* EDGY Gym Logger · scrolling and E mark */
+@media(min-width:800px){
+ .app{height:100dvh!important;overflow-y:auto!important;overflow-x:hidden!important;min-height:0!important;overscroll-behavior-y:contain;scrollbar-width:none!important}
+ .app::-webkit-scrollbar{display:none!important;width:0!important}
+ .app>#screen{min-height:0;min-width:0;flex:1 0 auto}
+ .gymUXLibrary{min-height:0}
+ .gymUXLibrary .gymUXList{max-height:min(62dvh,680px)!important;min-height:120px;overflow-y:auto!important;overflow-x:hidden;overscroll-behavior-y:contain;touch-action:pan-y;scrollbar-width:none!important}
+ .gymUXLibrary .gymUXList::-webkit-scrollbar{display:none!important}
+}
+@media(max-width:799px){
+ html,body{overflow-x:hidden!important;overflow-y:auto!important;height:auto!important;max-height:none!important}
+ .app{height:auto!important;min-height:100dvh!important;overflow:visible!important}
+ .gymUXLibrary .gymUXList{overflow-y:visible!important;max-height:none!important;touch-action:pan-y}
+}
+.gymSideBrand .gymMarkE{font-size:34px!important;line-height:.96!important;letter-spacing:-2.5px!important;font-weight:950!important;display:block}
+.gymSideBrand small{font-size:9px!important;letter-spacing:2.4px!important;margin-top:5px!important;font-weight:700!important}
+.gymBrand .gymBrandName{font-size:31px!important;letter-spacing:-1.8px!important}
+.gymBrand .gymBrandSub{letter-spacing:2.4px!important;font-size:9px!important}
+.gymXPInfo{margin:15px 0;padding:15px 17px;display:flex;align-items:center;justify-content:space-between;gap:16px;border:1px solid #603f64;background:linear-gradient(100deg,#2b213e,#39213f);border-radius:3px}
+.gymXPInfo h3{margin:0 0 5px;font-size:14px}
+.gymXPInfo p{margin:0;color:#c0b0cd;font-size:11px;line-height:1.55}
+.gymXPInfo .gymXPNumber{font-size:18px;color:#ff7bbb;white-space:nowrap;font-weight:850}
+.gymXPBreakdown{display:flex;gap:9px;flex-wrap:wrap;align-items:center;padding:11px 13px;margin:12px 0;border:1px solid #5b395d;background:#301e3a;border-radius:3px;color:#c9b1d1;font-size:11px}
+.gymXPBreakdown strong{font-size:13px;color:#ffa1d2}
+.gymXPBreakdown .gymXPPart{padding:4px 8px;background:#442c4c;border:1px solid #5f4564;border-radius:3px}
+.gymXPRules{border-left:3px solid #ea2589!important}
+.gymXPRules h3{margin:0 0 6px}
+.gymXPRules p{margin:0;font-size:12px}
+@media(max-width:480px){.gymXPInfo{padding:12px;gap:9px}.gymXPInfo p{font-size:10px}.gymXPInfo .gymXPNumber{font-size:15px}.gymXPBreakdown{font-size:10px}}
