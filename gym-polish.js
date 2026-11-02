@@ -96,6 +96,7 @@ const gymPolishBaseOpen=gymOpenNotifications;
 gymOpenNotifications=function(){
  gymPolishBaseOpen();
  const layer=document.getElementById("gymNotifBackdrop");
+ if(gymCloseTimer){clearTimeout(gymCloseTimer);gymCloseTimer=null}
  if(layer&&!layer.hidden){layer.classList.remove("gymNotifClosing");layer.classList.add("gymNotifOpening")}
  gymFetchActivity();
 };
@@ -164,6 +165,9 @@ document.addEventListener("click",event=>{
  },280));
 });
 db.auth.onAuthStateChange(event=>{
+ if(event==="SIGNED_IN"){
+  setTimeout(()=>{if(user&&!gymRealtimeChannel){gymStartNotificationSync();gymFetchActivity()}},500);
+ }
  if(event==="SIGNED_OUT"){
   gymLastUnread=null;gymFreshOwnPosts=[];gymFreshOwnLikes=[];gymFreshOwnComments=[];gymFreshFollows=[];gymLikeTotals=[];
   if(gymRealtimeChannel){db.removeChannel?.(gymRealtimeChannel);gymRealtimeChannel=null}
