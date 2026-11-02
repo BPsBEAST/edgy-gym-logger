@@ -52,7 +52,7 @@ function renderWorkout(){
   '<div class="gymSetList">'+(we.gym_sets||[]).slice().sort((a,b)=>a.position-b.position).map((s,i)=>gymSetEditor(we,s,i)).join('')+'</div>'+
   '<button type="button" class="gymAddSet" data-add-set="'+we.id+'">＋ Adicionar série</button></section>'
  ).join('');
- return '<div class="gymWorkoutHero"><div class="gymWorkoutHeroTitle"><div><span class="gymWorkoutLive"><i></i> Em curso</span><h1>'+esc(active.name)+'</h1></div><div class="gymWorkoutHeaderActions"><button class="btn ghost small" id="rename">Renomear</button><button class="gymWorkoutCancelTop" type="button" id="cancelWorkout">Cancelar treino</button></div></div>'+
+ return '<div class="gymWorkoutHero"><div class="gymWorkoutHeroTitle"><div><span class="gymWorkoutLive"><i></i> Em curso</span><h1>'+esc(active.name)+'</h1></div><div class="gymWorkoutHeaderActions"><span id="gymSetSaveStatus" class="gymSetSaveStatus" role="status" aria-live="polite">✓ Guardado</span><button class="btn ghost small" id="rename">Renomear</button><button class="gymWorkoutCancelTop" type="button" id="cancelWorkout">Cancelar treino</button></div></div>'+
   '<div class="gymWorkoutStats"><div class="stat"><strong>'+duration(active)+'m</strong><small>Duração</small></div><div class="stat"><strong>'+fmt(volume(active))+' <em>kg</em></strong><small>Volume</small></div><div class="stat"><strong>'+count(active)+'</strong><small>Séries feitas</small></div></div></div>'+
   cards+'<div class="gymWorkoutFooterActions"><button type="button" class="btn secondary full gymAddExerciseButton" id="pick">＋ Adicionar exercício</button><div class="gymWorkoutFinishRow"><button type="button" class="btn full gymFinishWorkoutButton" id="finish">Terminar treino</button><button type="button" class="gymCancelWorkoutButton" id="cancelWorkoutBottom">Cancelar treino</button></div></div><div id="picker"></div>';
 }
@@ -66,35 +66,21 @@ if(b.id==='start')gymUXWorkoutDialog();
 if(b.id==='finish')action(async()=>{if(!confirm('Terminar treino?'))return;const {error}=await db.from('gym_workouts').update({finished_at:new Date().toISOString()}).eq('id',active.id);if(error)throw error;page='historico'});
 if(b.id==='rename')gymUXWorkoutDialog('rename');
 if(b.id==='pick')gymUXPickExercise();
-if(b.dataset.exId)action(async()=>{const {data:created,error}=await db.from('gym_workout_exercises').insert({workout_id:active.id,exercise_id:b.dataset.exId,position:active.gym_workout_exercises.length}).select('id').single();if(error)throw error;const prev=previousFor(b.dataset.exId)[0];const {error:setError}=await db.from('gym_sets').insert({workout_exercise_id:created.id,position:0,weight:prev?.weight??0,reps:prev?.reps??0});if(setError)throw setError});
-if(b.dataset.cycleSet)action(async()=>{const set=active.gym_workout_exercises.flatMap(x=>x.gym_sets||[]).find(s=>s.id===b.dataset.cycleSet);if(!set)return;const types=['working','warmup','dropset'];const next=types[(types.indexOf(set.set_type)+1)%types.length];const {error}=await db.from('gym_sets').update({set_type:next}).eq('id',set.id);if(error)throw error});
-if(b.dataset.addSet)action(async()=>{const we=active.gym_workout_exercises.find(x=>x.id===b.dataset.addSet),sets=we.gym_sets||[],last=sets.slice().sort((a,b)=>b.position-a.position)[0];const {error}=await db.from('gym_sets').insert({workout_exercise_id:we.id,position:sets.length,weight:last?.weight??previousFor(we.exercise_id)[0]?.weight??0,reps:last?.reps??previousFor(we.exercise_id)[0]?.reps??0});if(error)throw error});
+if(b.dataset.exId)gymFastAddExercise(b.dataset.exId);
+if(b.dataset.cycleSet)gymFastCycleSet(b);
+if(b.dataset.addSet)gymFastAddSet(b);
 if(b.dataset.removeEx)action(async()=>{if(!confirm('Remover este exercício e as suas séries?'))return;const {error}=await db.from('gym_workout_exercises').delete().eq('id',b.dataset.removeEx);if(error)throw error});
 if(b.id==='new-ex')gymUXCreateExercise();
 if(b.id==='logout')action(async()=>{await db.auth.signOut();user=null;profile=null;render()});
 if(b.dataset.filter){filter=b.dataset.filter;render()}});
 document.addEventListener('input',e=>{if(e.target.id==='search'){search=e.target.value;const caret=e.target.selectionStart;render();const input=document.querySelector('#search');input.focus();input.setSelectionRange(caret,caret)}if(e.target.id==='pick-search'){const q=e.target.value.toLowerCase();document.querySelectorAll('#pick-list button').forEach(b=>b.style.display=b.textContent.toLowerCase().includes(q)?'block':'none')}});
 document.addEventListener('change',e=>{
- const el=e.target;if(!el.dataset?.set)return;
- const field=el.dataset.field,id=el.dataset.set;
- if(!['weight','reps','rpe','completed','to_failure'].includes(field))return;
- const sets=active?.gym_workout_exercises?.flatMap(x=>x.gym_sets||[])||[],record=sets.find(s=>s.id===id);
- let value;
- if(field==='completed'||field==='to_failure')value=el.checked;
- else if(field==='rpe'&&String(el.value).trim()==='')value=null;
- else {
-  value=Number(el.value);
-  if(!Number.isFinite(value)||value<0||(field==='reps'&&!Number.isInteger(value))||(field==='rpe'&&(value<1||value>10))){
-   toast('Introduz um valor válido.');if(record)el.value=record[field]??'';return;
-  }
- }
- const patch={[field]:value};
- if(field==='to_failure'&&value&&(record?.rpe==null))patch.rpe=10;
- if(record)Object.assign(record,patch);
- action(async()=>{
-  const {error}=await db.from('gym_sets').update(patch).eq('id',id);
-  if(error)throw error;
- });
+ const target=e.target;
+ if(target?.dataset?.set)gymHandleSetChange(target,true);
+});
+document.addEventListener('input',e=>{
+ const target=e.target;
+ if(target?.dataset?.set)gymHandleSetChange(target,false);
 });
 document.addEventListener('submit',e=>{e.preventDefault();if(e.target.id==='login')action(async()=>{const data=new FormData(e.target),{error}=await db.auth.signInWithPassword({email:data.get('email'),password:data.get('password')});if(error)throw error;user=(await db.auth.getUser()).data.user;gymAuthReady=true;await load()});if(e.target.id==='measure')action(async()=>{const data=new FormData(e.target),row={user_id:user.id,recorded_at:data.get('recorded_at')};for(const key of ['body_weight','waist','abdomen','chest','shoulders','arm','left_arm','thigh','calf','glutes'])if(data.get(key)!=='')row[key]=Number(data.get(key));const {error}=await db.from('gym_measurements').insert(row);if(error)throw error})});
 // Keep the server-rendered loading screen until session validation completes.
