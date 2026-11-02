@@ -96,3 +96,16 @@ button,input,select,textarea{font-family:inherit}
  .nav button span{white-space:nowrap}
  .nav button.navHome{transform:translateY(-7px)}
 }
+
+/* Identical header control dimensions to EDGY Game Hub. */
+@media(min-width:800px){
+  .topActions{gap:10px}
+  .gymBell{width:39px;height:39px;flex:0 0 39px;border:1px solid #584266;border-radius:3px;background:#29203a}
+  .gymHeaderAvatar{width:42px;height:42px;flex:0 0 42px;border:1px solid #695274;border-radius:50%;background:#282141}
+}
+@media(max-width:799px){
+  .topActions{gap:10px}
+  .gymBell,.gymHeaderAvatar{width:40px;height:40px;flex:0 0 40px}
+  .gymBell{border-radius:3px}
+  .gymHeaderAvatar{border-radius:50%}
+}
