@@ -1,0 +1,63 @@
+/* EDGY community refinements */
+.gymJoined{margin-top:7px;color:#aea2bc;font-size:11px;line-height:1.45}
+.gymSharedXP{margin:12px 0;display:flex;align-items:center;justify-content:space-between;gap:18px;background:#231a37;border:1px solid #483053;border-radius:3px;padding:14px 18px}
+.gymSharedXP>div:first-child{display:grid;gap:5px}
+.gymSharedXP strong{font-size:19px;line-height:1.2}
+.gymXPTag{font-size:9px;color:#ff73b6;font-weight:850;letter-spacing:1.5px}
+.gymXPProgress{width:min(54%,320px);display:grid;gap:6px}
+.gymXPProgressBar{height:8px;background:#483453;border-radius:4px;overflow:hidden}
+.gymXPProgressBar span{display:block;height:100%;background:linear-gradient(100deg,#ff075c,#c300a7);border-radius:4px;transition:width .5s ease}
+.gymXPProgress small{color:#b6a6c6;font-size:10px;text-align:right}
+.gymSocialPost{margin:12px 0;padding:17px 18px}
+.gymPostTop{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.gymPostAuthor{display:flex;gap:11px;align-items:center;background:none;border:0;color:#f9f6ff;padding:0;min-width:0;text-align:left;cursor:pointer}
+.gymPostAuthor>span:last-child{min-width:0}
+.gymPostAuthor strong{display:block;font-size:13px;line-height:1.4}
+.gymPostAuthor small{display:block;color:#b4a1c0;font-size:11px;margin-top:3px;overflow-wrap:anywhere}
+.gymPostAuthor:hover strong{color:#ff72b7}
+.gymPostInitial{width:39px;height:39px;flex:0 0 39px;display:grid;place-items:center;border:1px solid #8c527e;border-radius:50%;background:linear-gradient(135deg,#663157,#30213f);color:#ffb7d9;font-size:16px;font-weight:850}
+.gymPostKind{font-size:10px;color:#ffa4ce;background:#492b45;border:1px solid #664364;border-radius:3px;padding:6px 8px;white-space:nowrap}
+.gymPostHeading{margin:18px 0 10px;font-size:17px}
+.gymPostBody{color:#e2d5ea;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere;margin:15px 0}
+.gymPostActions{display:flex;gap:10px;align-items:center;border-top:1px solid #483650;border-bottom:1px solid #483650;padding:10px 0;margin-top:15px}
+.gymPostActions button{border:0;background:none;color:#a89cba;display:flex;align-items:center;gap:5px;font-weight:700;font-size:12px;padding:6px 8px;border-radius:3px;transition:color .15s ease,background .15s ease}
+.gymPostActions button:hover,.gymPostActions button.is-liked{color:#ff69af;background:#592b4a}
+.gymPostActions .gymPostDelete{margin-left:auto;color:#ad94ac;font-size:11px}
+.gymComments{display:grid;gap:9px;padding-top:12px}
+.gymComment{display:flex;align-items:start;gap:8px}
+.gymCommentAvatar .gymPostInitial{width:28px;height:28px;flex-basis:28px;font-size:11px}
+.gymCommentText{flex:1;min-width:0;background:#2d233f;border:1px solid #4a3559;border-radius:3px;padding:9px 10px}
+.gymCommentMeta{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.gymCommentMeta strong{font-size:11px}
+.gymCommentMeta span{font-size:10px;color:#afa0c0}
+.gymCommentText p{font-size:12px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere;margin:5px 0 0;color:#ecdeec}
+.gymCommentDelete{font-size:18px;background:transparent;border:0;color:#a996b5;padding:2px 5px}
+.gymCommentDelete:hover{color:#ff76b0}
+.gymShowComments{background:transparent;border:0;color:#ff8ac1;font-size:11px;text-align:left;font-weight:700;justify-self:start;padding:4px}
+.gymCommentForm{display:flex;align-items:center;gap:8px;margin-top:4px}
+.gymCommentForm input{flex:1;min-width:0;border:1px solid #5a4065;color:#fff;background:#171229;border-radius:3px;outline:none;padding:11px 12px;font-size:12px;min-height:41px;transition:box-shadow .18s,border-color .18s}
+.gymCommentForm input:focus{border-color:#f13798;box-shadow:0 0 0 3px #ef258824}
+.gymCommentForm button{border:0;border-radius:3px;background:#a71875;color:#fff;padding:11px 13px;font-size:11px;font-weight:800;min-height:41px}
+.gymCommentForm button:hover{background:#d01d8a}
+.gymCommentPrivate{color:#aa9ab6;font-size:11px}
+.gymPersonalFeed{margin-top:26px}
+.gymPersonalFeedHead{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:0 0 15px}
+.gymPersonalFeedHead h2{margin:0 0 5px}
+.gymPersonalFeedHead p{font-size:12px;margin:0}
+.gymAthleteHeader{display:flex;align-items:center;gap:12px}
+.gymAthleteHeader .gymPostInitial{width:56px;height:56px;font-size:20px;flex-basis:56px}
+.gymAthleteHeader h3{margin:0 0 4px}
+.gymAthleteHeader span:not(.gymPostInitial){color:#bda9c9;font-size:12px}
+.gymAthleteActions{margin:18px 0}
+.gymAthleteFeedTitle{margin:22px 0 9px}
+.gymAthletePost{background:#2c213c;border:1px solid #4e3959;border-radius:3px;padding:12px;margin:8px 0}
+.gymAthletePost strong{font-size:11px;color:#ff8ec2}
+.gymAthletePost p{font-size:12px;line-height:1.5;color:#f1e1ef;white-space:pre-wrap}
+.gymAthletePost small{font-size:10px;color:#ac99bb}
+/* Avatar size and whole-image rendering: no unintended clipping by button padding */
+.gymHeaderAvatar{width:44px!important;height:44px!important;min-width:44px!important;flex:0 0 44px!important;padding:0!important;border-radius:50%!important;overflow:hidden!important}
+.gymHeaderAvatar>img{display:block!important;max-width:100%!important;width:100%!important;height:100%!important;object-fit:contain!important;object-position:center!important;border-radius:50%!important}
+.gymHeaderAvatar>span{width:100%;height:100%;display:grid;place-items:center}
+/* Improve photo dimensions in the profile hero */
+.gymAvatar{object-fit:contain!important;object-position:center!important;aspect-ratio:1;border-radius:50%;padding:0}
+@media(max-width:440px){.gymSharedXP{gap:10px;padding:12px}.gymSharedXP strong{font-size:16px}.gymXPProgress{width:50%}.gymCommentForm{gap:5px}.gymCommentForm button{padding:10px 8px}.gymPostActions{gap:3px}.gymSocialPost{padding:14px 12px}}
