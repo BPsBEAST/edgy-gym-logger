@@ -109,3 +109,15 @@
  .gymUXSocialStats{grid-template-columns:repeat(2,minmax(0,1fr))!important;row-gap:11px}
  .gymUXVisibility{display:flex;align-items:center;justify-content:center;gap:3px}
 }
+
+
+/* iOS Safari zooms in when focused inputs are below 16px.
+   Keep pinch zoom enabled; make workout numeric controls comfortably legible. */
+@media (max-width: 799px){
+ input.gymStepValue,
+ input.gymRpeValue,
+ .gymSetControls input[type="number"]{
+  font-size:16px!important;
+  line-height:normal;
+ }
+}
