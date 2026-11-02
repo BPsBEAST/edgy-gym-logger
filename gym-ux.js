@@ -30,6 +30,34 @@ function gymUXWorkoutDialog(kind="start"){
  (start?'<div class="gymUXSuggestLabel">Sugestões rápidas</div><div class="gymUXChips">'+suggestions.map(x=>'<button type="button" class="gymUXChip" data-ux-suggestion="'+esc(x)+'">'+esc(x)+'</button>').join("")+'</div>':"")+gymUXActions(start?"Começar treino":"Guardar alterações")+
  '<input type="hidden" name="kind" value="'+kind+'"></form>');
 }
+function gymUXTemplateModal(id){
+ const workout=gymDone().find(w=>w.id===id);if(!workout)return;
+ gymUXShow("Guardar modelo","Reutiliza os exercícios e séries deste treino.",
+ '<form class="gymUXForm" data-ux-form="template">'+
+ gymUXField("name","Nome do modelo","Ex.: Push A",workout.name,'required maxlength="70"')+
+ '<input type="hidden" name="workout_id" value="'+esc(id)+'">'+gymUXActions("Guardar modelo")+'</form>');
+}
+async function gymUXSaveTemplate(form){
+ const data=new FormData(form),workout=gymDone().find(w=>w.id===data.get("workout_id"));
+ const name=String(data.get("name")||"").trim();if(!workout||!name)return;
+ const entries=(workout.gym_workout_exercises||[]).slice().sort((a,b)=>a.position-b.position);
+ if(!entries.length){toast("Treino sem exercícios.");return}
+ gymUXClose();
+ action(async()=>{
+  const {data:t,error}=await db.from("gym_templates").insert({user_id:user.id,name:name.slice(0,70)}).select("id").single();
+  if(error)throw error;
+  try{
+   const rows=entries.map((x,i)=>{
+    const working=(x.gym_sets||[]).filter(s=>s.set_type!=="warmup");
+    const completed=working.filter(s=>s.completed);
+    return {template_id:t.id,exercise_id:x.exercise_id,position:i,target_sets:Math.min(12,Math.max(1,working.length)),target_reps:Math.min(100,Math.max(1,completed[completed.length-1]?.reps||8))};
+   });
+   const {error:e}=await db.from("gym_template_exercises").insert(rows);
+   if(e)throw e;
+  }catch(e){await db.from("gym_templates").delete().eq("id",t.id);throw e}
+  toast("Modelo guardado!");
+ });
+}
 function gymUXCreateExercise(){
  gymUXShow("Criar exercício","Adiciona um exercício personalizado à tua biblioteca.",
  '<form class="gymUXForm" data-ux-form="exercise">'+gymUXField("name","Nome do exercício","Ex.: Incline Dumbbell Press","","required maxlength='95'")+
@@ -175,6 +203,7 @@ document.addEventListener("click",event=>{
  if(b.matches('[data-ux-close]')){event.preventDefault();gymUXClose();return}
  if(!user)return;
  // Capture existing prompt-based actions before the legacy handler can fire.
+ if(b.dataset.saveTemplate){event.preventDefault();event.stopImmediatePropagation();gymUXTemplateModal(b.dataset.saveTemplate);return}
  if(["start","rename","new-ex","pick"].includes(b.id)){
   event.preventDefault();event.stopImmediatePropagation();
   if(b.id==="start")gymUXWorkoutDialog();
@@ -218,6 +247,7 @@ document.addEventListener("submit",event=>{
   gymUXClose();action(async()=>{const {error}=await db.from("gym_exercises").insert({user_id:user.id,name,muscle:data.get("muscle"),equipment:data.get("equipment")});if(error)throw error;toast("Exercício criado!")});
  }
  if(type==="profile")gymUXProfileSave(form);
+ if(type==="template")gymUXSaveTemplate(form);
  if(type==="post"){
   const kind=data.get("kind"),value=String(data.get("text")||"").trim(),extra=String(data.get("details")||"").trim();
   if(!value)return;
@@ -254,3 +284,6 @@ document.addEventListener("keydown",event=>{
  if(event.key==="Escape"&&gymUXModalOpen){event.preventDefault();gymUXClose()}
 });
 document.getElementById("gymUXModal")?.addEventListener("click",event=>{if(event.target===event.currentTarget)gymUXClose()});
+
+const gymUXOldRender=render;
+render=function(){gymUXOldRender();if(page==="exercicios"&&!gymSelectedExercise){gymUXSetSelect("gymUXExMuscle",gymUXExMuscle);gymUXSetSelect("gymUXExEquipment",gymUXExEquipment)}};
