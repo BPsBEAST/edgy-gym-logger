@@ -55,9 +55,9 @@ function gymWeekCard(){
  const trend='<section class="card gymChartCard gymTrendCard"><div class="gymChartHead"><div><span class="gymChartEyebrow">EVOLUÇÃO</span><h3>Treinos por semana</h3><p>Últimas 12 semanas · cada ponto é uma semana</p></div><div class="gymTrendAverage"><strong>'+fmt(average)+'</strong><span>média / semana</span></div></div><div class="gymTrendCanvas">'+chart+'</div><div class="gymTrendLegend"><i></i> Treinos concluídos <span>·</span> '+weeks.reduce((n,w)=>n+w.count,0)+' treinos no período</div></section>';
  return current+trend;
 }
-const gymGraphsBaseProfileMarkup=gymProfileMarkup;
-gymProfileMarkup=function(){
- const html=gymGraphsBaseProfileMarkup();
+const gymGraphsBaseProfileRender=renderProfile;
+renderProfile=function(){
+ const html=gymGraphsBaseProfileRender();
  const begin='<div class="card"><div class="row"><h3>Treinos por semana</h3>';
  const i=html.indexOf(begin);
  if(i<0)return html;
