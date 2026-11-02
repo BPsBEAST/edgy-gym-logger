@@ -1,4 +1,4 @@
-/* EDGY — Gym Logger · integrated profile photos and athlete discovery */
+/* EDGY — Gym Logger · smooth workout editor */
 (function(){
 
 /* MODULE app.js */
@@ -56,7 +56,7 @@ function renderWorkout(){
   '<div class="gymSetList">'+(we.gym_sets||[]).slice().sort((a,b)=>a.position-b.position).map((s,i)=>gymSetEditor(we,s,i)).join('')+'</div>'+
   '<button type="button" class="gymAddSet" data-add-set="'+we.id+'">＋ Adicionar série</button></section>'
  ).join('');
- return '<div class="gymWorkoutHero"><div class="gymWorkoutHeroTitle"><div><span class="gymWorkoutLive"><i></i> Em curso</span><h1>'+esc(active.name)+'</h1></div><div class="gymWorkoutHeaderActions"><button class="btn ghost small" id="rename">Renomear</button><button class="gymWorkoutCancelTop" type="button" id="cancelWorkout">Cancelar treino</button></div></div>'+
+ return '<div class="gymWorkoutHero"><div class="gymWorkoutHeroTitle"><div><span class="gymWorkoutLive"><i></i> Em curso</span><h1>'+esc(active.name)+'</h1></div><div class="gymWorkoutHeaderActions"><span id="gymSetSaveStatus" class="gymSetSaveStatus" role="status" aria-live="polite">✓ Guardado</span><button class="btn ghost small" id="rename">Renomear</button><button class="gymWorkoutCancelTop" type="button" id="cancelWorkout">Cancelar treino</button></div></div>'+
   '<div class="gymWorkoutStats"><div class="stat"><strong>'+duration(active)+'m</strong><small>Duração</small></div><div class="stat"><strong>'+fmt(volume(active))+' <em>kg</em></strong><small>Volume</small></div><div class="stat"><strong>'+count(active)+'</strong><small>Séries feitas</small></div></div></div>'+
   cards+'<div class="gymWorkoutFooterActions"><button type="button" class="btn secondary full gymAddExerciseButton" id="pick">＋ Adicionar exercício</button><div class="gymWorkoutFinishRow"><button type="button" class="btn full gymFinishWorkoutButton" id="finish">Terminar treino</button><button type="button" class="gymCancelWorkoutButton" id="cancelWorkoutBottom">Cancelar treino</button></div></div><div id="picker"></div>';
 }
@@ -64,41 +64,27 @@ function renderHistory(){const done=history.filter(w=>w.finished_at);return '<h1
 function renderExercises(){const groups=['Todos',...new Set(exercises.map(e=>e.muscle))];const list=exercises.filter(e=>(filter==='Todos'||e.muscle===filter)&&e.name.toLowerCase().includes(search.toLowerCase()));return '<h1>Exercícios</h1><input class="input" id="search" value="'+esc(search)+'" placeholder="Pesquisar exercício…"><div class="filters">'+groups.map(g=>'<button class="btn small '+(filter===g?'':'secondary')+'" data-filter="'+esc(g)+'">'+esc(g)+'</button>').join('')+'</div><button class="btn secondary full" id="new-ex">＋ Criar exercício</button><div class="card">'+list.map(e=>'<div class="item"><strong>'+esc(e.name)+'</strong><div class="muted" style="font-size:12px">'+esc(e.muscle)+' · '+esc(e.equipment)+'</div></div>').join('')+'</div>'}
 function renderProfile(){const done=history.filter(w=>w.finished_at),tot=done.reduce((a,w)=>a+volume(w),0);const weeks=Array.from({length:8},(_,i)=>{const end=Date.now()-(7-i)*604800000,start=end-604800000;return done.filter(w=>+new Date(w.started_at)>=start&&+new Date(w.started_at)<end).length});const max=Math.max(1,...weeks);return '<div class="card hero"><h1>'+esc(profile?.display_name||user.email?.split('@')[0])+'</h1><p class="muted">@'+esc(profile?.username||'edgy')+'</p><p class="muted">'+esc(user.email)+'</p></div><div class="grid"><div class="stat"><strong>'+done.length+'</strong><small>Treinos</small></div><div class="stat"><strong>'+fmt(tot)+'</strong><small>kg volume</small></div><div class="stat"><strong>'+done.reduce((a,w)=>a+duration(w),0)+'</strong><small>Minutos</small></div></div><div class="card"><h3>Treinos por semana</h3><div class="chart">'+weeks.map((v,i)=>'<div class="barslot"><div class="bar" style="height:'+Math.max(3,v/max*100)+'%"></div><small>S'+(i+1)+'</small></div>').join('')+'</div></div><div class="card"><h3>Medidas corporais</h3><form id="measure" class="stack"><input class="input" type="date" name="recorded_at" value="'+new Date().toLocaleDateString('en-CA')+'" required>'+[['body_weight','Peso (kg)'],['waist','Cintura (cm)'],['chest','Peito (cm)'],['shoulders','Ombros (cm)'],['arm','Braço (cm)'],['thigh','Coxa (cm)']].map(([key,label])=>'<label class="muted">'+label+'<input class="input" name="'+key+'" type="number" min="0" step="0.1" placeholder="—"></label>').join('')+'<button class="btn">Guardar medição</button></form>'+measurements.map(m=>'<div class="item"><strong>'+esc(m.recorded_at)+'</strong><div class="muted">'+[['body_weight','Peso','kg'],['waist','Cintura','cm'],['chest','Peito','cm'],['shoulders','Ombros','cm'],['arm','Braço','cm'],['thigh','Coxa','cm']].filter(x=>m[x[0]]!=null).map(x=>x[1]+': '+fmt(m[x[0]])+' '+x[2]).join(' · ')+'</div></div>').join('')+'</div><button class="btn ghost full" id="logout">Terminar sessão</button>'}
 function renderFeed(){return '<h1>Feed</h1><p class="muted">A comunidade EDGY Gym.</p><div class="card hero"><h3>Em preparação</h3><p class="muted">Em breve: seguir atletas, publicar PRs e conquistas. Os teus treinos e medidas não serão partilhados automaticamente.</p></div><h2>A tua atividade</h2>'+history.filter(w=>w.finished_at).slice(0,5).map(workoutCard).join('')}
-async function action(fn){try{await fn();await load();render()}catch(e){console.error(e);toast(e.message||'Ocorreu um erro')}}
+async function action(fn){try{if(typeof gymHasPendingSetEdits==='function'&&gymHasPendingSetEdits())await gymFlushSetWrites();await fn();await load();render()}catch(e){console.error(e);toast(e.message||'Ocorreu um erro')}}
 document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.page){page=b.dataset.page;render();return}if(!user)return;
 if(b.id==='start')gymUXWorkoutDialog();
 if(b.id==='finish')action(async()=>{if(!confirm('Terminar treino?'))return;const {error}=await db.from('gym_workouts').update({finished_at:new Date().toISOString()}).eq('id',active.id);if(error)throw error;page='historico'});
 if(b.id==='rename')gymUXWorkoutDialog('rename');
 if(b.id==='pick')gymUXPickExercise();
-if(b.dataset.exId)action(async()=>{const {data:created,error}=await db.from('gym_workout_exercises').insert({workout_id:active.id,exercise_id:b.dataset.exId,position:active.gym_workout_exercises.length}).select('id').single();if(error)throw error;const prev=previousFor(b.dataset.exId)[0];const {error:setError}=await db.from('gym_sets').insert({workout_exercise_id:created.id,position:0,weight:prev?.weight??0,reps:prev?.reps??0});if(setError)throw setError});
-if(b.dataset.cycleSet)action(async()=>{const set=active.gym_workout_exercises.flatMap(x=>x.gym_sets||[]).find(s=>s.id===b.dataset.cycleSet);if(!set)return;const types=['working','warmup','dropset'];const next=types[(types.indexOf(set.set_type)+1)%types.length];const {error}=await db.from('gym_sets').update({set_type:next}).eq('id',set.id);if(error)throw error});
-if(b.dataset.addSet)action(async()=>{const we=active.gym_workout_exercises.find(x=>x.id===b.dataset.addSet),sets=we.gym_sets||[],last=sets.slice().sort((a,b)=>b.position-a.position)[0];const {error}=await db.from('gym_sets').insert({workout_exercise_id:we.id,position:sets.length,weight:last?.weight??previousFor(we.exercise_id)[0]?.weight??0,reps:last?.reps??previousFor(we.exercise_id)[0]?.reps??0});if(error)throw error});
+if(b.dataset.exId)gymFastAddExercise(b.dataset.exId);
+if(b.dataset.cycleSet)gymFastCycleSet(b);
+if(b.dataset.addSet)gymFastAddSet(b);
 if(b.dataset.removeEx)action(async()=>{if(!confirm('Remover este exercício e as suas séries?'))return;const {error}=await db.from('gym_workout_exercises').delete().eq('id',b.dataset.removeEx);if(error)throw error});
 if(b.id==='new-ex')gymUXCreateExercise();
 if(b.id==='logout')action(async()=>{await db.auth.signOut();user=null;profile=null;render()});
 if(b.dataset.filter){filter=b.dataset.filter;render()}});
 document.addEventListener('input',e=>{if(e.target.id==='search'){search=e.target.value;const caret=e.target.selectionStart;render();const input=document.querySelector('#search');input.focus();input.setSelectionRange(caret,caret)}if(e.target.id==='pick-search'){const q=e.target.value.toLowerCase();document.querySelectorAll('#pick-list button').forEach(b=>b.style.display=b.textContent.toLowerCase().includes(q)?'block':'none')}});
 document.addEventListener('change',e=>{
- const el=e.target;if(!el.dataset?.set)return;
- const field=el.dataset.field,id=el.dataset.set;
- if(!['weight','reps','rpe','completed','to_failure'].includes(field))return;
- const sets=active?.gym_workout_exercises?.flatMap(x=>x.gym_sets||[])||[],record=sets.find(s=>s.id===id);
- let value;
- if(field==='completed'||field==='to_failure')value=el.checked;
- else if(field==='rpe'&&String(el.value).trim()==='')value=null;
- else {
-  value=Number(el.value);
-  if(!Number.isFinite(value)||value<0||(field==='reps'&&!Number.isInteger(value))||(field==='rpe'&&(value<1||value>10))){
-   toast('Introduz um valor válido.');if(record)el.value=record[field]??'';return;
-  }
- }
- const patch={[field]:value};
- if(field==='to_failure'&&value&&(record?.rpe==null))patch.rpe=10;
- if(record)Object.assign(record,patch);
- action(async()=>{
-  const {error}=await db.from('gym_sets').update(patch).eq('id',id);
-  if(error)throw error;
- });
+ const target=e.target;
+ if(target?.dataset?.set)gymHandleSetChange(target,true);
+});
+document.addEventListener('input',e=>{
+ const target=e.target;
+ if(target?.dataset?.set)gymHandleSetChange(target,false);
 });
 document.addEventListener('submit',e=>{e.preventDefault();if(e.target.id==='login')action(async()=>{const data=new FormData(e.target),{error}=await db.auth.signInWithPassword({email:data.get('email'),password:data.get('password')});if(error)throw error;user=(await db.auth.getUser()).data.user;gymAuthReady=true;await load()});if(e.target.id==='measure')action(async()=>{const data=new FormData(e.target),row={user_id:user.id,recorded_at:data.get('recorded_at')};for(const key of ['body_weight','waist','abdomen','chest','shoulders','arm','left_arm','thigh','calf','glutes'])if(data.get(key)!=='')row[key]=Number(data.get(key));const {error}=await db.from('gym_measurements').insert(row);if(error)throw error})});
 // Keep the server-rendered loading screen until session validation completes.
@@ -1256,25 +1242,7 @@ document.addEventListener("visibilitychange",()=>{
 });
 document.addEventListener("click",event=>{
  const btn=event.target.closest("button[data-step-set]");
- if(!btn||!user||!active)return;
- event.preventDefault();
- const id=btn.dataset.stepSet,field=btn.dataset.stepField,direction=Number(btn.dataset.stepDir)||1;
- if(!["weight","reps"].includes(field))return;
- const input=document.querySelector('input[data-set="'+id+'"][data-field="'+field+'"]');
- if(!input)return;
- const step=field==="weight"?2.5:1;
- const current=Number(input.value)||0;
- const next=Math.max(0,Math.round((current+step*direction)*100)/100);
- input.value=String(next);
- input.classList.remove("gymStepUpdated");
- void input.offsetWidth;
- input.classList.add("gymStepUpdated");
- const key=id+":"+field;
- if(gymStepTimers.has(key))clearTimeout(gymStepTimers.get(key));
- gymStepTimers.set(key,setTimeout(()=>{
-  gymStepTimers.delete(key);
-  input.dispatchEvent(new Event("change",{bubbles:true}));
- },280));
+ if(btn&&user&&active){event.preventDefault();gymFastStepper(btn)}
 });
 db.auth.onAuthStateChange(event=>{
  if(event==="SIGNED_IN"){
@@ -1380,8 +1348,8 @@ document.addEventListener("click",event=>{
  if(!button||!user)return;
  if(button.dataset.addSet)gymPrepareMotion("set",button.dataset.addSet);
  if(button.dataset.cycleSet){
-  gymPrepareMotion("type",button.dataset.cycleSet);
   button.classList.add("gymTypePressed");
+  setTimeout(()=>button.classList.remove("gymTypePressed"),340);
  }
  if(button.dataset.addSet)button.classList.add("gymAddPressed");
  if(button.dataset.uxAddEx)gymPrepareMotion("exercise",button.dataset.uxAddEx);
@@ -1390,8 +1358,11 @@ document.addEventListener("change",event=>{
  const t=event.target;
  if(!user||!t.dataset?.set)return;
  if(t.dataset.field==="completed"||t.dataset.field==="to_failure"){
-  gymPrepareMotion("toggle",t.dataset.set);
-  t.closest?.(".gymSetItem")?.classList.add("gymTapFeedback");
+  const row=t.closest?.(".gymSetItem");
+  if(row){
+   row.classList.add("gymTapFeedback");
+   setTimeout(()=>row.classList.remove("gymTapFeedback"),420);
+  }
  }
 },true);
 
@@ -1465,6 +1436,243 @@ renderProfile=function(){
  if(j<0)return html;
  return html.slice(0,i)+gymWeekCard()+html.slice(j+endMarker.length);
 };
+
+
+/* MODULE gym-performance.js */
+/* EDGY Gym · lightweight set editor. Never refetch the app for a set edit. */
+"use strict";
+const gymSetSaveQueue=new Map();
+const gymPendingAdds=new Set();
+let gymSetLastFailure=null;
+function gymFindSet(id){
+ for(const we of active?.gym_workout_exercises||[]){
+  const found=(we.gym_sets||[]).find(s=>s.id===id);
+  if(found)return {record:found,exercise:we};
+ }
+ return null;
+}
+function gymSetSaveLabel(state){
+ const el=document.getElementById("gymSetSaveStatus");
+ if(!el)return;
+ const states={saving:"A guardar…",saved:"✓ Guardado",error:"Falha ao guardar · tentar novamente"};
+ el.textContent=states[state]||states.saved;
+ el.dataset.saveState=state;
+ el.setAttribute("role",state==="error"?"button":"status");
+ if(state==="error")el.setAttribute("tabindex","0");
+ else el.removeAttribute("tabindex");
+}
+function gymHasPendingSetEdits(){
+ return [...gymSetSaveQueue.values()].some(q=>q.writing||Object.keys(q.pending).length>0);
+}
+function gymPaintSaveStatus(){
+ if(gymSetLastFailure){gymSetSaveLabel("error");return}
+ gymSetSaveLabel(gymHasPendingSetEdits()?"saving":"saved");
+}
+function gymScheduleSetSave(id,patch,delay=620){
+ let q=gymSetSaveQueue.get(id);
+ if(!q){q={pending:{},writing:null,timer:null,retries:0};gymSetSaveQueue.set(id,q)}
+ Object.assign(q.pending,patch);
+ gymSetLastFailure=null;
+ if(q.timer)clearTimeout(q.timer);
+ q.timer=setTimeout(()=>{q.timer=null;gymPersistSet(id).catch(()=>{})},delay);
+ gymPaintSaveStatus();
+}
+async function gymPersistSet(id){
+ const q=gymSetSaveQueue.get(id);
+ if(!q)return;
+ if(q.timer){clearTimeout(q.timer);q.timer=null}
+ if(q.writing){await q.writing; if(Object.keys(q.pending).length)return gymPersistSet(id);return}
+ q.writing=(async()=>{
+  while(Object.keys(q.pending).length){
+   const patch=q.pending;
+   q.pending={};
+   try{
+    const {error}=await db.from("gym_sets").update(patch).eq("id",id);
+    if(error)throw error;
+    q.retries=0;
+    gymSetLastFailure=null;
+   }catch(err){
+    q.pending={...patch,...q.pending};
+    gymSetLastFailure=err;
+    q.retries+=1;
+    console.warn("EDGY Gym set save:",err);
+    throw err;
+   }
+  }
+ })();
+ try{await q.writing}
+ catch(err){
+  if(q.retries<=2&&!q.timer){
+   q.timer=setTimeout(()=>{q.timer=null;gymPersistSet(id).catch(()=>{})},1500*q.retries);
+  }
+  throw err;
+ }finally{
+  q.writing=null;
+  if(!Object.keys(q.pending).length&&!q.timer)gymSetSaveQueue.delete(id);
+  gymPaintSaveStatus();
+ }
+}
+async function gymFlushSetWrites(){
+ for(let attempt=0;attempt<2;attempt++){
+  for(const q of gymSetSaveQueue.values())if(q.timer){clearTimeout(q.timer);q.timer=null}
+  const ids=[...gymSetSaveQueue.keys()];
+  const results=await Promise.allSettled(ids.map(id=>gymPersistSet(id)));
+  if(results.every(r=>r.status==="fulfilled")&&!gymHasPendingSetEdits()){
+   gymSetLastFailure=null;gymPaintSaveStatus();return;
+  }
+ }
+ gymSetSaveLabel("error");
+ throw gymSetLastFailure||new Error("Não foi possível guardar todas as séries. Verifica a ligação antes de terminares o treino.");
+}
+function gymUpdateWorkoutNumbers(){
+ if(!active||page!=="treino")return;
+ const nodes=document.querySelectorAll(".gymWorkoutStats .stat strong");
+ if(nodes.length<3)return;
+ nodes[1].innerHTML=fmt(volume(active))+" <em>kg</em>";
+ nodes[2].textContent=String(count(active));
+}
+function gymSetItemUpdate(id,patch){
+ const item=document.querySelector('[data-set-item="'+id+'"]');
+ if(!item)return;
+ const record=gymFindSet(id)?.record;
+ if("completed" in patch){
+  const state=item.querySelector(".gymSetState");
+  if(state)state.textContent=patch.completed?"Concluída":"Por fazer";
+  gymUpdateWorkoutNumbers();
+ }
+ if("rpe" in patch){
+  const input=item.querySelector('[data-field="rpe"]');
+  if(input&&document.activeElement!==input)input.value=patch.rpe??"";
+ }
+ if("to_failure" in patch||"completed" in patch){
+  item.classList.remove("gymSetQuickFeedback");
+  item.classList.add("gymSetQuickFeedback");
+  setTimeout(()=>item.classList.remove("gymSetQuickFeedback"),390);
+ }
+ if(record&&("weight" in patch||"reps" in patch)&&record.completed)gymUpdateWorkoutNumbers();
+}
+function gymHandleSetChange(el,commit=false){
+ if(!user||!active)return;
+ const id=el.dataset.set,field=el.dataset.field,match=gymFindSet(id);
+ if(!match||!["weight","reps","rpe","completed","to_failure"].includes(field))return;
+ const record=match.record;
+ let value;
+ if(field==="completed"||field==="to_failure"){
+  if(!commit)return;
+  value=Boolean(el.checked);
+ }else{
+  const raw=String(el.value).trim().replace(",",".");
+  if(raw===""){
+   if(!commit)return;
+   value=field==="rpe"?null:0;
+   el.value=value===null?"":"0";
+  }else{
+   value=Number(raw);
+   if(!Number.isFinite(value)||value<0||(field==="reps"&&!Number.isInteger(value))||(field==="rpe"&&(value<1||value>10))){
+    if(commit){toast("Introduz um valor válido.");el.value=record[field]??""}
+    return;
+   }
+  }
+ }
+ if(Object.is(record[field],value))return;
+ const patch={[field]:value};
+ if(field==="to_failure"&&value&&record.rpe==null)patch.rpe=10;
+ Object.assign(record,patch);
+ gymSetItemUpdate(id,patch);
+ gymScheduleSetSave(id,patch,commit?130:700);
+}
+function gymFastStepper(btn){
+ if(!user||!active)return;
+ const id=btn.dataset.stepSet,field=btn.dataset.stepField;
+ if(!["weight","reps"].includes(field))return;
+ const match=gymFindSet(id);if(!match)return;
+ const step=field==="weight"?2.5:1;
+ const dir=Number(btn.dataset.stepDir)||1;
+ const el=document.querySelector('input[data-set="'+id+'"][data-field="'+field+'"]');
+ if(!el)return;
+ const current=Number(String(el.value).replace(",","."))||0;
+ const next=Math.max(0,Math.round((current+step*dir)*100)/100);
+ el.value=String(next);
+ el.classList.add("gymStepUpdated");
+ setTimeout(()=>el.classList.remove("gymStepUpdated"),260);
+ gymHandleSetChange(el,true);
+}
+function gymFastCycleSet(btn){
+ const id=btn.dataset.cycleSet,match=gymFindSet(id);
+ if(!match||!user)return;
+ const record=match.record,types=["working","warmup","dropset"];
+ const next=types[(types.indexOf(record.set_type)+1)%types.length];
+ record.set_type=next;
+ const item=btn.closest(".gymSetItem");
+ const index=match.exercise.gym_sets.slice().sort((a,b)=>a.position-b.position).indexOf(record);
+ btn.textContent=next==="warmup"?"W":next==="dropset"?"D":String(index+1);
+ btn.classList.remove("gymSetType-working","gymSetType-warmup","gymSetType-dropset");
+ btn.classList.add("gymSetType-"+next,"gymTypePressed");
+ setTimeout(()=>btn.classList.remove("gymTypePressed"),340);
+ if(item)item.dataset.setType=next;
+ gymScheduleSetSave(id,{set_type:next},170);
+}
+async function gymFastAddSet(btn){
+ if(!user||!active)return;
+ const id=btn.dataset.addSet,exercise=active.gym_workout_exercises.find(we=>we.id===id);
+ if(!exercise||gymPendingAdds.has(id))return;
+ gymPendingAdds.add(id);
+ btn.disabled=true;
+ const label=btn.textContent;btn.textContent="A adicionar…";
+ try{
+  await gymFlushSetWrites();
+  const sets=(exercise.gym_sets||[]).slice().sort((a,b)=>a.position-b.position);
+  const last=sets[sets.length-1],previous=previousFor(exercise.exercise_id)[0];
+  const payload={workout_exercise_id:id,position:sets.length,weight:last?.weight??previous?.weight??0,reps:last?.reps??previous?.reps??0};
+  const {data:created,error}=await db.from("gym_sets").insert(payload).select("*").single();
+  if(error)throw error;
+  exercise.gym_sets.push(created);
+  const list=btn.closest(".gymExerciseWorkoutCard")?.querySelector(".gymSetList");
+  if(list){
+   list.insertAdjacentHTML("beforeend",gymSetEditor(exercise,created,sets.length));
+   const row=list.lastElementChild;
+   row?.classList.add("gymJustChanged");
+   row?.scrollIntoView?.({behavior:"smooth",block:"nearest"});
+  }else render();
+  const labelCount=btn.closest(".gymExerciseWorkoutCard")?.querySelector(".gymExerciseHeading small");
+  if(labelCount)labelCount.textContent=exercise.gym_sets.length+" séries";
+ }catch(err){console.error(err);toast(err.message||"Não foi possível adicionar a série")}
+ finally{gymPendingAdds.delete(id);btn.disabled=false;btn.textContent=label}
+}
+async function gymFastAddExercise(id){
+ if(!user||!active||gymPendingAdds.has("exercise:"+id))return;
+ gymPendingAdds.add("exercise:"+id);
+ const workoutId=active.id;
+ gymUXClose();
+ try{
+  await gymFlushSetWrites();
+  const position=(active.gym_workout_exercises||[]).length;
+  const {data:created,error}=await db.from("gym_workout_exercises").insert({workout_id:workoutId,exercise_id:id,position}).select("*").single();
+  if(error)throw error;
+  const prev=previousFor(id)[0];
+  const {data:set,error:setError}=await db.from("gym_sets").insert({workout_exercise_id:created.id,position:0,weight:prev?.weight??0,reps:prev?.reps??0}).select("*").single();
+  if(setError)throw setError;
+  const exercise=exercises.find(e=>e.id===id);
+  active.gym_workout_exercises.push({...created,gym_exercises:{name:exercise?.name||"Exercício",muscle:exercise?.muscle},gym_sets:[set]});
+  gymPrepareMotion("exercise",id);
+  render();
+ }catch(err){
+  console.error(err);
+  toast(err.message||"Não foi possível adicionar o exercício");
+  // Reconcile a possible partial insert without refetching the other app data.
+  const {data,error}=await db.from("gym_workouts").select("*,gym_workout_exercises(*,gym_exercises(name,muscle),gym_sets(*))").eq("id",workoutId).maybeSingle();
+  if(!error&&data&&active?.id===workoutId){active=data;history=history.map(w=>w.id===workoutId?data:w);render()}
+ }finally{gymPendingAdds.delete("exercise:"+id)}
+}
+// Override only the hot-path exercise picker operation, preserving the rest of the app.
+gymUXAddExercise=gymFastAddExercise;
+document.addEventListener("click",event=>{
+ const btn=event.target.closest("button");
+ if(btn?.id==="gymSetSaveStatus"&&gymSetLastFailure)gymFlushSetWrites().catch(()=>toast("Sem ligação: as alterações continuam pendentes."));
+});
+document.addEventListener("visibilitychange",()=>{
+ if(document.visibilityState==="hidden"&&gymHasPendingSetEdits())gymFlushSetWrites().catch(()=>{});
+});
 
 
 })();
