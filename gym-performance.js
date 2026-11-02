@@ -193,6 +193,8 @@ async function gymFastAddSet(btn){
    row?.classList.add("gymJustChanged");
    row?.scrollIntoView?.({behavior:"smooth",block:"nearest"});
   }else render();
+  // Partial DOM insert already animated the new row; do not replay it on a later page render.
+  gymMotionNext=null;
   const labelCount=btn.closest(".gymExerciseWorkoutCard")?.querySelector(".gymExerciseHeading small");
   if(labelCount)labelCount.textContent=exercise.gym_sets.length+" séries";
  }catch(err){console.error(err);toast(err.message||"Não foi possível adicionar a série")}
