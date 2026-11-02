@@ -84,9 +84,9 @@ async function gymRefreshSocial(){
  if(!user){gymSocialProfiles=[];gymFollowRows=[];gymFeedPosts=[];gymPostLikes=[];return}
  const requests=await Promise.all([
   db.from("gym_social_profiles").select("user_id,display_name,username,is_public").limit(100),
-  db.from("gym_follows").select("follower_id,followed_id").limit(1000),
+  db.from("gym_follows").select("follower_id,followed_id,created_at").limit(1000),
   db.from("gym_feed_posts").select("id,user_id,workout_id,kind,title,body,created_at").order("created_at",{ascending:false}).limit(100),
-  db.from("gym_post_likes").select("post_id,user_id").limit(1000)
+  db.from("gym_post_likes").select("post_id,user_id,created_at").limit(1000)
  ]);
  for(const r of requests)if(r.error)console.warn("EDGY community:",r.error.message);
  gymSocialProfiles=requests[0].data||[];gymFollowRows=requests[1].data||[];gymFeedPosts=requests[2].data||[];gymPostLikes=requests[3].data||[];
