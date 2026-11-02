@@ -47,7 +47,7 @@ document.addEventListener('change',e=>{const el=e.target;if(!el.dataset.set)retu
 document.addEventListener('submit',e=>{e.preventDefault();if(e.target.id==='login')action(async()=>{const data=new FormData(e.target),{error}=await db.auth.signInWithPassword({email:data.get('email'),password:data.get('password')});if(error)throw error;user=(await db.auth.getUser()).data.user;await load()});if(e.target.id==='measure')action(async()=>{const data=new FormData(e.target),row={user_id:user.id,recorded_at:data.get('recorded_at')};for(const key of ['body_weight','waist','abdomen','chest','shoulders','arm','left_arm','thigh','calf','glutes'])if(data.get(key)!=='')row[key]=Number(data.get(key));const {error}=await db.from('gym_measurements').insert(row);if(error)throw error})});
 // Present the application immediately. Authentication must never leave the UI blank.
 render();
-(async()=>{
+window.EDGY_GYM_START=async function(){
  try{
   const result=await Promise.race([
    db.auth.getUser(),
@@ -62,4 +62,4 @@ render();
   toast('Não foi possível validar a sessão. Podes iniciar sessão novamente.');
   render();
  }
-})();
+};
