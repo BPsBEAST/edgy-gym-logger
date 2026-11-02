@@ -120,3 +120,9 @@ select.gymUXInput{appearance:auto;cursor:pointer}
  .gymUXSocialStats{gap:4px}
 }
 @media(prefers-reduced-motion:reduce){.gymUXBackdrop,.gymUXDialog,.gymUXExerciseRow,.gymUXNewPost,.gymUXChip{animation:none!important;transition:none!important}}
+
+/* Shared EDGY circular crop editor, with squared panels and buttons. */
+.cropCard{border-radius:3px!important;border-top:3px solid #ef298f!important;background:#211a35!important}
+.cropActions button{border-radius:3px!important}
+.cropCircle{border-color:#f2218a!important}
+.cropZoom{accent-color:#ff2f91!important}
