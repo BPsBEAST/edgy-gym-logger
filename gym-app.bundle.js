@@ -1,7 +1,7 @@
-/* EDGY — Gym Logger · no navigation during authentication */
+/* EDGY — Gym Logger · private follower names and iOS numeric fields */
 (function(){
 
-/* app.js */
+/* MODULE app.js */
 const URL='https://okzpfhjdckmoawmwmydu.supabase.co',KEY='sb_publishable_hF29Hv9P7Snfj2utKL-XjA_PvE0oK5a';
 const db=window.supabase.createClient(URL,KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storageKey:'sb-okzpfhjdckmoawmwmydu-auth-token'}}), screen=document.querySelector('#screen');
 let user=null,profile=null,page='treino',active=null,exercises=[],history=[],measurements=[],search='',filter='Todos';
@@ -40,7 +40,7 @@ function gymSetEditor(we,s,i){
    const value=field==='weight'?s.weight:s.reps;
    return '<div class="gymInputGroup gymGroup'+field+'"><span class="gymSetLabel">'+label+'</span><div class="gymStepper">'+
     '<button type="button" class="gymStepBtn" data-step-set="'+s.id+'" data-step-field="'+field+'" data-step-dir="-1" aria-label="Diminuir '+label+'" title="Diminuir '+increment+'">−</button>'+
-    '<input class="gymStepValue" type="number" min="0" step="'+increment+'" inputmode="decimal" data-set="'+s.id+'" data-field="'+field+'" value="'+value+'" aria-label="'+label+(unit?' em '+unit:'')+'">'+
+    '<input class="gymStepValue" type="number" min="0" step="'+increment+'" inputmode="'+(field==="reps"?"numeric":"decimal")+'" data-set="'+s.id+'" data-field="'+field+'" value="'+value+'" aria-label="'+label+(unit?' em '+unit:'')+'">'+
     '<button type="button" class="gymStepBtn" data-step-set="'+s.id+'" data-step-field="'+field+'" data-step-dir="1" aria-label="Aumentar '+label+'" title="Aumentar '+increment+'">+</button>'+
     '</div></div>';
  };
@@ -133,7 +133,7 @@ window.EDGY_GYM_START=async function(){
 };
 
 
-/* enhancements.js */
+/* MODULE enhancements.js */
 /* EDGY Gym · analytics, exercise records and opt-in community */
 "use strict";
 let gymSelectedExercise=null,gymCalendarMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1);
@@ -285,7 +285,7 @@ document.addEventListener("submit",event=>{
 });
 
 
-/* edgy-shell.js */
+/* MODULE edgy-shell.js */
 /* EDGY Gym - unified header, identity and real event notifications. */
 "use strict";
 const gymShellRender=render;
@@ -367,7 +367,7 @@ db.auth.onAuthStateChange((event)=>{
 gymUpdateHeader();
 
 
-/* gym-templates.js */
+/* MODULE gym-templates.js */
 /* Reusable workout templates for EDGY Gym Logger */
 "use strict";
 let gymTemplates=[],gymTemplateBusy=false;
@@ -464,7 +464,7 @@ document.addEventListener("click",event=>{
 });
 
 
-/* gym-rest.js */
+/* MODULE gym-rest.js */
 /* Rest timer: local to the athlete, survives page reloads */
 "use strict";
 const gymRestWorkoutBase=renderWorkout;
@@ -517,7 +517,7 @@ document.addEventListener("change",event=>{
 });
 
 
-/* gym-ux.js */
+/* MODULE gym-ux.js */
 /* EDGY Gym Logger · profile, feed, modal and exercise UX */
 "use strict";
 let gymUXModalOpen=false,gymUXPickerSearch="",gymUXPickerMuscle="Todos",gymUXPickerEquipment="Todos";
@@ -811,7 +811,7 @@ const gymUXOldRender=render;
 render=function(){gymUXOldRender();if(page==="exercicios"&&!gymSelectedExercise){gymUXSetSelect("gymUXExMuscle",gymUXExMuscle);gymUXSetSelect("gymUXExEquipment",gymUXExEquipment)}};
 
 
-/* gym-community.js */
+/* MODULE gym-community.js */
 /* EDGY Gym · post conversations, public athlete profiles, personal feed */
 "use strict";
 let gymPostComments=[],gymExpandedComments=new Set();
@@ -943,7 +943,12 @@ document.addEventListener("click",event=>{
   })();
   return;
  }
- if(b.dataset.gymAthlete){gymAthleteDialog(b.dataset.gymAthlete);return}
+ if(b.dataset.gymAthlete){
+  const id=b.dataset.gymAthlete;
+  if(gymNotificationOpen){gymCloseNotifications();setTimeout(()=>gymAthleteDialog(id),230)}
+  else gymAthleteDialog(id);
+  return;
+ }
  if(b.dataset.gymComments){
   const id=b.dataset.gymComments;
   gymExpandedComments.add(id);render();
@@ -998,7 +1003,7 @@ gymNotificationItems=function(){
 };
 
 
-/* gym-confirm.js */
+/* MODULE gym-confirm.js */
 /* EDGY Gym · branded confirmation dialogs */
 "use strict";
 let gymConfirmCallback=null;
@@ -1100,11 +1105,11 @@ document.addEventListener("click",event=>{
 },true);
 
 
-/* gym-polish.js */
+/* MODULE gym-polish.js */
 /* EDGY Gym · fast set steppers, likes totals and reactive notifications */
 "use strict";
 let gymLikeTotals=[];
-let gymFreshOwnPosts=[],gymFreshOwnLikes=[],gymFreshOwnComments=[],gymFreshFollows=[],gymFreshActors=[];
+let gymFreshOwnPosts=[],gymFreshOwnLikes=[],gymFreshOwnComments=[],gymFreshFollows=[],gymFreshActors=[],gymFollowerIdentityRows=[];
 let gymRealtimeChannel=null,gymActivityRefreshing=false,gymNoticeRefreshTimer=null,gymLastUnread=null;
 const gymStepTimers=new Map();
 function gymTotalLikesFor(id){
@@ -1124,7 +1129,7 @@ gymNotificationItems=function(){
  const original=gymPolishBaseNotices();
  if(!user)return original;
  const own=new Map(gymFreshOwnPosts.map(p=>[p.id,p]));
- const actors=new Map([...gymSocialProfiles,...gymFreshActors].map(p=>[p.user_id,p.display_name]));
+ const actors=new Map([...gymSocialProfiles,...gymFreshActors,...gymFollowerIdentityRows].map(p=>[p.user_id||p.follower_id,p.display_name]));
  const incoming=[];
  for(const l of gymFreshOwnLikes){
   if(l.user_id===user.id||!own.has(l.post_id))continue;
@@ -1135,7 +1140,7 @@ gymNotificationItems=function(){
   incoming.push({id:"reply:"+c.id,title:"Nova resposta à tua publicação",body:(actors.get(c.user_id)||"Um atleta")+" respondeu a "+own.get(c.post_id).title+".",icon:"✎",when:c.created_at});
  }
  for(const f of gymFreshFollows){
-  incoming.push({id:"follow:"+f.follower_id,title:"Novo seguidor",body:(actors.get(f.follower_id)||"Um atleta")+" começou a seguir-te.",icon:"♧",when:f.created_at});
+  incoming.push({id:"follow:"+f.follower_id,title:"Novo seguidor",body:(actors.get(f.follower_id)||"Atleta EDGY")+" começou a seguir-te.",icon:"♧",when:f.created_at,actorId:f.follower_id});
  }
  const unique=new Map([...original,...incoming].filter(n=>n.when).map(n=>[n.id,n]));
  return [...unique.values()].sort((a,b)=>new Date(b.when)-new Date(a.when)).slice(0,50);
@@ -1159,7 +1164,7 @@ function gymPaintNotificationList(){
  if(!host||!gymNotificationOpen)return;
  const notices=gymNotificationItems(),read=gymReadNotices();
  host.innerHTML=notices.length?notices.map((n,i)=>
-  '<div class="gymNotice '+(read.has(n.id)?"":"unread")+'" style="--note-index:'+Math.min(i,10)+'"><span class="gymNoticeIcon" aria-hidden="true">'+n.icon+'</span><div><strong>'+esc(n.title)+'</strong><small>'+esc(n.body)+'</small><small class="gymNoticeDate">'+esc(new Date(n.when).toLocaleDateString("pt-PT",{day:"numeric",month:"short",year:"numeric"}))+'</small></div></div>'
+  '<div class="gymNotice '+(read.has(n.id)?"":"unread")+'" style="--note-index:'+Math.min(i,10)+'"><span class="gymNoticeIcon" aria-hidden="true">'+n.icon+'</span><div><strong>'+esc(n.title)+'</strong><small>'+esc(n.body)+'</small><small class="gymNoticeDate">'+esc(new Date(n.when).toLocaleDateString("pt-PT",{day:"numeric",month:"short",year:"numeric"}))+'</small>'+(n.actorId?'<button type="button" class="gymNoticeProfileLink" data-gym-athlete="'+esc(n.actorId)+'">Ver perfil</button>':'')+'</div></div>'
  ).join(""):'<div class="gymNoticeEmpty">Ainda não tens notificações. Os likes, respostas, seguidores e recordes aparecem aqui.</div>';
  gymMarkRead(notices);
  gymUpdateHeader();
@@ -1174,17 +1179,20 @@ async function gymFetchActivity(){
   if(!user||user.id!==uid)return;
   gymFreshOwnPosts=posts||[];
   const ids=gymFreshOwnPosts.map(p=>p.id);
-  const [likes,comments,follows,totals]=await Promise.all([
+  const [likes,comments,follows,totals,followerNames]=await Promise.all([
    ids.length?db.from("gym_post_likes").select("post_id,user_id,created_at").in("post_id",ids).order("created_at",{ascending:false}).limit(600):Promise.resolve({data:[],error:null}),
    ids.length?db.from("gym_post_comments").select("id,post_id,user_id,created_at").in("post_id",ids).order("created_at",{ascending:false}).limit(600):Promise.resolve({data:[],error:null}),
    db.from("gym_follows").select("follower_id,followed_id,created_at").eq("followed_id",uid).order("created_at",{ascending:false}).limit(300),
-   db.from("gym_like_totals").select("user_id,likes_received,post_count").limit(300)
+   db.from("gym_like_totals").select("user_id,likes_received,post_count").limit(300),
+   db.rpc("gym_my_follower_identities")
   ]);
   for(const res of [likes,comments,follows,totals])if(res.error)throw res.error;
   if(!user||user.id!==uid)return;
   gymFreshOwnLikes=likes.data||[];
   gymFreshOwnComments=comments.data||[];
   gymFreshFollows=follows.data||[];
+  if(!followerNames.error)gymFollowerIdentityRows=followerNames.data||[];
+  else console.warn("Follower identity notification lookup:",followerNames.error.message);
   gymLikeTotals=totals.data||gymLikeTotals;
   const actorIds=[...new Set([...gymFreshOwnLikes.map(x=>x.user_id),...gymFreshOwnComments.map(x=>x.user_id),...gymFreshFollows.map(x=>x.follower_id)].filter(x=>x!==uid))].slice(0,200);
   if(actorIds.length){
@@ -1254,13 +1262,13 @@ db.auth.onAuthStateChange(event=>{
   setTimeout(()=>{if(user&&!gymRealtimeChannel){gymStartNotificationSync();gymFetchActivity()}},500);
  }
  if(event==="SIGNED_OUT"){
-  gymLastUnread=null;gymFreshOwnPosts=[];gymFreshOwnLikes=[];gymFreshOwnComments=[];gymFreshFollows=[];gymLikeTotals=[];
+  gymLastUnread=null;gymFreshOwnPosts=[];gymFreshOwnLikes=[];gymFreshOwnComments=[];gymFreshFollows=[];gymFollowerIdentityRows=[];gymLikeTotals=[];
   if(gymRealtimeChannel){db.removeChannel?.(gymRealtimeChannel);gymRealtimeChannel=null}
  }
 });
 
 
-/* gym-xp.js */
+/* MODULE gym-xp.js */
 /* EDGY Gym: XP uses the single profile XP balance, awarded only by Supabase triggers. */
 "use strict";
 let gymXPAwards=[];
@@ -1285,7 +1293,7 @@ renderProfile=function(){
 };
 
 
-/* gym-experience.js */
+/* MODULE gym-experience.js */
 /* EDGY Gym · social activity count, smooth workout interactions and page transitions */
 "use strict";
 let gymOwnPublishedCount=0,gymOwnReplyCount=0;
@@ -1372,7 +1380,7 @@ document.addEventListener("change",event=>{
 },true);
 
 
-/* gym-trends.js */
+/* MODULE gym-trends.js */
 /* EDGY Gym charts — weekly summary and 12-week activity trajectory */
 "use strict";
 function gymMondayOf(input){
@@ -1443,7 +1451,7 @@ renderProfile=function(){
 };
 
 
-/* gym-performance.js */
+/* MODULE gym-performance.js */
 /* EDGY Gym · lightweight set editor. Never refetch the app for a set edit. */
 "use strict";
 const gymSetSaveQueue=new Map();
@@ -1682,7 +1690,7 @@ document.addEventListener("visibilitychange",()=>{
 });
 
 
-/* gym-live-community.js */
+/* MODULE gym-live-community.js */
 /* EDGY Gym · real-time social sync & public athlete experience */
 "use strict";
 let gymPublicProfileId=null,gymPublicProfileSnapshot=null,gymPublicProfileRequest=0;
@@ -1927,7 +1935,7 @@ document.addEventListener("visibilitychange",()=>{
 window.addEventListener?.("focus",()=>{if(user)gymScheduleLiveSync()});
 
 
-/* gym-auth.js */
+/* MODULE gym-auth.js */
 /* EDGY Gym — direct account creation on the shared identity */
 "use strict";
 let gymEntryMode="login",gymEntryBusy=false,gymPendingEmail="",gymEntryNotice="";
