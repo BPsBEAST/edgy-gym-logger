@@ -1,0 +1,39 @@
+/* EDGY Gym · live session clock + opt-in device alert settings */
+.gymWorkoutDuration strong{
+ color:#fff;letter-spacing:-.65px;font-weight:900;
+ font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1;
+ font-size:clamp(17px,2.9vw,24px)!important;
+ white-space:nowrap;line-height:1.22
+}
+.gymWorkoutDuration small{display:flex;align-items:center;justify-content:center;gap:5px}
+.gymWorkoutDurationDot{width:6px;height:6px;border-radius:50%;background:#f13c9a;box-shadow:0 0 0 3px #e72d962a;display:inline-block}
+.gymRestAlertOption{display:flex;flex-wrap:wrap;align-items:center;gap:9px;margin-top:12px;border-top:1px solid #543b60;padding-top:12px}
+.gymRestAlertOption .gymAlertOption{flex:0 0 auto}
+.gymRestAlertOption small{flex:1;min-width:160px;color:#bba6c7;font-size:10px;line-height:1.55}
+.gymAlertsSettings{border-left:3px solid #ed358f!important;background:linear-gradient(125deg,#2b203f,#221b32)!important}
+.gymAlertsHeader{display:flex;justify-content:space-between;align-items:flex-start;gap:15px}
+.gymAlertsHeader h3{font-weight:850;margin:6px 0 6px}
+.gymAlertsHeader p{font-size:12px;margin:0}
+.gymAlertsEyebrow{color:#ff74b9;font-size:9px;letter-spacing:2px;font-weight:900}
+.gymAlertsBadge{font-size:9px;letter-spacing:2px;color:#e9b3dc;border:1px solid #815580;padding:6px 8px}
+.gymAlertsOptions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:16px 0 12px}
+.gymAlertOption{display:flex;align-items:center;justify-content:center;gap:6px;
+ border-radius:3px;border:1px solid #79587a;background:#372844;color:#eac9e4;
+ font-size:11px;font-weight:800;min-height:39px;padding:9px 10px;
+ cursor:pointer;transition:border-color .18s,background .18s,transform .18s;text-align:center}
+.gymAlertOption:hover{border-color:#e852a5;background:#533050}
+.gymAlertOption:active{transform:scale(.98)}
+.gymAlertOption.is-enabled{background:linear-gradient(100deg,#80275d,#7c286c);border-color:#d7559f;color:#fff}
+.gymAlertOption span{color:#f58cbd;font-size:10px}
+.gymAlertOption.is-enabled span{color:#ffb7df}
+.gymAlertOption:disabled{opacity:.55;cursor:progress}
+.gymAlertOption:focus-visible{outline:2px solid #ff69b4;outline-offset:3px}
+.gymAlertsDisclaimer{font-size:10.5px;color:#b7a5c4;line-height:1.6;margin:0;overflow-wrap:anywhere}
+@media(max-width:570px){
+ .gymWorkoutDuration strong{font-size:17px!important;letter-spacing:-.85px}
+ .gymAlertsOptions{grid-template-columns:minmax(0,1fr)}
+ .gymRestAlertOption{flex-direction:column;align-items:stretch}
+ .gymRestAlertOption .gymAlertOption{width:100%}
+ .gymRestAlertOption small{min-width:0}
+}
+@media(prefers-reduced-motion:reduce){.gymAlertOption{transition:none!important}}
