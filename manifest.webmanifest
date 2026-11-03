@@ -14,5 +14,6 @@
       "purpose": "any maskable"
     }
   ],
-  "scope": "./"
+  "scope": "./",
+  "id": "/edgy-gym-logger/"
 }
