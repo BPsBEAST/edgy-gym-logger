@@ -28,7 +28,33 @@ function gymCommunityAvatar(userId, fallbackName="Atleta EDGY"){
  (photo?'<img src="'+esc(photo)+'" alt="" data-gym-avatar loading="lazy" decoding="async">':'')+
  '</span>';
 }
-function gymCommentsFor(id){return gymPostComments.filter(x=>x.post_id===id)}
+// Index reactions once per dataset rather than rescanning all comments for every card.
+let gymCommentsIndexSource=null,gymCommentsIndexSize=-1,gymCommentsIndex=new Map();
+function gymCommentsFor(id){
+ if(gymCommentsIndexSource!==gymPostComments||gymCommentsIndexSize!==gymPostComments.length){
+  gymCommentsIndexSource=gymPostComments;
+  gymCommentsIndexSize=gymPostComments.length;
+  gymCommentsIndex=new Map();
+  for(const comment of gymPostComments){
+   if(!gymCommentsIndex.has(comment.post_id))gymCommentsIndex.set(comment.post_id,[]);
+   gymCommentsIndex.get(comment.post_id).push(comment);
+  }
+ }
+ return gymCommentsIndex.get(id)||[];
+}
+let gymLikesIndexSource=null,gymLikesIndexSize=-1,gymLikesIndex=new Map();
+function gymLikesFor(id){
+ if(gymLikesIndexSource!==gymPostLikes||gymLikesIndexSize!==gymPostLikes.length){
+  gymLikesIndexSource=gymPostLikes;
+  gymLikesIndexSize=gymPostLikes.length;
+  gymLikesIndex=new Map();
+  for(const like of gymPostLikes){
+   if(!gymLikesIndex.has(like.post_id))gymLikesIndex.set(like.post_id,[]);
+   gymLikesIndex.get(like.post_id).push(like);
+  }
+ }
+ return gymLikesIndex.get(id)||[];
+}
 function gymCommunityComments(post){
  const comments=gymCommentsFor(post.id),expanded=gymExpandedComments.has(post.id);
  const shown=expanded?comments:comments.slice(-2);
@@ -44,8 +70,9 @@ function gymCommunityComments(post){
 }
 gymFeedCard=function(p){
  const author=gymSocialProfiles.find(x=>x.user_id===p.user_id);
- const liked=gymPostLikes.some(x=>x.post_id===p.id&&x.user_id===user.id);
- const likes=gymPostLikes.filter(x=>x.post_id===p.id).length;
+ const reactions=gymLikesFor(p.id);
+ const liked=reactions.some(x=>x.user_id===user.id);
+ const likes=reactions.length;
  const comments=gymCommentsFor(p.id).length;
  const kindLabel=({pr:"★ PR",workout:"Treino",goal:"Meta",post:"Publicação"}[p.kind]||"Publicação");
  const owner=p.user_id===user.id;
