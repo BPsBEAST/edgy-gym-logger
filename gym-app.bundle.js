@@ -927,7 +927,33 @@ function gymCommunityAvatar(userId, fallbackName="Atleta EDGY"){
  (photo?'<img src="'+esc(photo)+'" alt="" data-gym-avatar loading="lazy" decoding="async">':'')+
  '</span>';
 }
-function gymCommentsFor(id){return gymPostComments.filter(x=>x.post_id===id)}
+// Index reactions once per dataset rather than rescanning all comments for every card.
+let gymCommentsIndexSource=null,gymCommentsIndexSize=-1,gymCommentsIndex=new Map();
+function gymCommentsFor(id){
+ if(gymCommentsIndexSource!==gymPostComments||gymCommentsIndexSize!==gymPostComments.length){
+  gymCommentsIndexSource=gymPostComments;
+  gymCommentsIndexSize=gymPostComments.length;
+  gymCommentsIndex=new Map();
+  for(const comment of gymPostComments){
+   if(!gymCommentsIndex.has(comment.post_id))gymCommentsIndex.set(comment.post_id,[]);
+   gymCommentsIndex.get(comment.post_id).push(comment);
+  }
+ }
+ return gymCommentsIndex.get(id)||[];
+}
+let gymLikesIndexSource=null,gymLikesIndexSize=-1,gymLikesIndex=new Map();
+function gymLikesFor(id){
+ if(gymLikesIndexSource!==gymPostLikes||gymLikesIndexSize!==gymPostLikes.length){
+  gymLikesIndexSource=gymPostLikes;
+  gymLikesIndexSize=gymPostLikes.length;
+  gymLikesIndex=new Map();
+  for(const like of gymPostLikes){
+   if(!gymLikesIndex.has(like.post_id))gymLikesIndex.set(like.post_id,[]);
+   gymLikesIndex.get(like.post_id).push(like);
+  }
+ }
+ return gymLikesIndex.get(id)||[];
+}
 function gymCommunityComments(post){
  const comments=gymCommentsFor(post.id),expanded=gymExpandedComments.has(post.id);
  const shown=expanded?comments:comments.slice(-2);
@@ -943,8 +969,9 @@ function gymCommunityComments(post){
 }
 gymFeedCard=function(p){
  const author=gymSocialProfiles.find(x=>x.user_id===p.user_id);
- const liked=gymPostLikes.some(x=>x.post_id===p.id&&x.user_id===user.id);
- const likes=gymPostLikes.filter(x=>x.post_id===p.id).length;
+ const reactions=gymLikesFor(p.id);
+ const liked=reactions.some(x=>x.user_id===user.id);
+ const likes=reactions.length;
  const comments=gymCommentsFor(p.id).length;
  const kindLabel=({pr:"★ PR",workout:"Treino",goal:"Meta",post:"Publicação"}[p.kind]||"Publicação");
  const owner=p.user_id===user.id;
@@ -968,42 +995,7 @@ renderProfile=function(){
  const anchor='<div class="card"><div class="row"><h3>Privacidade e conta</h3>';
  return original.includes(anchor)?original.replace(anchor,feed+anchor):original+feed;
 };
-async function gymAthleteDialog(id){
- if(!user||!id)return;
- if(id===user.id){gymUXClose();page="perfil";render();return}
- const originalUser=user.id;
- gymUXShow("Perfil EDGY Gym","A consultar o perfil público deste atleta.",'<div class="gymUXEmpty">A carregar o perfil…</div>',true);
- try{
-  const {data:athlete,error:athleteError}=await db.from("gym_social_profiles")
-   .select("user_id,display_name,username,is_public,avatar_path").eq("user_id",id).maybeSingle();
-  if(athleteError)throw athleteError;
-  if(!user||user.id!==originalUser)return;
-  if(!athlete||!athlete.is_public){
-   gymUXShow("Perfil privado","Este atleta não tem um perfil público disponível.",'<div class="gymUXEmpty">O perfil não pode ser consultado.</div>',true);
-   return;
-  }
-  const {data:posts,error:postError}=await db.from("gym_feed_posts")
-   .select("id,user_id,kind,title,body,created_at").eq("user_id",id).order("created_at",{ascending:false}).limit(50);
-  if(postError)throw postError;
-  if(!user||user.id!==originalUser||!gymUXModalOpen)return;
-  const previous=gymSocialProfiles.findIndex(p=>p.user_id===id);
-  if(previous<0)gymSocialProfiles.push(athlete);else gymSocialProfiles[previous]=athlete;
-  const followers=gymFollowRows.filter(f=>f.followed_id===id).length;
-  const followingCount=gymFollowRows.filter(f=>f.follower_id===id).length;
-  const isFollowing=gymFollowRows.some(f=>f.followed_id===id&&f.follower_id===user.id);
-  const listed=posts||[];
-  const content='<div class="gymAthleteHeader">'+gymCommunityAvatar(id,athlete.display_name)+
-   '<div><h3>'+esc(athlete.display_name||"Atleta EDGY")+'</h3><span>@'+esc(athlete.username||"edgy")+'</span></div></div>'+
-   '<div class="gymAthleteActions"><button type="button" class="btn small '+(isFollowing?"secondary":"")+'" data-gym-athlete-follow="'+esc(id)+'">'+(isFollowing?"A seguir ✓":"Seguir atleta")+'</button></div>'+
-   '<div class="gymAthleteStats"><span><strong>'+followers+'</strong> seguidores</span><span><strong>'+followingCount+'</strong> a seguir</span><span><strong>'+listed.length+'</strong> publicações recentes</span></div>'+
-   '<h3 class="gymAthleteFeedTitle">Publicações</h3>'+
-   (listed.length?listed.map(p=>'<article class="gymAthletePost"><strong>'+esc(({goal:"Meta",workout:"Treino",pr:"Recorde",post:"Publicação"}[p.kind]||"Publicação"))+'</strong><p>'+esc(p.kind==="post"?(p.body||p.title):p.title)+'</p>'+(p.kind!=="post"&&p.body?'<p>'+esc(p.body)+'</p>':"")+'<small>'+date(p.created_at)+'</small></article>').join(""):'<p class="muted">Este atleta ainda não tem publicações públicas.</p>');
-  gymUXShow("Perfil EDGY Gym","Perfil público e publicações do atleta.",content,true);
- }catch(error){
-  console.warn("EDGY Gym profile:",error);
-  if(gymUXModalOpen)gymUXShow("Perfil indisponível","Não foi possível carregar este atleta.",'<div class="gymUXEmpty">Tenta abrir o perfil novamente.</div>',true);
- }
-}
+// Public athlete profile is implemented once in gym-live-community.js.
 document.addEventListener("error",event=>{
  if(event.target?.matches?.("img[data-gym-avatar]"))event.target.remove();
 },true);
@@ -1333,35 +1325,14 @@ gymCloseNotifications=function(){
   layer.classList.remove("gymNotifClosing");
  },210);
 };
-function gymStartNotificationSync(){
- if(!user)return;
- if(gymRealtimeChannel){db.removeChannel?.(gymRealtimeChannel);gymRealtimeChannel=null}
- if(typeof db.channel==="function"){
-  try{
-   gymRealtimeChannel=db.channel("edgy-gym-alerts-"+user.id);
-   for(const table of ["gym_post_likes","gym_post_comments","gym_follows"]){
-    gymRealtimeChannel.on("postgres_changes",{event:"*",schema:"public",table},()=>{
-     if(gymNoticeRefreshTimer)clearTimeout(gymNoticeRefreshTimer);
-     gymNoticeRefreshTimer=setTimeout(gymFetchActivity,350);
-    });
-   }
-   gymRealtimeChannel.subscribe(status=>{
-    if(status==="CHANNEL_ERROR"||status==="TIMED_OUT")console.warn("EDGY Gym realtime:",status);
-   });
-  }catch(err){console.warn("EDGY Gym realtime:",err.message)}
- }
-}
+// Real-time notifications are initialized once in gym-live-community.js.
+let gymStartNotificationSync;
 const gymPolishBaseStart=window.EDGY_GYM_START;
 window.EDGY_GYM_START=async function(){
  await gymPolishBaseStart();
  if(user){await gymFetchActivity();gymStartNotificationSync()}
 };
-setInterval(()=>{
- if(user&&document.visibilityState!=="hidden")gymFetchActivity();
-},45000);
-document.addEventListener("visibilitychange",()=>{
- if(user&&document.visibilityState==="visible")gymFetchActivity();
-});
+// Social polling and foreground refresh are centralized in gym-live-community.js.
 document.addEventListener("click",event=>{
  const btn=event.target.closest("button[data-step-set]");
  if(btn&&user&&active){event.preventDefault();gymFastStepper(btn)}
@@ -2352,7 +2323,7 @@ document.addEventListener("click",event=>{
  })();
 },true);
 if("serviceWorker" in navigator){
- gymAlertRegisterWorker();
+ // Register only when someone opts in. Avoid unnecessary startup network work.
  navigator.serviceWorker.addEventListener?.("message",event=>{
   if(event.data?.type!=="EDGY_GYM_OPEN"||!user)return;
   const target=event.data.page==="feed"?"feed":"treino";
@@ -2367,6 +2338,7 @@ if(gymAlertLink==="feed"||gymAlertLink==="treino"){
   if(user&&page!==gymAlertLink){page=gymAlertLink;render()}
  };
 }
+
 
 
 })();
