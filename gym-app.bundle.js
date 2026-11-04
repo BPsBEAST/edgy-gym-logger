@@ -267,14 +267,8 @@ function gymFeedMarkup(){
  (visible.length?visible.map(gymFeedCard).join(""):'<div class="card"><p class="muted">Ainda não há publicações nesta vista. Segue atletas ou partilha o teu próximo treino.</p></div>')+
  '<div class="card"><h3>Encontrar atletas</h3><input class="input" id="gymFindPeople" placeholder="Procurar por nome ou @" value="'+esc(gymFeedSearch)+'">'+(people.length?people.slice(0,25).map(p=>'<div class="row item"><div><strong>'+esc(p.display_name)+'</strong><div class="muted" style="font-size:12px">@'+esc(p.username||"edgy")+'</div></div><button class="btn small '+(following.has(p.user_id)?"secondary":"")+'" data-follow="'+p.user_id+'">'+(following.has(p.user_id)?"A seguir ✓":"Seguir")+'</button></div>').join(""):'<p class="muted">Ainda não há outros perfis públicos correspondentes.</p>')+'</div>';
 }
-function gymFeedCard(p){
- const author=gymSocialProfiles.find(x=>x.user_id===p.user_id);
- const likes=gymPostLikes.filter(x=>x.post_id===p.id).length;
- const liked=gymPostLikes.some(x=>x.post_id===p.id&&x.user_id===user.id);
- return '<div class="card"><div class="row"><div><strong>'+esc(author?.display_name||"Atleta EDGY")+'</strong><div class="muted" style="font-size:12px">@'+esc(author?.username||"edgy")+' · '+date(p.created_at)+'</div></div><span class="pill">'+({pr:"🏆 PR",workout:"🏋️ Treino",goal:"🎯 Meta",post:"✎ Publicação"}[p.kind]||"Treino")+'</span></div><h3 style="margin-top:14px">'+esc(p.title)+'</h3><p class="muted" style="white-space:pre-wrap">'+esc(p.body)+'</p><div class="row"><button class="btn small '+(liked?"":"secondary")+'" data-like="'+p.id+'">'+(liked?"♥":"♡")+' '+likes+'</button>'+(p.user_id===user.id?'<button class="btn ghost small" data-delete-post="'+p.id+'">Eliminar</button>':"")+'</div></div>';
-}
-const gymOldRender=render;
-render=function(){gymOldRender()};
+// One Feed-card renderer: gym-community.js assigns it after its dependencies load.
+let gymFeedCard;
 renderProfile=gymProfileMarkup;
 renderExercises=gymExercisesMarkup;
 renderHistory=gymHistoryMarkup;
@@ -503,16 +497,19 @@ const gymRestWorkoutBase=renderWorkout;
 renderWorkout=function(){
  const body=gymRestWorkoutBase();
  if(!user||!active)return body;
- const rest='<section class="card gymRestCard"><div class="gymRestTop"><div><span class="gymRestEyebrow">RECUPERAÇÃO</span><h3>Descanso entre séries</h3><div class="gymRestClock" id="gymRestClock">01:30</div></div><label class="gymRestSelectGroup"><span>Duração</span><select class="input gymRestSelect" id="gymRestPreset" aria-label="Duração do descanso"><option value="45">45 s</option><option value="60">60 s</option><option value="90">90 s</option><option value="120">120 s</option><option value="180">180 s</option></select></label></div><div class="gymRestTrack" role="progressbar" aria-label="Descanso restante"><span id="gymRestProgress"></span></div><div class="gymRestActions"><button type="button" class="btn small" id="gymRestStart">▶ Iniciar descanso</button><button type="button" class="btn secondary small" id="gymRestStop">Parar</button></div><div class="gymRestAlertOption">'+gymAlertButton("rest")+'<small>Recebe um aviso quando o descanso terminar, com as notificações autorizadas.</small></div></section>';
- const place=body.indexOf('<section class="card gymExerciseWorkoutCard">');
+ const rest=gymRestIsHidden()
+  ?'<div class="gymRestRestore"><span><strong>Descanso</strong><small>Temporizador oculto neste dispositivo</small></span><button type="button" id="gymRestShow" aria-label="Voltar a mostrar temporizador de descanso">＋ Mostrar temporizador</button></div>'
+  :'<section class="card gymRestCard"><div class="gymRestTop"><div><span class="gymRestEyebrow">RECUPERAÇÃO</span><h3>Descanso entre séries</h3><div class="gymRestClock" id="gymRestClock">01:30</div></div><label class="gymRestSelectGroup"><span>Duração</span><select class="input gymRestSelect" id="gymRestPreset" aria-label="Duração do descanso"><option value="45">45 s</option><option value="60">60 s</option><option value="90">90 s</option><option value="120">120 s</option><option value="180">180 s</option></select></label></div><div class="gymRestTrack" role="progressbar" aria-label="Descanso restante"><span id="gymRestProgress"></span></div><div class="gymRestActions"><button type="button" class="btn small" id="gymRestStart">▶ Iniciar descanso</button><button type="button" class="btn secondary small" id="gymRestStop">Parar</button></div><div class="gymRestFooter"><button type="button" id="gymRestHide" class="gymRestHideBtn" aria-label="Remover temporizador de descanso">Remover temporizador</button></div><div class="gymRestAlertOption">'+gymAlertButton("rest")+'<small>Recebe um aviso quando o descanso terminar, com as notificações autorizadas.</small></div></section>';
+ const place=body.indexOf('<section class="card gymExerciseWorkoutCard"');
  const fallback=body.indexOf('<div class="gymWorkoutFooterActions">');
  const at=place>=0?place:(fallback>=0?fallback:0);
  return body.slice(0,at)+rest+body.slice(at);
 };
 function gymRestKey(type){return "edgy-gym-rest-"+(user?.id||"guest")+"-"+type}
+function gymRestIsHidden(){return localStorage.getItem(gymRestKey("hidden"))==="1"}
 function gymRestPresetSeconds(){return Number(localStorage.getItem(gymRestKey("preset")))||90}
 function gymPaintRest(){
- if(!user)return;
+ if(!user||!active||gymRestIsHidden())return;
  const clock=document.getElementById("gymRestClock");
  const preset=gymRestPresetSeconds(),end=Number(localStorage.getItem(gymRestKey("end")))||0;
  const remain=end?Math.max(0,Math.ceil((end-Date.now())/1000)):0;
@@ -538,12 +535,30 @@ function gymPaintRest(){
 }
 const gymRestRenderBase=render;
 render=function(){gymRestRenderBase();gymPaintRest()};
-setInterval(()=>{gymPaintRest();gymPaintWorkoutElapsed()},1000);
+// Single 1-second tick for both clocks. Do nothing while there is no active session.
+setInterval(()=>{
+ if(!user||!active||document.visibilityState==="hidden")return;
+ gymPaintRest();
+ gymPaintWorkoutElapsed();
+},1000);
 document.addEventListener("visibilitychange",()=>{
  if(document.visibilityState==="visible"){gymPaintRest();gymPaintWorkoutElapsed()}
 });
 document.addEventListener("click",event=>{
  const b=event.target.closest("button");if(!b||!user)return;
+ if(b.id==="gymRestHide"){
+  // Remove the panel and cancel the current rest; never delete workout data.
+  localStorage.setItem(gymRestKey("hidden"),"1");
+  localStorage.removeItem(gymRestKey("end"));
+  render();
+  toast("Temporizador de descanso oculto.");
+  return;
+ }
+ if(b.id==="gymRestShow"){
+  localStorage.removeItem(gymRestKey("hidden"));
+  render();
+  return;
+ }
  if(b.id==="gymRestStart"){
   localStorage.setItem(gymRestKey("end"),String(Date.now()+gymRestPresetSeconds()*1000));
   gymPaintRest();
@@ -788,17 +803,8 @@ async function gymUXUploadPhoto(file){
   if(old&&old!==newPath&&old.startsWith(user.id+"/"))db.storage.from("edgy-avatars").remove([old]).catch(()=>{});
  }catch(error){console.error(error);toast(error.message||"Não foi possível guardar a fotografia")}
 }
-async function gymUXAddExercise(id){
- gymPrepareMotion("exercise",id);
- gymUXClose();
- action(async()=>{
-  const {data:we,error:e}=await db.from("gym_workout_exercises").insert({workout_id:active.id,exercise_id:id,position:(active.gym_workout_exercises||[]).length}).select("id").single();
-  if(e)throw e;
-  const previous=previousFor(id)[0];
-  const {error:s}=await db.from("gym_sets").insert({workout_exercise_id:we.id,position:0,weight:previous?.weight||0,reps:previous?.reps||0});
-  if(s)throw s;
- });
-}
+// Exercise creation is implemented once in gym-performance.js.
+let gymUXAddExercise;
 document.addEventListener("click",event=>{
  const b=event.target.closest("button");if(!b)return;
  if(b.matches('[data-ux-close]')){event.preventDefault();gymUXClose();return}
