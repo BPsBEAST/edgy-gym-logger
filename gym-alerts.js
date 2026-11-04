@@ -165,7 +165,7 @@ document.addEventListener("click",event=>{
  })();
 },true);
 if("serviceWorker" in navigator){
- gymAlertRegisterWorker();
+ // Register only when someone opts in. Avoid unnecessary startup network work.
  navigator.serviceWorker.addEventListener?.("message",event=>{
   if(event.data?.type!=="EDGY_GYM_OPEN"||!user)return;
   const target=event.data.page==="feed"?"feed":"treino";
