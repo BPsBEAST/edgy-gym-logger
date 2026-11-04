@@ -1,0 +1,50 @@
+/* EDGY Gym · consistent input focus, no iOS auto-zoom, optional rest card.
+   Keep native pinch zoom available for accessibility. */
+html{-webkit-text-size-adjust:100%}
+@media(max-width:1024px),(hover:none) and (pointer:coarse){
+ body input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="color"]),
+ body select,
+ body textarea,
+ body [contenteditable="true"]{
+   font-size:16px!important;
+   line-height:normal;
+ }
+ button,a,label,select,[role="button"]{touch-action:manipulation}
+}
+.gymRestFooter{
+ display:flex;justify-content:flex-end;align-items:center;
+ border-top:1px solid #583b63;
+ margin-top:12px;padding-top:10px;
+}
+.gymRestHideBtn{
+ background:transparent;border:1px solid #6e4b6c;color:#d6b8cd;
+ padding:9px 12px;min-height:35px;border-radius:3px;
+ font-size:11px;font-weight:750;cursor:pointer;
+ transition:background .15s,border-color .15s,color .15s;
+}
+.gymRestHideBtn:hover{background:#4b2b4a;border-color:#e45b9d;color:#fff}
+.gymRestRestore{
+ display:flex;justify-content:space-between;align-items:center;gap:12px;
+ background:linear-gradient(120deg,#2a213b,#231a32);
+ border:1px solid #533b5d;border-left:3px solid #d33687;
+ padding:13px 16px;margin:13px 0;border-radius:3px;
+}
+.gymRestRestore>span{display:grid;gap:4px}
+.gymRestRestore strong{font-size:12px;color:#f4e9f4}
+.gymRestRestore small{font-size:10px;color:#b8a7c4}
+.gymRestRestore button{
+ background:#49284c;border:1px solid #a94b8c;border-radius:3px;
+ color:#ffd2e7;padding:10px 12px;min-height:36px;
+ font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap;
+}
+.gymRestRestore button:hover{background:#66305c;border-color:#ef65ad}
+.gymRestRestore button:focus-visible,.gymRestHideBtn:focus-visible{
+ outline:2px solid #ff76bb;outline-offset:3px
+}
+@media(max-width:420px){
+ .gymRestRestore{align-items:stretch;flex-direction:column}
+ .gymRestRestore button{width:100%}
+}
+@media(prefers-reduced-motion:reduce){
+ .gymRestHideBtn,.gymRestRestore button{transition:none!important}
+}
