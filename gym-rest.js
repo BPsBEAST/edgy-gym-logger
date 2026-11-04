@@ -4,16 +4,19 @@ const gymRestWorkoutBase=renderWorkout;
 renderWorkout=function(){
  const body=gymRestWorkoutBase();
  if(!user||!active)return body;
- const rest='<section class="card gymRestCard"><div class="gymRestTop"><div><span class="gymRestEyebrow">RECUPERAÇÃO</span><h3>Descanso entre séries</h3><div class="gymRestClock" id="gymRestClock">01:30</div></div><label class="gymRestSelectGroup"><span>Duração</span><select class="input gymRestSelect" id="gymRestPreset" aria-label="Duração do descanso"><option value="45">45 s</option><option value="60">60 s</option><option value="90">90 s</option><option value="120">120 s</option><option value="180">180 s</option></select></label></div><div class="gymRestTrack" role="progressbar" aria-label="Descanso restante"><span id="gymRestProgress"></span></div><div class="gymRestActions"><button type="button" class="btn small" id="gymRestStart">▶ Iniciar descanso</button><button type="button" class="btn secondary small" id="gymRestStop">Parar</button></div><div class="gymRestAlertOption">'+gymAlertButton("rest")+'<small>Recebe um aviso quando o descanso terminar, com as notificações autorizadas.</small></div></section>';
+ const rest=gymRestIsHidden()
+  ?'<div class="gymRestRestore"><span><strong>Descanso</strong><small>Temporizador oculto neste dispositivo</small></span><button type="button" id="gymRestShow" aria-label="Voltar a mostrar temporizador de descanso">＋ Mostrar temporizador</button></div>'
+  :'<section class="card gymRestCard"><div class="gymRestTop"><div><span class="gymRestEyebrow">RECUPERAÇÃO</span><h3>Descanso entre séries</h3><div class="gymRestClock" id="gymRestClock">01:30</div></div><label class="gymRestSelectGroup"><span>Duração</span><select class="input gymRestSelect" id="gymRestPreset" aria-label="Duração do descanso"><option value="45">45 s</option><option value="60">60 s</option><option value="90">90 s</option><option value="120">120 s</option><option value="180">180 s</option></select></label></div><div class="gymRestTrack" role="progressbar" aria-label="Descanso restante"><span id="gymRestProgress"></span></div><div class="gymRestActions"><button type="button" class="btn small" id="gymRestStart">▶ Iniciar descanso</button><button type="button" class="btn secondary small" id="gymRestStop">Parar</button></div><div class="gymRestFooter"><button type="button" id="gymRestHide" class="gymRestHideBtn" aria-label="Remover temporizador de descanso">Remover temporizador</button></div><div class="gymRestAlertOption">'+gymAlertButton("rest")+'<small>Recebe um aviso quando o descanso terminar, com as notificações autorizadas.</small></div></section>';
  const place=body.indexOf('<section class="card gymExerciseWorkoutCard">');
  const fallback=body.indexOf('<div class="gymWorkoutFooterActions">');
  const at=place>=0?place:(fallback>=0?fallback:0);
  return body.slice(0,at)+rest+body.slice(at);
 };
 function gymRestKey(type){return "edgy-gym-rest-"+(user?.id||"guest")+"-"+type}
+function gymRestIsHidden(){return localStorage.getItem(gymRestKey("hidden"))==="1"}
 function gymRestPresetSeconds(){return Number(localStorage.getItem(gymRestKey("preset")))||90}
 function gymPaintRest(){
- if(!user)return;
+ if(!user||!active||gymRestIsHidden())return;
  const clock=document.getElementById("gymRestClock");
  const preset=gymRestPresetSeconds(),end=Number(localStorage.getItem(gymRestKey("end")))||0;
  const remain=end?Math.max(0,Math.ceil((end-Date.now())/1000)):0;
@@ -39,12 +42,30 @@ function gymPaintRest(){
 }
 const gymRestRenderBase=render;
 render=function(){gymRestRenderBase();gymPaintRest()};
-setInterval(()=>{gymPaintRest();gymPaintWorkoutElapsed()},1000);
+// Single 1-second tick for both clocks. Do nothing while there is no active session.
+setInterval(()=>{
+ if(!user||!active||document.visibilityState==="hidden")return;
+ gymPaintRest();
+ gymPaintWorkoutElapsed();
+},1000);
 document.addEventListener("visibilitychange",()=>{
  if(document.visibilityState==="visible"){gymPaintRest();gymPaintWorkoutElapsed()}
 });
 document.addEventListener("click",event=>{
  const b=event.target.closest("button");if(!b||!user)return;
+ if(b.id==="gymRestHide"){
+  // Remove the panel and cancel the current rest; never delete workout data.
+  localStorage.setItem(gymRestKey("hidden"),"1");
+  localStorage.removeItem(gymRestKey("end"));
+  render();
+  toast("Temporizador de descanso oculto.");
+  return;
+ }
+ if(b.id==="gymRestShow"){
+  localStorage.removeItem(gymRestKey("hidden"));
+  render();
+  return;
+ }
  if(b.id==="gymRestStart"){
   localStorage.setItem(gymRestKey("end"),String(Date.now()+gymRestPresetSeconds()*1000));
   gymPaintRest();
