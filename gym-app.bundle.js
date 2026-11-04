@@ -93,15 +93,9 @@ function renderProfile(){const done=history.filter(w=>w.finished_at),tot=done.re
 function renderFeed(){return '<h1>Feed</h1><p class="muted">A comunidade EDGY Gym.</p><div class="card hero"><h3>Em preparação</h3><p class="muted">Em breve: seguir atletas, publicar PRs e conquistas. Os teus treinos e medidas não serão partilhados automaticamente.</p></div><h2>A tua atividade</h2>'+history.filter(w=>w.finished_at).slice(0,5).map(workoutCard).join('')}
 async function action(fn){try{if(typeof gymHasPendingSetEdits==='function'&&gymHasPendingSetEdits())await gymFlushSetWrites();await fn();await load();render()}catch(e){console.error(e);toast(e.message||'Ocorreu um erro')}}
 document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.page){if(!user||!gymAuthReady)return;if(page===b.dataset.page){document.querySelector('.app')?.scrollTo?.({top:0,behavior:'smooth'});return}page=b.dataset.page;render();return}if(!user)return;
-if(b.id==='start')gymUXWorkoutDialog();
-if(b.id==='finish')action(async()=>{if(!confirm('Terminar treino?'))return;const {error}=await db.from('gym_workouts').update({finished_at:new Date().toISOString()}).eq('id',active.id);if(error)throw error;page='historico'});
-if(b.id==='rename')gymUXWorkoutDialog('rename');
-if(b.id==='pick')gymUXPickExercise();
 if(b.dataset.exId)gymFastAddExercise(b.dataset.exId);
 if(b.dataset.cycleSet)gymFastCycleSet(b);
 if(b.dataset.addSet)gymFastAddSet(b);
-if(b.dataset.removeEx)action(async()=>{if(!confirm('Remover este exercício e as suas séries?'))return;const {error}=await db.from('gym_workout_exercises').delete().eq('id',b.dataset.removeEx);if(error)throw error});
-if(b.id==='new-ex')gymUXCreateExercise();
 if(b.id==='logout')action(async()=>{await db.auth.signOut();user=null;profile=null;render()});
 if(b.dataset.filter){filter=b.dataset.filter;render()}});
 document.addEventListener('input',e=>{if(e.target.id==='search'){search=e.target.value;const caret=e.target.selectionStart;render();const input=document.querySelector('#search');input.focus();input.setSelectionRange(caret,caret)}if(e.target.id==='pick-search'){const q=e.target.value.toLowerCase();document.querySelectorAll('#pick-list button').forEach(b=>b.style.display=b.textContent.toLowerCase().includes(q)?'block':'none')}});
@@ -2058,7 +2052,7 @@ gymStartNotificationSync=function(){
   }
   channel.subscribe(status=>{
    gymLiveSubscribed=status==="SUBSCRIBED";
-   if(status==="SUBSCRIBED")gymScheduleLiveSync();
+   // Initial identity/activity data are already fetched by startup; avoid a duplicate request.
    if(status==="CHANNEL_ERROR"||status==="TIMED_OUT")console.warn("EDGY Gym realtime:",status);
   });
  }catch(err){console.warn("EDGY Gym channel:",err)}
