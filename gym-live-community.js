@@ -242,7 +242,7 @@ gymStartNotificationSync=function(){
   }
   channel.subscribe(status=>{
    gymLiveSubscribed=status==="SUBSCRIBED";
-   if(status==="SUBSCRIBED")gymScheduleLiveSync();
+   // Initial identity/activity data are already fetched by startup; avoid a duplicate request.
    if(status==="CHANNEL_ERROR"||status==="TIMED_OUT")console.warn("EDGY Gym realtime:",status);
   });
  }catch(err){console.warn("EDGY Gym channel:",err)}
