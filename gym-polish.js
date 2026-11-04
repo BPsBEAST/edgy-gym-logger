@@ -116,35 +116,14 @@ gymCloseNotifications=function(){
   layer.classList.remove("gymNotifClosing");
  },210);
 };
-function gymStartNotificationSync(){
- if(!user)return;
- if(gymRealtimeChannel){db.removeChannel?.(gymRealtimeChannel);gymRealtimeChannel=null}
- if(typeof db.channel==="function"){
-  try{
-   gymRealtimeChannel=db.channel("edgy-gym-alerts-"+user.id);
-   for(const table of ["gym_post_likes","gym_post_comments","gym_follows"]){
-    gymRealtimeChannel.on("postgres_changes",{event:"*",schema:"public",table},()=>{
-     if(gymNoticeRefreshTimer)clearTimeout(gymNoticeRefreshTimer);
-     gymNoticeRefreshTimer=setTimeout(gymFetchActivity,350);
-    });
-   }
-   gymRealtimeChannel.subscribe(status=>{
-    if(status==="CHANNEL_ERROR"||status==="TIMED_OUT")console.warn("EDGY Gym realtime:",status);
-   });
-  }catch(err){console.warn("EDGY Gym realtime:",err.message)}
- }
-}
+// Real-time notifications are initialized once in gym-live-community.js.
+let gymStartNotificationSync;
 const gymPolishBaseStart=window.EDGY_GYM_START;
 window.EDGY_GYM_START=async function(){
  await gymPolishBaseStart();
  if(user){await gymFetchActivity();gymStartNotificationSync()}
 };
-setInterval(()=>{
- if(user&&document.visibilityState!=="hidden")gymFetchActivity();
-},45000);
-document.addEventListener("visibilitychange",()=>{
- if(user&&document.visibilityState==="visible")gymFetchActivity();
-});
+// Social polling and foreground refresh are centralized in gym-live-community.js.
 document.addEventListener("click",event=>{
  const btn=event.target.closest("button[data-step-set]");
  if(btn&&user&&active){event.preventDefault();gymFastStepper(btn)}
