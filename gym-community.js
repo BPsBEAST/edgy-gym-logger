@@ -69,42 +69,7 @@ renderProfile=function(){
  const anchor='<div class="card"><div class="row"><h3>Privacidade e conta</h3>';
  return original.includes(anchor)?original.replace(anchor,feed+anchor):original+feed;
 };
-async function gymAthleteDialog(id){
- if(!user||!id)return;
- if(id===user.id){gymUXClose();page="perfil";render();return}
- const originalUser=user.id;
- gymUXShow("Perfil EDGY Gym","A consultar o perfil público deste atleta.",'<div class="gymUXEmpty">A carregar o perfil…</div>',true);
- try{
-  const {data:athlete,error:athleteError}=await db.from("gym_social_profiles")
-   .select("user_id,display_name,username,is_public,avatar_path").eq("user_id",id).maybeSingle();
-  if(athleteError)throw athleteError;
-  if(!user||user.id!==originalUser)return;
-  if(!athlete||!athlete.is_public){
-   gymUXShow("Perfil privado","Este atleta não tem um perfil público disponível.",'<div class="gymUXEmpty">O perfil não pode ser consultado.</div>',true);
-   return;
-  }
-  const {data:posts,error:postError}=await db.from("gym_feed_posts")
-   .select("id,user_id,kind,title,body,created_at").eq("user_id",id).order("created_at",{ascending:false}).limit(50);
-  if(postError)throw postError;
-  if(!user||user.id!==originalUser||!gymUXModalOpen)return;
-  const previous=gymSocialProfiles.findIndex(p=>p.user_id===id);
-  if(previous<0)gymSocialProfiles.push(athlete);else gymSocialProfiles[previous]=athlete;
-  const followers=gymFollowRows.filter(f=>f.followed_id===id).length;
-  const followingCount=gymFollowRows.filter(f=>f.follower_id===id).length;
-  const isFollowing=gymFollowRows.some(f=>f.followed_id===id&&f.follower_id===user.id);
-  const listed=posts||[];
-  const content='<div class="gymAthleteHeader">'+gymCommunityAvatar(id,athlete.display_name)+
-   '<div><h3>'+esc(athlete.display_name||"Atleta EDGY")+'</h3><span>@'+esc(athlete.username||"edgy")+'</span></div></div>'+
-   '<div class="gymAthleteActions"><button type="button" class="btn small '+(isFollowing?"secondary":"")+'" data-gym-athlete-follow="'+esc(id)+'">'+(isFollowing?"A seguir ✓":"Seguir atleta")+'</button></div>'+
-   '<div class="gymAthleteStats"><span><strong>'+followers+'</strong> seguidores</span><span><strong>'+followingCount+'</strong> a seguir</span><span><strong>'+listed.length+'</strong> publicações recentes</span></div>'+
-   '<h3 class="gymAthleteFeedTitle">Publicações</h3>'+
-   (listed.length?listed.map(p=>'<article class="gymAthletePost"><strong>'+esc(({goal:"Meta",workout:"Treino",pr:"Recorde",post:"Publicação"}[p.kind]||"Publicação"))+'</strong><p>'+esc(p.kind==="post"?(p.body||p.title):p.title)+'</p>'+(p.kind!=="post"&&p.body?'<p>'+esc(p.body)+'</p>':"")+'<small>'+date(p.created_at)+'</small></article>').join(""):'<p class="muted">Este atleta ainda não tem publicações públicas.</p>');
-  gymUXShow("Perfil EDGY Gym","Perfil público e publicações do atleta.",content,true);
- }catch(error){
-  console.warn("EDGY Gym profile:",error);
-  if(gymUXModalOpen)gymUXShow("Perfil indisponível","Não foi possível carregar este atleta.",'<div class="gymUXEmpty">Tenta abrir o perfil novamente.</div>',true);
- }
-}
+// Public athlete profile is implemented once in gym-live-community.js.
 document.addEventListener("error",event=>{
  if(event.target?.matches?.("img[data-gym-avatar]"))event.target.remove();
 },true);
