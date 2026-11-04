@@ -227,17 +227,8 @@ async function gymUXUploadPhoto(file){
   if(old&&old!==newPath&&old.startsWith(user.id+"/"))db.storage.from("edgy-avatars").remove([old]).catch(()=>{});
  }catch(error){console.error(error);toast(error.message||"Não foi possível guardar a fotografia")}
 }
-async function gymUXAddExercise(id){
- gymPrepareMotion("exercise",id);
- gymUXClose();
- action(async()=>{
-  const {data:we,error:e}=await db.from("gym_workout_exercises").insert({workout_id:active.id,exercise_id:id,position:(active.gym_workout_exercises||[]).length}).select("id").single();
-  if(e)throw e;
-  const previous=previousFor(id)[0];
-  const {error:s}=await db.from("gym_sets").insert({workout_exercise_id:we.id,position:0,weight:previous?.weight||0,reps:previous?.reps||0});
-  if(s)throw s;
- });
-}
+// Exercise creation is implemented once in gym-performance.js.
+let gymUXAddExercise;
 document.addEventListener("click",event=>{
  const b=event.target.closest("button");if(!b)return;
  if(b.matches('[data-ux-close]')){event.preventDefault();gymUXClose();return}
