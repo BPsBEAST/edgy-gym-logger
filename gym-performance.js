@@ -254,13 +254,22 @@ async function gymFastAddExercise(id){
   const position=(active.gym_workout_exercises||[]).length;
   const {data:created,error}=await db.from("gym_workout_exercises").insert({workout_id:workoutId,exercise_id:id,position}).select("*").single();
   if(error)throw error;
-  const prev=previousFor(id)[0];
-  const {data:set,error:setError}=await db.from("gym_sets").insert({workout_exercise_id:created.id,position:0,weight:prev?.weight??0,reps:prev?.reps??0}).select("*").single();
+  // Recreate the completed working/drop sets of the latest session for this exercise.
+  // No repeated requests: a single batch insert prepares the full exercise.
+  const previous=previousFor(id).slice(0,20);
+  const templates=previous.length?previous:[{weight:0,reps:0,set_type:"working"}];
+  const setsToCreate=templates.map((prior,position)=>({
+   workout_exercise_id:created.id,position,
+   weight:Number(prior.weight)||0,reps:Number(prior.reps)||0,
+   set_type:prior.set_type==="dropset"?"dropset":"working"
+  }));
+  const {data:sets,error:setError}=await db.from("gym_sets").insert(setsToCreate).select("*");
   if(setError)throw setError;
   const exercise=exercises.find(e=>e.id===id);
-  active.gym_workout_exercises.push({...created,gym_exercises:{name:exercise?.name||"Exercício",muscle:exercise?.muscle},gym_sets:[set]});
+  active.gym_workout_exercises.push({...created,gym_exercises:{name:exercise?.name||"Exercício",muscle:exercise?.muscle},gym_sets:sets||[]});
   gymPrepareMotion("exercise",id);
   render();
+  if(previous.length)toast("Carregadas "+previous.length+" séries do treino anterior.");
  }catch(err){
   console.error(err);
   toast(err.message||"Não foi possível adicionar o exercício");
