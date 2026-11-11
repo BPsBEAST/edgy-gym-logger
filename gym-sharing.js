@@ -74,11 +74,13 @@ async function gymHydrateSharedWorkouts(){
  const missing=ids.filter(id=>!gymSharedWorkoutCache.has(id));
  if(!missing.length)return;
  gymSharedLoading=true;
+ const requestOwner=user.id;
  try{
   for(let i=0;i<missing.length;i+=30){
    const subset=missing.slice(i,i+30);
    const {data,error}=await db.rpc("gym_shared_workouts",{p_workout_ids:subset});
    if(error)throw error;
+   if(user?.id!==requestOwner)return;
    const fetched=new Map((Array.isArray(data)?data:[]).map(w=>[w.id,w]));
    for(const id of subset)gymSharedWorkoutCache.set(id,fetched.get(id)||null);
    // Render into current DOM (old cards may have been replaced during the request).
@@ -90,6 +92,7 @@ async function gymHydrateSharedWorkouts(){
    node.innerHTML='<p class="gymShareEmpty">Não foi possível carregar o treino. Podes tentar abrir novamente.</p>';
  }finally{
   gymSharedLoading=false;
+  if(user?.id!==requestOwner)return;
   gymPaintSharedWorkoutPreviews();
   const needsNew=document.querySelectorAll("[data-gym-workout-preview]");
   if([...needsNew].some(node=>!gymSharedWorkoutCache.has(node.dataset.gymWorkoutPreview)&&!ids.includes(node.dataset.gymWorkoutPreview))){
