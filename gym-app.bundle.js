@@ -1774,6 +1774,18 @@ async function gymFastDeleteSet(id){
   toast(error.message||"Não foi possível eliminar a série.");
  }finally{gymPendingAdds.delete("delete:"+id)}
 }
+// Last completed exercise layout, including W and D series (not just work sets).
+function gymPreviousCompletedSeries(exerciseId){
+ for(const workout of history){
+  if(!workout.finished_at)continue;
+  const record=(workout.gym_workout_exercises||[]).find(we=>we.exercise_id===exerciseId);
+  if(!record)continue;
+  const done=(record.gym_sets||[]).filter(set=>set.completed)
+   .slice().sort((a,b)=>a.position-b.position);
+  if(done.length)return done;
+ }
+ return [];
+}
 async function gymFastAddExercise(id){
  if(!user||!active||gymPendingAdds.has("exercise:"+id))return;
  gymPendingAdds.add("exercise:"+id);
@@ -1786,12 +1798,12 @@ async function gymFastAddExercise(id){
   if(error)throw error;
   // Recreate the completed working/drop sets of the latest session for this exercise.
   // No repeated requests: a single batch insert prepares the full exercise.
-  const previous=previousFor(id).slice(0,20);
+  const previous=gymPreviousCompletedSeries(id).slice(0,20);
   const templates=previous.length?previous:[{weight:0,reps:0,set_type:"working"}];
   const setsToCreate=templates.map((prior,position)=>({
    workout_exercise_id:created.id,position,
    weight:Number(prior.weight)||0,reps:Number(prior.reps)||0,
-   set_type:prior.set_type==="dropset"?"dropset":"working"
+   set_type:["warmup","dropset"].includes(prior.set_type)?prior.set_type:"working"
   }));
   const {data:sets,error:setError}=await db.from("gym_sets").insert(setsToCreate).select("*");
   if(setError)throw setError;
