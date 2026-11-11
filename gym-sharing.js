@@ -82,7 +82,7 @@ async function gymHydrateSharedWorkouts(){
   gymSharedLoading=false;
   gymPaintSharedWorkoutPreviews();
   const needsNew=document.querySelectorAll("[data-gym-workout-preview]");
-  if([...needsNew].some(node=>!gymSharedWorkoutCache.has(node.dataset.gymWorkoutPreview))){
+  if([...needsNew].some(node=>!gymSharedWorkoutCache.has(node.dataset.gymWorkoutPreview)&&!ids.includes(node.dataset.gymWorkoutPreview))){
    // Only needed if a new set of cards appeared during the previous request.
    gymHydrateSharedWorkouts();
   }
