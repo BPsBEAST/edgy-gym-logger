@@ -6,13 +6,11 @@ function gymShareEnsureAccount(){
  const current=user?.id||null;
  if(current!==gymSharedCacheOwner){
   gymSharedWorkoutCache.clear();
-  gymOwnWorkoutsVisible=12;
   gymSharedCacheOwner=current;
  }
 }
 let gymSharedLoading=false;
 let gymSharePublishing=false;
-let gymOwnWorkoutsVisible=12;
 function gymSharingWorkoutToDetail(workout){
  const entries=(workout.gym_workout_exercises||[]).slice().sort((a,b)=>a.position-b.position);
  return {
@@ -150,23 +148,23 @@ function gymSharingWorkoutEntry(workout){
  '<div><strong>'+esc(workout.name||"Treino")+'</strong><small>'+date(workout.started_at)+' · '+gymSharingNum(workout.duration_minutes)+' min</small></div></div>'+
  gymSharingInline(workout.id)+'</article>';
 }
-function gymSharingPublicWorkoutList(workouts,hasMore=false){
+function gymSharingPublicWorkoutList(workouts){
  const list=Array.isArray(workouts)?workouts:[];
- return '<section class="gymPublicWorkoutCollection"><div class="gymPublicSectionHead"><div><span class="gymPublicEyebrow">HISTÓRICO PÚBLICO</span><h3>Treinos concluídos</h3><small>Todos os treinos do atleta, mesmo os não publicados no Feed</small></div><strong>'+list.length+(hasMore?'+':'')+'</strong></div>'+
- (list.length?list.map(gymSharingWorkoutEntry).join(""):'<p class="gymShareEmpty">Ainda não há treinos concluídos.</p>')+
- (hasMore?'<button type="button" class="gymShareLoadMore" data-gym-more-public="true">Mostrar mais treinos</button>':'')+'</section>';
+ return '<section class="gymPublicWorkoutCollection"><div class="gymPublicSectionHead"><div><span class="gymPublicEyebrow">ESTA SEMANA</span><h3>Treinos desta semana</h3><small>Sessões concluídas entre segunda-feira e domingo</small></div><strong>'+list.length+'</strong></div>'+
+ (list.length?list.map(gymSharingWorkoutEntry).join(""):'<p class="gymShareEmpty">Este atleta ainda não concluiu treinos nesta semana.</p>')+'</section>';
 }
 function gymSharingPersonalWorkoutList(){
  if(!user)return "";
- const all=gymDone().slice().sort((a,b)=>new Date(b.started_at)-new Date(a.started_at));
- const show=all.slice(0,gymOwnWorkoutsVisible);
- // O histórico do próprio já está em memória: evita RPCs redundantes ao abrir o perfil.
+ const monday=gymMondayOf(new Date()),nextMonday=new Date(monday);
+ nextMonday.setDate(nextMonday.getDate()+7);
+ const all=gymDone().filter(w=>{
+  const d=new Date(w.started_at);return d>=monday&&d<nextMonday;
+ }).sort((a,b)=>new Date(b.started_at)-new Date(a.started_at));
  gymShareEnsureAccount();
- for(const workout of show)if(!gymSharedWorkoutCache.has(workout.id))gymSharedWorkoutCache.set(workout.id,gymSharingWorkoutToDetail(workout));
+ for(const workout of all)if(!gymSharedWorkoutCache.has(workout.id))gymSharedWorkoutCache.set(workout.id,gymSharingWorkoutToDetail(workout));
  const own=gymOwnSocial();
- return '<section class="gymPublicWorkoutCollection gymPersonalWorkoutCollection"><div class="gymPublicSectionHead"><div><span class="gymPublicEyebrow">O TEU HISTÓRICO</span><h3>Treinos concluídos</h3><small>'+(own?.is_public?'Visíveis para outros atletas no teu perfil público':'Só tu podes consultar estes treinos enquanto o perfil for privado')+'</small></div><strong>'+all.length+'</strong></div>'+
- (show.length?show.map(w=>gymSharingWorkoutEntry({id:w.id,name:w.name,started_at:w.started_at,duration_minutes:duration(w)})).join(""):'<p class="gymShareEmpty">Ainda não tens treinos concluídos.</p>')+
- (all.length>show.length?'<button type="button" class="gymShareLoadMore" data-gym-more-own="true">Mostrar mais '+Math.min(12,all.length-show.length)+' treinos</button>':'')+'</section>';
+ return '<section class="gymPublicWorkoutCollection gymPersonalWorkoutCollection"><div class="gymPublicSectionHead"><div><span class="gymPublicEyebrow">ESTA SEMANA</span><h3>Treinos desta semana</h3><small>'+(own?.is_public?'Sessões concluídas visíveis no teu perfil público':'Só tu podes consultar estas sessões enquanto o perfil for privado')+'</small></div><strong>'+all.length+'</strong></div>'+
+ (all.length?all.map(w=>gymSharingWorkoutEntry({id:w.id,name:w.name,started_at:w.started_at,duration_minutes:duration(w)})).join(""):'<p class="gymShareEmpty">Ainda não concluíste treinos nesta semana. Consulta as sessões anteriores no Histórico.</p>')+'</section>';
 }
 async function gymSharingOpenWorkout(id){
  if(!user||!id)return;
@@ -212,41 +210,12 @@ function gymSharingDialog(id){
  '<div class="gymShareComposeTitle"><strong>'+esc(workout.name)+'</strong><small>'+date(workout.started_at)+'</small></div>'+intro+
  gymSharingCompactHTML(gymSharingWorkoutToDetail(workout))+
  '<label class="gymShareCaption">Adiciona uma mensagem (opcional)<textarea name="caption" maxlength="220" rows="3" placeholder="Como correu o treino? O que melhoraste?"></textarea></label>'+
- '<p class="gymSharePrivacy">O Feed mostra os top sets e permite expandir todas as séries. Com o perfil público, todos os teus treinos concluídos (incluindo os anteriores e não publicados) também são visíveis no perfil. As medidas continuam privadas.</p>'+
+ '<p class="gymSharePrivacy">O Feed mostra os top sets e permite expandir todas as séries. Com o perfil público, os treinos concluídos desta semana aparecem no perfil; o histórico completo mantém-se no separador Histórico. As medidas continuam privadas.</p>'+
  '<div class="gymShareFormActions"><button type="button" class="btn secondary" data-ux-close>Cancelar</button><button class="btn" type="submit">Publicar treino</button></div></form>',true);
 }
 document.addEventListener("click",event=>{
  const button=event.target.closest?.("button");
  if(!button||!user)return;
- if(button.dataset.gymMoreOwn){
-  event.preventDefault();event.stopImmediatePropagation();
-  gymOwnWorkoutsVisible+=12;
-  const section=document.querySelector(".gymPersonalWorkoutCollection");
-  if(section){section.outerHTML=gymSharingPersonalWorkoutList();gymHydrateSharedWorkouts()}
-  return;
- }
- if(button.dataset.gymMorePublic){
-  event.preventDefault();event.stopImmediatePropagation();
-  const snapshot=gymPublicProfileSnapshot,athleteId=gymPublicProfileId,requester=user.id;
-  if(!snapshot||!athleteId||!snapshot.hasMoreWorkouts)return;
-  button.disabled=true;button.textContent="A carregar…";
-  (async()=>{
-   try{
-    const {data,error}=await db.rpc("gym_public_athlete_workouts",{p_athlete_id:athleteId,p_limit:13,p_offset:snapshot.workouts.length});
-    if(error)throw error;
-    if(user?.id!==requester||gymPublicProfileSnapshot!==snapshot||gymPublicProfileId!==athleteId)return;
-    const entries=Array.isArray(data)?data:[];
-    snapshot.workouts.push(...entries.slice(0,12));
-    snapshot.hasMoreWorkouts=entries.length>12;
-    gymPublicRenderCached();
-   }catch(error){
-    console.warn("Gym more public workouts:",error);
-    toast("Não foi possível carregar mais treinos.");
-    if(button.isConnected){button.disabled=false;button.textContent="Mostrar mais treinos"}
-   }
-  })();
-  return;
- }
  if(button.dataset.shareWorkout){
   event.preventDefault();event.stopImmediatePropagation();
   gymSharingDialog(button.dataset.shareWorkout);return;
