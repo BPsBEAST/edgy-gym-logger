@@ -49,7 +49,9 @@ function render(){
  if(authorized)nav();
  else document.querySelector('#nav').replaceChildren();
  document.querySelector('#status').textContent=!gymAuthReady?'A confirmar a sessão EDGY':user?'Conta EDGY':'Sem sessão';if(!gymAuthReady){screen.innerHTML='<section class="card hero gymAuthLoading" aria-busy="true"><span class="gymAuthSpinner" aria-hidden="true"></span><h2>A entrar na EDGY…</h2><p class="muted">A recuperar a tua sessão guardada.</p></section>';return}if(!user){screen.innerHTML=gymAuthMarkup();return}
-screen.innerHTML=({treino:renderWorkout,historico:renderHistory,exercicios:renderExercises,perfil:renderProfile,feed:renderFeed}[page])()}
+screen.innerHTML=({treino:renderWorkout,historico:renderHistory,exercicios:renderExercises,perfil:renderProfile,feed:renderFeed}[page])();
+if((page==="feed"||page==="perfil")&&typeof gymHydrateSharedWorkouts==="function")gymHydrateSharedWorkouts();
+}
 const workoutCard=w=>'<div class="card"><div class="row"><div><h3>'+esc(w.name)+'</h3><small class="muted">'+date(w.started_at)+'</small></div><span class="pill">'+(w.finished_at?'Concluído':'Em curso')+'</span></div><div class="grid" style="margin:16px 0"><div class="stat"><strong>'+duration(w)+'m</strong><small>Duração</small></div><div class="stat"><strong>'+fmt(volume(w))+'</strong><small>kg volume</small></div><div class="stat"><strong>'+count(w)+'</strong><small>Séries</small></div></div><div class="muted" style="font-size:13px">'+(w.gym_workout_exercises||[]).map(x=>esc(x.gym_exercises?.name)).join(' · ')+'</div></div>';
 function gymSetEditor(we,s,i){
  const prev=previousFor(we.exercise_id)[i],previous=prev?fmt(prev.weight)+' kg × '+prev.reps:'—';
