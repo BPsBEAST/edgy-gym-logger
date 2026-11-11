@@ -1,0 +1,58 @@
+/* EDGY Gym · structured shared workouts and opt-in PRs */
+.gymShareSummary{display:grid;gap:13px;min-width:0;color:#f7edf9}
+.gymShareMeta{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+.gymShareMeta>span{display:grid;align-content:center;text-align:center;gap:5px;min-width:0;padding:10px 5px;background:#332641;border:1px solid #66416c;border-radius:3px}
+.gymShareMeta strong{font-size:17px;font-weight:900;font-variant-numeric:tabular-nums;color:#ffeaf6}
+.gymShareMeta small{font-size:10px;color:#c0a8ca}
+.gymShareExerciseList{display:grid;gap:9px}
+.gymShareExercise{background:#2b203c;border:1px solid #564063;border-left:3px solid #e53495;border-radius:3px;overflow:hidden}
+.gymShareExercise header{display:flex;align-items:center;gap:9px;min-width:0;background:#3b294b;padding:10px 12px}
+.gymShareExercise header strong{font-size:12px;color:#f6eaf5;flex:1;min-width:0;overflow-wrap:anywhere}
+.gymShareExercise header small{white-space:nowrap;color:#bba6c8;font-size:10px}
+.gymShareExerciseIndex{font-size:9px;color:#fb80bd;font-weight:900;letter-spacing:.6px}
+.gymShareSets{display:grid;gap:0}
+.gymShareSet{display:flex;align-items:center;gap:9px;padding:8px 12px;border-top:1px solid #44314f}
+.gymShareSetTag{display:grid;place-items:center;flex:0 0 24px;height:24px;background:#594067;color:#fae8f6;border:1px solid #77537f;border-radius:3px;font-size:10px;font-weight:900}
+.gymShareSetTag.warmup{color:#f8d49c;background:#5b454a}.gymShareSetTag.dropset{color:#cbbafa;background:#463962}
+.gymShareSet strong{font-size:12px;font-weight:850;letter-spacing:.1px;font-variant-numeric:tabular-nums;flex:1;white-space:nowrap}
+.gymShareSet strong span{color:#b7a1c5;font-size:11px}
+.gymShareSet small{color:#c5b5ce;font-size:10px;white-space:nowrap}
+.gymShareSet .gymShareFailure{color:#ff91b6;font-weight:900;letter-spacing:.6px}
+.gymShareEmpty,.gymShareLoading{color:#b6a7c4;font-size:11px;line-height:1.6;padding:12px;margin:0}
+.gymSharedWorkoutInline{margin:13px 0 0;border-top:1px solid #5a4161;padding-top:13px}
+.gymSharedWorkoutInline .gymShareSummary{gap:8px}
+.gymSharedWorkoutInline .gymShareMeta strong{font-size:13px}
+.gymSharedWorkoutInline .gymShareMeta small{font-size:9px}
+.gymSharedWorkoutInline .gymShareExercise{background:#2a203a}
+.gymSharedWorkoutInline .gymShareSet{padding:6px 10px}
+.gymShareOpen{display:block;margin:10px 0 0;width:100%;background:#4b2856;border:1px solid #9e558b;border-radius:3px;padding:10px;color:#ffbfdf;font-size:11px;font-weight:900;text-align:center;cursor:pointer}
+.gymShareOpen:hover{background:#693064;color:#fff;border-color:#f05eaf}
+.gymPublicWorkoutCollection{display:grid;gap:7px;padding:16px;background:#291f3b;border:1px solid #5b4163;border-radius:3px}
+.gymPublicWorkoutCollection .gymPublicSectionHead{margin-bottom:10px}
+.gymPublicWorkoutLink{display:flex;align-items:center;gap:11px;width:100%;text-align:left;padding:11px 12px;border-radius:3px;border:1px solid #64446e;background:#362645;color:#f7eaf8;cursor:pointer}
+.gymPublicWorkoutLink:hover{border-color:#dd55a2;background:#482b50}
+.gymPublicWorkoutLink>span:nth-child(2){display:grid;gap:4px;flex:1;min-width:0}
+.gymPublicWorkoutLink strong{font-size:12px;overflow-wrap:anywhere}
+.gymPublicWorkoutLink small{font-size:10px;color:#c6a9d3}
+.gymPublicWorkoutLink b{font-size:10px;color:#ff98c7;white-space:nowrap}
+.gymPublicWorkoutIcon{font-size:22px;color:#f45ea9}
+.gymShareOptIn{display:grid;gap:12px;border-left:3px solid #f03899!important}
+.gymShareOptIn h3{margin:7px 0 8px;font-size:16px}
+.gymShareEyebrow{font-weight:900;font-size:9px;color:#f47caf;letter-spacing:1.6px}
+.gymShareOptIn p{font-size:12px;line-height:1.6}
+.gymShareOptIn>small{color:#c6a9cf;font-size:10px}
+.gymShareOptToggle{padding:10px 14px;min-height:40px;border:1px solid #985485;border-radius:3px;background:#4e2d53;color:#ffb9d9;font-weight:850;font-size:12px;cursor:pointer;text-align:left}
+.gymShareOptToggle.is-active{background:#743267;color:white;border-color:#eb5baf}
+.gymShareComposeTitle{display:flex;justify-content:space-between;gap:12px;align-items:center;margin:5px 0 15px;color:#f9e9f8}
+.gymShareComposeTitle strong{font-size:20px}.gymShareComposeTitle small{color:#baa2c5;font-size:11px;white-space:nowrap}
+.gymSharePR{margin-bottom:13px;background:#4e3447;border:1px solid #ae6b83;padding:12px;color:#fbc3df;border-radius:3px;font-weight:800;font-size:12px;line-height:1.5}
+.gymShareCaption{display:grid;gap:9px;color:#f0d4e9;font-size:12px;font-weight:800;margin:17px 0 10px}
+.gymShareCaption textarea{background:#20172f;border:1px solid #76507a;border-radius:3px;padding:12px;color:#fff;resize:vertical;min-height:75px;font-size:16px}
+.gymShareCaption textarea:focus{border-color:#f45daa;outline:2px solid #ef5da931}
+.gymSharePrivacy{font-size:10px;line-height:1.6;color:#bda6ca;margin:12px 0}
+.gymShareFormActions{display:grid;grid-template-columns:1fr 1.3fr;gap:10px;margin:18px 0 4px}
+.gymShareFormActions button{min-height:42px;font-weight:850}
+@media(max-width:550px){.gymShareMeta{gap:4px}.gymShareMeta>span{padding:8px 3px}.gymShareMeta strong{font-size:14px}.gymShareMeta small{font-size:9px}
+.gymSharedWorkoutInline .gymShareMeta strong{font-size:12px}.gymShareSet{gap:6px;padding:7px 8px}
+.gymShareSet strong{font-size:11px}.gymShareComposeTitle{flex-direction:column;align-items:flex-start}
+.gymShareFormActions{grid-template-columns:1fr 1fr}.gymShareExercise header{padding:9px 8px}}
