@@ -33,7 +33,7 @@ Cada sessão concluída apresenta duração, volume, séries, exercícios, detal
 Fotografia/nome/@ associados à EDGY, totais, gráfico semanal, calendário, medidas e respetiva evolução. Medidas adicionais: peso, peito, cintura, abdómen, ombros, braços, coxa, gémeos e glúteo.
 
 ### Feed
-Desativado por defeito. Ao aderir, o utilizador passa a ter um perfil de comunidade visível para outros utilizadores autenticados: nome e @. Permite seguir atletas, gostar de publicações, partilhar treinos e publicar objetivos. O histórico completo e as medidas nunca são tornados públicos automaticamente.
+Desativado por defeito. Ao aderir, o utilizador passa a ter um perfil de comunidade visível para outros utilizadores autenticados: nome e @. Permite seguir atletas, gostar de publicações, partilhar treinos e publicar objetivos. Os treinos concluídos aparecem no perfil público do atleta (incluindo treinos antigos não publicados), com top sets no resumo e todas as séries num painel expansível. Treinos em curso e medidas continuam privados. O Feed apenas recebe treinos publicados voluntariamente.
 
 ## Base de dados
 
@@ -48,7 +48,7 @@ Tabelas sociais: `gym_social_profiles`, `gym_follows`, `gym_feed_posts`, `gym_po
 ## Segurança
 
 - A chave no cliente é **publishable**, não uma chave administrativa.
-- Operações de treinos e medidas são restritas ao dono pelas políticas RLS.
+- Operações de treinos e medidas são restritas ao dono pelas políticas RLS. Uma RPC de leitura permite a utilizadores autenticados ver apenas treinos concluídos de perfis públicos; as tabelas base não recebem permissões de leitura indiscriminadas.
 - Os perfis do Feed só são públicos após ativação explícita.
 - Uma publicação não concede acesso aos registos privados subjacentes.
 - As tabelas da EDGY Games não foram modificadas.
@@ -120,3 +120,6 @@ Não são atribuídos XP retroativos por treinos terminados antes da migração.
 3. Para testar XP positivo, cumprir os requisitos mínimos. Testar também uma sessão inferior a 15 min, que deve receber 0 XP.
 4. Atualizar a página e confirmar que a recompensa não se repete.
 5. Verificar na EDGY Games que o total de XP e nível reflete a recompensa quando atualizar os dados da conta.
+
+### Top sets e histórico público (novembro de 2026)
+Os posts de treinos mostram no texto apenas a melhor série de trabalho por exercício (maior carga, desempate por repetições), com opção de expandir e consultar todas as séries. Os perfis públicos listam todos os treinos concluídos, mesmo sem publicação, com paginação de 12 sessões. Tornar o perfil privado oculta estes treinos de outros utilizadores; as medidas e os treinos ativos não são públicos.
