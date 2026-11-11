@@ -212,7 +212,7 @@ function gymProfileMarkup(){
  '<div class="card"><div class="row"><h3>Treinos por semana</h3><span class="pill">12 semanas</span></div><div class="chart gymWeekChart">'+weeks.map(w=>'<div class="barslot" title="'+w.count+' treinos · '+w.minutes+' minutos"><div class="bar" style="height:'+(w.count?Math.max(5,w.count/max*100):1)+'%;opacity:'+(w.count?1:.18)+'"></div><small>'+w.count+'</small></div>').join("")+'</div><small class="muted">Cada coluna representa uma semana, de segunda a domingo.</small></div>'+
  '<div class="card"><div class="row"><h3>Calendário</h3><div class="row"><button class="btn ghost small" id="gymCalPrev" aria-label="Mês anterior">‹</button><span class="muted" style="font-size:12px">'+m.toLocaleDateString("pt-PT",{month:"long",year:"numeric"})+'</span><button class="btn ghost small" id="gymCalNext" aria-label="Mês seguinte">›</button></div></div>'+cells+'<p class="muted" style="font-size:12px">Os dias assinalados correspondem a treinos concluídos.</p></div>'+
  '<div class="card"><div class="row"><h3>Medidas corporais</h3><span class="pill">'+measurements.length+' medições</span></div><select class="input" id="gymMetric">'+gymMetricFields.map(([k,label])=>'<option value="'+k+'" '+(k===gymMeasureMetric?"selected":"")+'>'+label+'</option>').join("")+'</select><div style="margin-top:12px">'+gymPlot(current,gymMetricFields.find(x=>x[0]===gymMeasureMetric)?.[2]||"")+'</div><div class="gymLatest">'+(latest?gymMetricFields.filter(f=>latest[f[0]]!=null).map(f=>'<div><small class="muted">'+esc(f[1])+'</small><strong>'+fmt(latest[f[0]])+' '+f[2]+'</strong></div>').join(""):'<p class="muted">Regista as primeiras medidas para acompanhares a evolução.</p>')+'</div><details><summary>＋ Adicionar medição</summary><form id="measure" class="stack" style="margin-top:14px"><label class="muted">Data<input class="input" type="date" name="recorded_at" value="'+new Date().toLocaleDateString("en-CA")+'" required></label><div class="gymMeasureForm">'+gymMetricFields.map(([k,label,unit])=>'<label class="muted" style="font-size:12px">'+esc(label)+' ('+unit+')<input class="input" name="'+k+'" type="number" min="0" step="0.1" placeholder="—"></label>').join("")+'</div><button class="btn full">Guardar medição</button></form></details>'+(measurements.length?'<details><summary>Ver histórico de medições</summary>'+measurements.slice(0,35).map(x=>'<div class="item row"><div><strong>'+esc(x.recorded_at)+'</strong><div class="muted" style="font-size:12px">'+gymMetricFields.filter(f=>x[f[0]]!=null).map(f=>f[1]+": "+fmt(x[f[0]])+" "+f[2]).join(" · ")+'</div></div><button class="btn ghost small" data-delete-measure="'+x.id+'">Eliminar</button></div>').join("")+'</details>':'')+'</div>'+
- '<div class="card"><div class="row"><h3>Privacidade e conta</h3><span class="pill">EDGY</span></div><p class="muted" style="font-size:13px">As cargas e medidas são privadas. Só o que decidires publicar é visível no Feed.</p><button class="btn ghost full" id="logout">Terminar sessão</button></div>';
+ '<div class="card"><div class="row"><h3>Privacidade e conta</h3><span class="pill">EDGY</span></div><p class="muted" style="font-size:13px">As medidas e os treinos em curso são privados. Com o perfil público, os teus treinos concluídos ficam visíveis no perfil; só as publicações que escolheres aparecem no Feed.</p><button class="btn ghost full" id="logout">Terminar sessão</button></div>';
 }
 function gymExercisesMarkup(){
  if(gymSelectedExercise){
@@ -276,7 +276,7 @@ document.addEventListener("click",event=>{
  if(btn.id==="gymBackExercises"){gymSelectedExercise=null;render();return}
  if(btn.dataset.deleteMeasure){action(async()=>{if(!confirm("Eliminar esta medição?"))return;const {error}=await db.from("gym_measurements").delete().eq("id",btn.dataset.deleteMeasure);if(error)throw error});return}
  if(btn.id==="gymJoinFeed"){action(async()=>{if(!profile){toast("Configura primeiro o teu perfil na EDGY Games.");return}const {error}=await db.from("gym_social_profiles").upsert({user_id:user.id,display_name:profile.display_name,username:profile.username,is_public:true},{onConflict:"user_id"});if(error)throw error;toast("Perfil público ativado")});return}
- if(btn.id==="gymLeaveFeed"){action(async()=>{if(!confirm("Desativar o perfil público? As tuas publicações deixarão de estar visíveis."))return;const {error}=await db.from("gym_social_profiles").update({is_public:false}).eq("user_id",user.id);if(error)throw error});return}
+ if(btn.id==="gymLeaveFeed"){action(async()=>{if(!confirm("Desativar o perfil público? As tuas publicações e o histórico de treinos deixarão de estar visíveis."))return;const {error}=await db.from("gym_social_profiles").update({is_public:false}).eq("user_id",user.id);if(error)throw error});return}
  if(btn.dataset.feedMode){gymFeedMode=btn.dataset.feedMode;render();return}
  if(btn.dataset.follow){action(async()=>{const id=btn.dataset.follow;const follows=gymFollowRows.some(f=>f.follower_id===user.id&&f.followed_id===id);const q=follows?db.from("gym_follows").delete().eq("follower_id",user.id).eq("followed_id",id):db.from("gym_follows").insert({follower_id:user.id,followed_id:id});const {error}=await q;if(error)throw error});return}
  if(btn.dataset.like){action(async()=>{const id=btn.dataset.like,liked=gymPostLikes.some(l=>l.post_id===id&&l.user_id===user.id);const q=liked?db.from("gym_post_likes").delete().eq("post_id",id).eq("user_id",user.id):db.from("gym_post_likes").insert({post_id:id,user_id:user.id});const {error}=await q;if(error)throw error});return}
@@ -713,7 +713,7 @@ function gymUXEditProfile(){
  gymUXField("username","Identificador @","O teu identificador",profile?.username||"", 'required minlength="3" maxlength="20" pattern="[a-zA-Z0-9_]+" title="3 a 20 caracteres: letras, números ou _" autocapitalize="none" spellcheck="false"')+
  '<p class="gymUXProfileHint">O @ tem entre 3 e 20 caracteres: letras, números e _ (sem espaços, pontos ou hífenes).</p>'+
  '<label class="gymUXField"><span>Descrição</span><textarea name="bio" class="gymUXInput" rows="3" maxlength="160" placeholder="Sobre ti…">'+esc(profile?.bio||"")+'</textarea></label>'+
- '<label class="gymUXPrivacy"><span><strong>Perfil público no Gym</strong><small>Permite que outros atletas vejam o teu nome, @ e publicações. As medidas e os treinos completos permanecem privados.</small></span><input name="is_public" type="checkbox" '+(social?.is_public?"checked":"")+'></label>'+
+ '<label class="gymUXPrivacy"><span><strong>Perfil público no Gym</strong><small>Outros atletas podem ver o teu nome, @, publicações e todos os treinos concluídos, incluindo os antigos e não publicados. As medidas continuam privadas. Desativa para ocultar o histórico.</small></span><input name="is_public" type="checkbox" '+(social?.is_public?"checked":"")+'></label>'+
  '<p class="gymUXFine">Email: '+esc(user.email||"")+' · Alterar a visibilidade aqui não altera a visibilidade do teu perfil na EDGY Games.</p><p class="gymUXProfileStatus" data-gym-profile-status role="status" aria-live="polite" hidden></p>'+gymUXActions("Guardar perfil")+'</form>',true);
 }
 const gymUXPriorFeed=renderFeed;
@@ -1841,7 +1841,7 @@ function gymPublicActor(id, fallback="Atleta EDGY"){
  const found=gymSocialProfiles.find(p=>p.user_id===id);
  return {name:found?.display_name||fallback,username:found?.username||"edgy"};
 }
-function gymPublicProfileMarkup(target,summary,posts,likes,comments){
+function gymPublicProfileMarkup(target,summary,posts,likes,comments,workouts=[],hasMoreWorkouts=false){
  const xp=Math.max(0,Number(summary.xp)||0),level=1+Math.floor(xp/100);
  const following=gymFollowRows.some(f=>f.follower_id===user.id&&f.followed_id===target.user_id);
  const days=Array.isArray(summary.days)?summary.days:[0,0,0,0,0,0,0];
@@ -1883,7 +1883,7 @@ function gymPublicProfileMarkup(target,summary,posts,likes,comments){
    (gymOwnSocial()?.is_public?'<form class="gymPublicReplyForm" data-gym-public-reply="'+esc(p.id)+'"><input name="body" required maxlength="500" placeholder="Escrever resposta…" aria-label="Responder à publicação"><button type="submit">Responder</button></form>':'')+
    '</article>';
  }).join("");
- return '<div class="gymPublicProfile">'+hero+stats+xpBox+week+gymSharingPublicWorkoutList(posts)+'<section class="gymPublicPosts"><div class="gymPublicSectionHead"><div><span class="gymPublicEyebrow">COMUNIDADE</span><h3>Publicações</h3></div><strong>'+fmt(Number(summary.posts)||0)+' posts</strong></div>'+
+ return '<div class="gymPublicProfile">'+hero+stats+xpBox+week+gymSharingPublicWorkoutList(workouts,hasMoreWorkouts)+'<section class="gymPublicPosts"><div class="gymPublicSectionHead"><div><span class="gymPublicEyebrow">COMUNIDADE</span><h3>Publicações</h3></div><strong>'+fmt(Number(summary.posts)||0)+' posts</strong></div>'+
  (content||'<p class="gymPublicEmpty">Este atleta ainda não tem publicações.</p>')+'</section></div>';
 }
 async function gymAthleteDialog(id,options={}){
@@ -1896,13 +1896,14 @@ async function gymAthleteDialog(id,options={}){
   gymUXShow("Perfil EDGY","A carregar o perfil público…",'<div class="gymUXEmpty">A carregar o atleta e as publicações…</div>',true);
  }
  try{
-  const [a,b,summaryResult]=await Promise.all([
+  const [a,b,summaryResult,workoutsResult]=await Promise.all([
    db.from("gym_social_profiles").select("user_id,display_name,username,is_public,avatar_path").eq("user_id",id).maybeSingle(),
    db.from("gym_feed_posts").select("id,user_id,workout_id,kind,title,body,created_at").eq("user_id",id).order("created_at",{ascending:false}).limit(30),
-   db.rpc("gym_public_athlete_summary",{p_athlete_id:id})
+   db.rpc("gym_public_athlete_summary",{p_athlete_id:id}),
+   db.rpc("gym_public_athlete_workouts",{p_athlete_id:id,p_limit:13,p_offset:0})
   ]);
   if(!user||user.id!==uid||gymPublicProfileRequest!==request||gymPublicProfileId!==id||!gymUXModalOpen)return;
-  if(a.error)throw a.error;if(b.error)throw b.error;if(summaryResult.error)throw summaryResult.error;
+  if(a.error)throw a.error;if(b.error)throw b.error;if(summaryResult.error)throw summaryResult.error;if(workoutsResult.error)throw workoutsResult.error;
   if(!a.data?.is_public||!summaryResult.data){
    gymUXShow("Perfil privado","Este perfil não está disponível publicamente.",'<p class="gymPublicEmpty">O atleta optou por não divulgar o seu perfil.</p>',true);return;
   }
@@ -1922,9 +1923,13 @@ async function gymAthleteDialog(id,options={}){
    for(const actor of actors||[])if(!gymSocialProfiles.some(p=>p.user_id===actor.user_id))gymSocialProfiles.push(actor);
   }
   if(!user||user.id!==uid||gymPublicProfileRequest!==request||gymPublicProfileId!==id||!gymUXModalOpen)return;
-  gymPublicProfileSnapshot={athlete:a.data,summary:summaryResult.data,posts,likes:likeResult.data||[],comments};
+  const existing=quiet&&gymPublicProfileSnapshot?.athlete?.user_id===id?gymPublicProfileSnapshot:null;
+  const batch=Array.isArray(workoutsResult.data)?workoutsResult.data:[];
+  const workouts=existing?.workouts||batch.slice(0,12);
+  const hasMoreWorkouts=existing?existing.hasMoreWorkouts:batch.length>12;
+  gymPublicProfileSnapshot={athlete:a.data,summary:summaryResult.data,posts,likes:likeResult.data||[],comments,workouts,hasMoreWorkouts};
   const scroll=document.querySelector("#gymUXModal .gymUXBody"),priorScroll=quiet?scroll?.scrollTop:0;
-  gymUXShow("Perfil EDGY","Perfil público do atleta",gymPublicProfileMarkup(a.data,summaryResult.data,posts,likeResult.data||[],comments),true);
+  gymUXShow("Perfil EDGY","Perfil público do atleta",gymPublicProfileMarkup(a.data,summaryResult.data,posts,likeResult.data||[],comments,workouts,hasMoreWorkouts),true);
   gymHydrateSharedWorkouts();
   if(quiet){const body=document.querySelector("#gymUXModal .gymUXBody");if(body)body.scrollTop=priorScroll||0}
  }catch(err){
@@ -1939,7 +1944,7 @@ function gymPublicRenderCached(){
  const s=gymPublicProfileSnapshot,body=document.querySelector("#gymUXModal .gymUXBody");
  if(!body)return;
  const scroll=body.scrollTop;
- body.innerHTML=gymPublicProfileMarkup(s.athlete,s.summary,s.posts,s.likes,s.comments);
+ body.innerHTML=gymPublicProfileMarkup(s.athlete,s.summary,s.posts,s.likes,s.comments,s.workouts,s.hasMoreWorkouts);
  gymHydrateSharedWorkouts();
  body.scrollTop=scroll;
 }
@@ -2370,11 +2375,13 @@ function gymShareEnsureAccount(){
  const current=user?.id||null;
  if(current!==gymSharedCacheOwner){
   gymSharedWorkoutCache.clear();
+  gymOwnWorkoutsVisible=12;
   gymSharedCacheOwner=current;
  }
 }
 let gymSharedLoading=false;
 let gymSharePublishing=false;
+let gymOwnWorkoutsVisible=12;
 function gymSharingWorkoutToDetail(workout){
  const entries=(workout.gym_workout_exercises||[]).slice().sort((a,b)=>a.position-b.position);
  return {
@@ -2399,6 +2406,32 @@ function gymSharingSetsHTML(sets){
    '</div>';
  }).join("")+'</div>';
 }
+function gymSharingTopSet(exercise){
+ const sets=(exercise?.sets||[]).filter(s=>s.completed!==false&&Number(s.reps)>0);
+ const working=sets.filter(s=>s.set_type!=="warmup"&&s.set_type!=="dropset");
+ const candidates=working.length?working:sets.filter(s=>s.set_type!=="warmup");
+ const available=candidates.length?candidates:sets;
+ return available.slice().sort((a,b)=>Number(b.weight||0)-Number(a.weight||0)||Number(b.reps||0)-Number(a.reps||0))[0]||null;
+}
+function gymSharingTopSetsText(workout){
+ return (workout.exercises||[]).map(ex=>{
+  const s=gymSharingTopSet(ex);
+  return s?ex.name+": "+gymSharingNum(s.weight)+" kg × "+gymSharingNum(s.reps):null;
+ }).filter(Boolean).join("\n");
+}
+function gymSharingCompactHTML(workout){
+ if(!workout)return '<p class="gymShareEmpty">Treino indisponível ou privado.</p>';
+ const exercises=workout.exercises||[];
+ const topSets=exercises.map(ex=>{
+  const s=gymSharingTopSet(ex);
+  return '<div class="gymShareTopRow"><span>'+esc(ex.name||"Exercício")+'</span>'+
+   '<strong>'+(s?gymSharingNum(s.weight)+' kg <small>×</small> '+gymSharingNum(s.reps):'Sem séries concluídas')+'</strong></div>';
+ }).join("");
+ return '<div class="gymShareCompact"><div class="gymShareCompactMeta"><span>'+gymSharingNum(workout.duration_minutes)+' min</span><span>'+gymSharingNum(workout.volume_kg)+' kg volume</span><span>'+gymSharingNum(workout.completed_sets)+' séries</span></div>'+
+ '<div class="gymShareTopSets"><div class="gymShareTopHeading">TOP SETS · MELHOR SÉRIE DE CADA EXERCÍCIO</div>'+
+ (topSets||'<p class="gymShareEmpty">Sem exercícios concluídos.</p>')+'</div>'+
+ '<details class="gymShareDetails"><summary>Ver treino completo <span>Exercícios e todas as séries</span></summary><div class="gymShareExpanded">'+gymSharingWorkoutHTML(workout)+'</div></details></div>';
+}
 function gymSharingWorkoutHTML(workout){
  if(!workout)return '<p class="gymShareEmpty">Treino indisponível ou privado.</p>';
  const exercises=(workout.exercises||[]);
@@ -2414,16 +2447,16 @@ function gymSharingWorkoutHTML(workout){
 }
 function gymSharingInline(workoutId){
  gymShareEnsureAccount();
+ const known=gymSharedWorkoutCache.has(workoutId);
  const saved=gymSharedWorkoutCache.get(workoutId);
  return '<div class="gymSharedWorkoutInline" data-gym-workout-preview="'+esc(workoutId)+'">'+
- (saved?gymSharingWorkoutHTML(saved):'<p class="gymShareLoading">A carregar exercícios e séries…</p>')+
- '</div><button type="button" class="gymShareOpen" data-gym-open-workout="'+esc(workoutId)+'">Ver treino completo</button>';
+ (known?gymSharingCompactHTML(saved):'<p class="gymShareLoading">A carregar top sets…</p>')+'</div>';
 }
 function gymPaintSharedWorkoutPreviews(){
  for(const node of document.querySelectorAll("[data-gym-workout-preview]")){
   const id=node.dataset.gymWorkoutPreview;
   if(!gymSharedWorkoutCache.has(id)||node.dataset.gymHydrated==="1")continue;
-  node.innerHTML=gymSharingWorkoutHTML(gymSharedWorkoutCache.get(id));
+  node.innerHTML=gymSharingCompactHTML(gymSharedWorkoutCache.get(id));
   node.dataset.gymHydrated="1";
  }
 }
@@ -2474,12 +2507,25 @@ gymFeedCard=function(post){
  if(!html.includes(boundary))return html;
  return html.replace(boundary,insert+boundary);
 };
-function gymSharingPublicWorkoutList(posts){
- const shared=[...new Map(posts.filter(p=>p.workout_id).map(p=>[p.workout_id,p])).values()];
- return '<section class="gymPublicWorkoutCollection"><div class="gymPublicSectionHead"><div><span class="gymPublicEyebrow">TREINOS PARTILHADOS</span><h3>Explorar os treinos</h3><small>Apenas os treinos que este atleta decidiu publicar</small></div><strong>'+shared.length+'</strong></div>'+
- (shared.length?shared.map(p=>'<button type="button" class="gymPublicWorkoutLink" data-gym-open-workout="'+esc(p.workout_id)+'">'+
- '<span class="gymPublicWorkoutIcon">▤</span><span><strong>'+esc(p.title||"Treino partilhado")+'</strong><small>'+date(p.created_at)+'</small></span><b>Ver treino</b></button>').join(""):
- '<p class="gymShareEmpty">Ainda não há treinos partilhados.</p>')+'</section>';
+function gymSharingWorkoutEntry(workout){
+ return '<article class="gymPublicWorkoutEntry"><div class="gymPublicWorkoutEntryHead"><span class="gymPublicWorkoutIcon">▤</span>'+
+ '<div><strong>'+esc(workout.name||"Treino")+'</strong><small>'+date(workout.started_at)+' · '+gymSharingNum(workout.duration_minutes)+' min</small></div></div>'+
+ gymSharingInline(workout.id)+'</article>';
+}
+function gymSharingPublicWorkoutList(workouts,hasMore=false){
+ const list=Array.isArray(workouts)?workouts:[];
+ return '<section class="gymPublicWorkoutCollection"><div class="gymPublicSectionHead"><div><span class="gymPublicEyebrow">HISTÓRICO PÚBLICO</span><h3>Treinos concluídos</h3><small>Todos os treinos do atleta, mesmo os não publicados no Feed</small></div><strong>'+list.length+(hasMore?'+':'')+'</strong></div>'+
+ (list.length?list.map(gymSharingWorkoutEntry).join(""):'<p class="gymShareEmpty">Ainda não há treinos concluídos.</p>')+
+ (hasMore?'<button type="button" class="gymShareLoadMore" data-gym-more-public="true">Mostrar mais treinos</button>':'')+'</section>';
+}
+function gymSharingPersonalWorkoutList(){
+ if(!user)return "";
+ const all=gymDone().slice().sort((a,b)=>new Date(b.started_at)-new Date(a.started_at));
+ const show=all.slice(0,gymOwnWorkoutsVisible);
+ const own=gymOwnSocial();
+ return '<section class="gymPublicWorkoutCollection gymPersonalWorkoutCollection"><div class="gymPublicSectionHead"><div><span class="gymPublicEyebrow">O TEU HISTÓRICO</span><h3>Treinos concluídos</h3><small>'+(own?.is_public?'Visíveis para outros atletas no teu perfil público':'Só tu podes consultar estes treinos enquanto o perfil for privado')+'</small></div><strong>'+all.length+'</strong></div>'+
+ (show.length?show.map(w=>gymSharingWorkoutEntry({id:w.id,name:w.name,started_at:w.started_at,duration_minutes:duration(w)})).join(""):'<p class="gymShareEmpty">Ainda não tens treinos concluídos.</p>')+
+ (all.length>show.length?'<button type="button" class="gymShareLoadMore" data-gym-more-own="true">Mostrar mais '+Math.min(12,all.length-show.length)+' treinos</button>':'')+'</section>';
 }
 async function gymSharingOpenWorkout(id){
  if(!user||!id)return;
@@ -2507,10 +2553,11 @@ function gymSharingOptInCard(){
  '<small>'+(own?.is_public?"Funciona apenas enquanto o perfil for público. Podes desativar a qualquer momento.":"Ativa primeiro o teu perfil público para publicar conquistas.")+'</small></section>';
 }
 const gymSharingProfileBase=renderProfile;
-renderProfile=function(){return gymSharingProfileBase()+gymSharingOptInCard()};
+renderProfile=function(){return gymSharingProfileBase()+gymSharingPersonalWorkoutList()+gymSharingOptInCard()};
 function gymSharingComposePost(workout,caption){
- const summary='Treino concluído · '+duration(workout)+' min · '+gymSharingNum(volume(workout))+' kg de volume · '+count(workout)+' séries · '+(workout.gym_workout_exercises||[]).length+' exercícios.';
- return (caption.trim()?caption.trim().slice(0,220)+'\n\n':'')+summary;
+ const topSets=gymSharingTopSetsText(gymSharingWorkoutToDetail(workout));
+ const intro=String(caption||"").trim().slice(0,220);
+ return (intro?intro+'\n\n':'')+(topSets?'TOP SETS\n'+topSets:'Treino concluído');
 }
 function gymSharingDialog(id){
  gymShareEnsureAccount();
@@ -2520,16 +2567,45 @@ function gymSharingDialog(id){
  const prs=gymPRData().events.get(id)||[];
  const intro=prs.length?'<div class="gymSharePR">🏆 '+prs.length+' '+(prs.length===1?"recorde neste treino":"recordes neste treino")+
  ': '+prs.map(pr=>esc(pr.name)+" "+gymSharingNum(pr.weight)+" kg").join(" · ")+'</div>':'';
- gymUXShow("Partilhar treino","Publicação completa no Feed",'<form id="gymShareWorkoutForm" data-gym-share-id="'+esc(id)+'">'+
+ gymUXShow("Partilhar treino","Resumo com top sets no Feed",'<form id="gymShareWorkoutForm" data-gym-share-id="'+esc(id)+'">'+
  '<div class="gymShareComposeTitle"><strong>'+esc(workout.name)+'</strong><small>'+date(workout.started_at)+'</small></div>'+intro+
- gymSharingWorkoutHTML(gymSharingWorkoutToDetail(workout))+
+ gymSharingCompactHTML(gymSharingWorkoutToDetail(workout))+
  '<label class="gymShareCaption">Adiciona uma mensagem (opcional)<textarea name="caption" maxlength="220" rows="3" placeholder="Como correu o treino? O que melhoraste?"></textarea></label>'+
- '<p class="gymSharePrivacy">Este treino, incluindo todas as cargas e repetições concluídas, ficará visível no Feed e no teu perfil público até eliminares a publicação ou tornares o perfil privado.</p>'+
+ '<p class="gymSharePrivacy">O Feed mostra os top sets e permite expandir todas as séries. Com o perfil público, todos os teus treinos concluídos (incluindo os anteriores e não publicados) também são visíveis no perfil. As medidas continuam privadas.</p>'+
  '<div class="gymShareFormActions"><button type="button" class="btn secondary" data-ux-close>Cancelar</button><button class="btn" type="submit">Publicar treino</button></div></form>',true);
 }
 document.addEventListener("click",event=>{
  const button=event.target.closest?.("button");
  if(!button||!user)return;
+ if(button.dataset.gymMoreOwn){
+  event.preventDefault();event.stopImmediatePropagation();
+  gymOwnWorkoutsVisible+=12;
+  const section=document.querySelector(".gymPersonalWorkoutCollection");
+  if(section){section.outerHTML=gymSharingPersonalWorkoutList();gymHydrateSharedWorkouts()}
+  return;
+ }
+ if(button.dataset.gymMorePublic){
+  event.preventDefault();event.stopImmediatePropagation();
+  const snapshot=gymPublicProfileSnapshot,athleteId=gymPublicProfileId,requester=user.id;
+  if(!snapshot||!athleteId||!snapshot.hasMoreWorkouts)return;
+  button.disabled=true;button.textContent="A carregar…";
+  (async()=>{
+   try{
+    const {data,error}=await db.rpc("gym_public_athlete_workouts",{p_athlete_id:athleteId,p_limit:13,p_offset:snapshot.workouts.length});
+    if(error)throw error;
+    if(user?.id!==requester||gymPublicProfileSnapshot!==snapshot||gymPublicProfileId!==athleteId)return;
+    const entries=Array.isArray(data)?data:[];
+    snapshot.workouts.push(...entries.slice(0,12));
+    snapshot.hasMoreWorkouts=entries.length>12;
+    gymPublicRenderCached();
+   }catch(error){
+    console.warn("Gym more public workouts:",error);
+    toast("Não foi possível carregar mais treinos.");
+    if(button.isConnected){button.disabled=false;button.textContent="Mostrar mais treinos"}
+   }
+  })();
+  return;
+ }
  if(button.dataset.shareWorkout){
   event.preventDefault();event.stopImmediatePropagation();
   gymSharingDialog(button.dataset.shareWorkout);return;
