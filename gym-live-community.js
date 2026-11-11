@@ -34,7 +34,8 @@ function gymPublicProfileMarkup(target,summary,posts,likes,comments,workouts=[],
   const ownerLikes=byLikes.get(p.id)||[],ownerComments=byComments.get(p.id)||[];
   const hasLiked=ownerLikes.some(l=>l.user_id===user.id);
   const content=p.kind==="post"?(p.body||p.title):p.title;
-  const body=p.kind!=="post"&&p.body?'<p class="gymPublicPostBody">'+esc(p.body)+'</p>':'';
+  const displayedBody=p.workout_id?gymSharingPostCaption(p.body):p.body;
+  const body=p.kind!=="post"&&displayedBody?'<p class="gymPublicPostBody">'+esc(displayedBody)+'</p>':'';
   const expanded=gymPublicExpandedReplies.has(p.id);
   const shown=expanded?ownerComments:ownerComments.slice(-3);
   const label=({post:"Publicação",goal:"Meta",pr:"Recorde",workout:"Treino"}[p.kind]||"Publicação");
