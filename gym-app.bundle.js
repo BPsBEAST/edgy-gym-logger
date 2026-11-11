@@ -713,7 +713,7 @@ function gymUXEditProfile(){
  gymUXField("username","Identificador @","O teu identificador",profile?.username||"", 'required minlength="3" maxlength="20" pattern="[a-zA-Z0-9_]+" title="3 a 20 caracteres: letras, números ou _" autocapitalize="none" spellcheck="false"')+
  '<p class="gymUXProfileHint">O @ tem entre 3 e 20 caracteres: letras, números e _ (sem espaços, pontos ou hífenes).</p>'+
  '<label class="gymUXField"><span>Descrição</span><textarea name="bio" class="gymUXInput" rows="3" maxlength="160" placeholder="Sobre ti…">'+esc(profile?.bio||"")+'</textarea></label>'+
- '<label class="gymUXPrivacy"><span><strong>Perfil público no Gym</strong><small>Outros atletas podem ver o teu nome, @, publicações e todos os treinos concluídos, incluindo os antigos e não publicados. As medidas continuam privadas. Desativa para ocultar o histórico.</small></span><input name="is_public" type="checkbox" '+(social?.is_public?"checked":"")+'></label>'+
+ '<label class="gymUXPrivacy"><span><strong>Perfil público no Gym</strong><small>Outros atletas podem ver o teu nome, @, publicações, os gráficos de evolução e os treinos concluídos desta semana. As sessões anteriores permanecem no teu Histórico, e as medidas continuam privadas. Desativa para ocultar a atividade.</small></span><input name="is_public" type="checkbox" '+(social?.is_public?"checked":"")+'></label>'+
  '<p class="gymUXFine">Email: '+esc(user.email||"")+' · Alterar a visibilidade aqui não altera a visibilidade do teu perfil na EDGY Games.</p><p class="gymUXProfileStatus" data-gym-profile-status role="status" aria-live="polite" hidden></p>'+gymUXActions("Guardar perfil")+'</form>',true);
 }
 const gymUXPriorFeed=renderFeed;
@@ -1489,14 +1489,25 @@ function gymWeeklyCurvePath(points){
  }
  return path;
 }
-function gymWeekCard(){
- const weeks=gymWeekDataset(),today=new Date();
- const monday=gymMondayOf(today),tomorrow=new Date(monday);tomorrow.setDate(tomorrow.getDate()+7);
+function gymWeekCard(activity=null){
+ const weeks=Array.isArray(activity?.weeks)&&activity.weeks.length===12
+  ?activity.weeks.map(w=>({
+    start:new Date(String(w.start).slice(0,10)+"T12:00:00"),
+    count:Number(w.count)||0,minutes:Number(w.minutes)||0
+   }))
+  :gymWeekDataset();
+ const today=new Date();
+ const monday=activity?.weeks?.length?new Date(String(activity.weeks[11].start).slice(0,10)+"T12:00:00"):gymMondayOf(today);
+ const tomorrow=new Date(monday);tomorrow.setDate(tomorrow.getDate()+7);
  const days=Array.from({length:7},(_,i)=>{
   const start=new Date(monday);start.setDate(start.getDate()+i);
   const end=new Date(start);end.setDate(end.getDate()+1);
-  const sessions=gymDone().filter(w=>new Date(w.started_at)>=start&&new Date(w.started_at)<end);
-  return {day:["Seg","Ter","Qua","Qui","Sex","Sáb","Dom"][i],count:sessions.length,minutes:sessions.reduce((n,w)=>n+duration(w),0),today:start.toDateString()===today.toDateString(),future:start>today};
+  const publicDay=Array.isArray(activity?.days)?activity.days[i]:null;
+  const sessions=publicDay?null:gymDone().filter(w=>new Date(w.started_at)>=start&&new Date(w.started_at)<end);
+  return {day:["Seg","Ter","Qua","Qui","Sex","Sáb","Dom"][i],
+   count:publicDay?Number(publicDay.count)||0:sessions.length,
+   minutes:publicDay?Number(publicDay.minutes)||0:sessions.reduce((n,w)=>n+duration(w),0),
+   today:start.toDateString()===today.toDateString(),future:start>today};
  });
  const total=days.reduce((n,d)=>n+d.count,0),minutes=days.reduce((n,d)=>n+d.minutes,0),peak=Math.max(1,...days.map(d=>d.count));
  const bars=days.map((d,i)=>'<div class="gymCurrentDay '+(d.today?'is-today':'')+' '+(d.future?'is-future':'')+'" style="--bar-order:'+i+'" title="'+d.count+' treinos · '+d.minutes+' minutos"><div class="gymCurrentBarTrack"><span class="gymCurrentBar" style="--bar-height:'+(d.count?Math.max(12,Math.round(d.count/peak*100)):0)+'%"></span></div><b>'+d.day+'</b><small>'+d.count+'</small></div>').join("");
@@ -1509,7 +1520,8 @@ function gymWeekCard(){
  const guides=[0,.5,1].map(f=>{const y=bottom-(bottom-top-18)*f;return '<line x1="'+left+'" x2="'+right+'" y1="'+y.toFixed(1)+'" y2="'+y.toFixed(1)+'" stroke="#5e3c61" stroke-width=".8" stroke-dasharray="4 6" opacity=".6"/>';}).join("");
  const dots=points.map((p,i)=>'<g class="gymLineDot" style="--dot-order:'+i+'" tabindex="0"><title>'+p.count+' treinos · '+p.minutes+' minutos · semana de '+p.start.toLocaleDateString("pt-PT",{day:"numeric",month:"short"})+'</title><circle class="gymDotHalo" cx="'+p.x.toFixed(2)+'" cy="'+p.y.toFixed(2)+'" r="8" fill="#f81c8b" opacity="'+(i===11?'.18':'.09')+'"/><circle cx="'+p.x.toFixed(2)+'" cy="'+p.y.toFixed(2)+'" r="'+(i===11?5.2:3.4)+'" fill="'+(i===11?'#ff59ac':'#ffd2eb')+'" stroke="#3d2046" stroke-width="2"/></g>').join("");
  const labels=weeks.map((w,i)=>i%2===0||i===11?'<text x="'+points[i].x.toFixed(2)+'" y="223" text-anchor="middle" fill="#b49cbf" font-size="12">'+w.start.toLocaleDateString("pt-PT",{day:"2-digit",month:"short"})+'</text>':'').join("");
- const chart='<svg class="gymTrendSVG" viewBox="0 0 720 236" role="img" aria-label="Evolução de treinos concluídos por semana, últimas doze semanas"><defs><linearGradient id="gym-week-area" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#f20a87" stop-opacity=".76"/><stop offset="80%" stop-color="#aa277f" stop-opacity=".26"/><stop offset="100%" stop-color="#7b2a77" stop-opacity=".04"/></linearGradient><linearGradient id="gym-week-line" x1="0" x2="1"><stop offset="0%" stop-color="#b7309c"/><stop offset="100%" stop-color="#ff4fa3"/></linearGradient></defs>'+guides+'<path d="'+area+'" fill="url(#gym-week-area)" class="gymTrendArea"/><path d="'+line+'" class="gymTrendLine" stroke="url(#gym-week-line)" stroke-width="4" stroke-linecap="round" fill="none"/>'+dots+labels+'</svg>';
+ const gradientId=activity?"gym-public-week":"gym-week";
+ const chart='<svg class="gymTrendSVG" viewBox="0 0 720 236" role="img" aria-label="Evolução de treinos concluídos por semana, últimas doze semanas"><defs><linearGradient id="'+gradientId+'-area" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#f20a87" stop-opacity=".76"/><stop offset="80%" stop-color="#aa277f" stop-opacity=".26"/><stop offset="100%" stop-color="#7b2a77" stop-opacity=".04"/></linearGradient><linearGradient id="'+gradientId+'-line" x1="0" x2="1"><stop offset="0%" stop-color="#b7309c"/><stop offset="100%" stop-color="#ff4fa3"/></linearGradient></defs>'+guides+'<path d="'+area+'" fill="url(#'+gradientId+'-area)" class="gymTrendArea"/><path d="'+line+'" class="gymTrendLine" stroke="url(#'+gradientId+'-line)" stroke-width="4" stroke-linecap="round" fill="none"/>'+dots+labels+'</svg>';
  const average=weeks.reduce((n,w)=>n+w.count,0)/12;
  const trend='<section class="card gymChartCard gymTrendCard"><div class="gymChartHead"><div><span class="gymChartEyebrow">EVOLUÇÃO</span><h3>Treinos por semana</h3><p>Últimas 12 semanas · cada ponto é uma semana</p></div><div class="gymTrendAverage"><strong>'+fmt(average)+'</strong><span>média / semana</span></div></div><div class="gymTrendCanvas">'+chart+'</div><div class="gymTrendLegend"><i></i> Treinos concluídos <span>·</span> '+weeks.reduce((n,w)=>n+w.count,0)+' treinos no período</div></section>';
  return current+trend;
@@ -1841,11 +1853,9 @@ function gymPublicActor(id, fallback="Atleta EDGY"){
  const found=gymSocialProfiles.find(p=>p.user_id===id);
  return {name:found?.display_name||fallback,username:found?.username||"edgy"};
 }
-function gymPublicProfileMarkup(target,summary,posts,likes,comments,workouts=[],hasMoreWorkouts=false){
+function gymPublicProfileMarkup(target,summary,posts,likes,comments,workouts=[],activity=null){
  const xp=Math.max(0,Number(summary.xp)||0),level=1+Math.floor(xp/100);
  const following=gymFollowRows.some(f=>f.follower_id===user.id&&f.followed_id===target.user_id);
- const days=Array.isArray(summary.days)?summary.days:[0,0,0,0,0,0,0];
- const peak=Math.max(1,...days.map(Number)),total=days.reduce((v,n)=>v+(Number(n)||0),0);
  const counts={followers:Number(summary.followers)||0,following:Number(summary.following)||0,likes:Number(summary.likes_received)||0,posts:(Number(summary.posts)||0)+(Number(summary.replies)||0)};
  const d=new Date(summary.joined_at||Date.now());
  const joined=Number.isNaN(+d)?"":d.toLocaleDateString("pt-PT",{month:"long",year:"numeric"});
@@ -1858,9 +1868,7 @@ function gymPublicProfileMarkup(target,summary,posts,likes,comments,workouts=[],
  [['Seguidores',counts.followers],['A seguir',counts.following],['Likes',counts.likes],['Posts + respostas',counts.posts]]
  .map(([name,n])=>'<div><strong>'+fmt(n)+'</strong><small>'+name+'</small></div>').join("")+'</div>';
  const xpBox='<div class="gymPublicXp"><div class="gymPublicXpTitle"><span><small>NÍVEL EDGY</small><strong>Nível '+level+'</strong></span><span>'+fmt(xp)+' XP</span></div><div class="gymPublicXpRail"><span style="width:'+(xp%100)+'%"></span></div><small>'+((100-xp%100)%100||100)+' XP até ao próximo nível</small></div>';
- const bars='<div class="gymPublicWeekBars" role="img" aria-label="Treinos nesta semana: '+days.join(", ")+'">'+days.slice(0,7).map((count,i)=>
- '<div class="gymPublicWeekDay"><div class="gymPublicWeekTrack"><span style="height:'+(Number(count)?Math.max(12,100*Number(count)/peak):0)+'%"></span></div><b>'+["Seg","Ter","Qua","Qui","Sex","Sáb","Dom"][i]+'</b><small>'+fmt(Number(count)||0)+'</small></div>').join("")+'</div>';
- const week='<section class="gymPublicWeek"><div class="gymPublicSectionHead"><div><span class="gymPublicEyebrow">ATIVIDADE</span><h3>Treinos desta semana</h3><small>Segunda a domingo · apenas contagem de sessões</small></div><strong>'+total+' '+(total===1?"treino":"treinos")+'</strong></div>'+bars+'</section>';
+ const activityCharts=activity?gymWeekCard(activity):'<p class="gymPublicEmpty">Não foi possível carregar os gráficos de atividade.</p>';
  const byLikes=new Map(),byComments=new Map();
  for(const l of likes||[])byLikes.set(l.post_id,[...(byLikes.get(l.post_id)||[]),l]);
  for(const c of comments||[])byComments.set(c.post_id,[...(byComments.get(c.post_id)||[]),c]);
@@ -1884,7 +1892,7 @@ function gymPublicProfileMarkup(target,summary,posts,likes,comments,workouts=[],
    (gymOwnSocial()?.is_public?'<form class="gymPublicReplyForm" data-gym-public-reply="'+esc(p.id)+'"><input name="body" required maxlength="500" placeholder="Escrever resposta…" aria-label="Responder à publicação"><button type="submit">Responder</button></form>':'')+
    '</article>';
  }).join("");
- return '<div class="gymPublicProfile">'+hero+stats+xpBox+week+gymSharingPublicWorkoutList(workouts,hasMoreWorkouts)+'<section class="gymPublicPosts"><div class="gymPublicSectionHead"><div><span class="gymPublicEyebrow">COMUNIDADE</span><h3>Publicações</h3></div><strong>'+fmt(Number(summary.posts)||0)+' posts</strong></div>'+
+ return '<div class="gymPublicProfile">'+hero+stats+xpBox+activityCharts+gymSharingPublicWorkoutList(workouts)+'<section class="gymPublicPosts"><div class="gymPublicSectionHead"><div><span class="gymPublicEyebrow">COMUNIDADE</span><h3>Publicações</h3></div><strong>'+fmt(Number(summary.posts)||0)+' posts</strong></div>'+
  (content||'<p class="gymPublicEmpty">Este atleta ainda não tem publicações.</p>')+'</section></div>';
 }
 async function gymAthleteDialog(id,options={}){
@@ -1897,14 +1905,14 @@ async function gymAthleteDialog(id,options={}){
   gymUXShow("Perfil EDGY","A carregar o perfil público…",'<div class="gymUXEmpty">A carregar o atleta e as publicações…</div>',true);
  }
  try{
-  const [a,b,summaryResult,workoutsResult]=await Promise.all([
+  const [a,b,summaryResult,activityResult]=await Promise.all([
    db.from("gym_social_profiles").select("user_id,display_name,username,is_public,avatar_path").eq("user_id",id).maybeSingle(),
    db.from("gym_feed_posts").select("id,user_id,workout_id,kind,title,body,created_at").eq("user_id",id).order("created_at",{ascending:false}).limit(30),
    db.rpc("gym_public_athlete_summary",{p_athlete_id:id}),
-   db.rpc("gym_public_athlete_workouts",{p_athlete_id:id,p_limit:13,p_offset:0})
+   db.rpc("gym_public_athlete_activity",{p_athlete_id:id})
   ]);
   if(!user||user.id!==uid||gymPublicProfileRequest!==request||gymPublicProfileId!==id||!gymUXModalOpen)return;
-  if(a.error)throw a.error;if(b.error)throw b.error;if(summaryResult.error)throw summaryResult.error;if(workoutsResult.error)throw workoutsResult.error;
+  if(a.error)throw a.error;if(b.error)throw b.error;if(summaryResult.error)throw summaryResult.error;if(activityResult.error)throw activityResult.error;
   if(!a.data?.is_public||!summaryResult.data){
    gymUXShow("Perfil privado","Este perfil não está disponível publicamente.",'<p class="gymPublicEmpty">O atleta optou por não divulgar o seu perfil.</p>',true);return;
   }
@@ -1924,13 +1932,11 @@ async function gymAthleteDialog(id,options={}){
    for(const actor of actors||[])if(!gymSocialProfiles.some(p=>p.user_id===actor.user_id))gymSocialProfiles.push(actor);
   }
   if(!user||user.id!==uid||gymPublicProfileRequest!==request||gymPublicProfileId!==id||!gymUXModalOpen)return;
-  const existing=quiet&&gymPublicProfileSnapshot?.athlete?.user_id===id?gymPublicProfileSnapshot:null;
-  const batch=Array.isArray(workoutsResult.data)?workoutsResult.data:[];
-  const workouts=existing?.workouts||batch.slice(0,12);
-  const hasMoreWorkouts=existing?existing.hasMoreWorkouts:batch.length>12;
-  gymPublicProfileSnapshot={athlete:a.data,summary:summaryResult.data,posts,likes:likeResult.data||[],comments,workouts,hasMoreWorkouts};
+  const activity=activityResult.data||null;
+  const workouts=Array.isArray(activity?.workouts)?activity.workouts:[];
+  gymPublicProfileSnapshot={athlete:a.data,summary:summaryResult.data,posts,likes:likeResult.data||[],comments,workouts,activity};
   const scroll=document.querySelector("#gymUXModal .gymUXBody"),priorScroll=quiet?scroll?.scrollTop:0;
-  gymUXShow("Perfil EDGY","Perfil público do atleta",gymPublicProfileMarkup(a.data,summaryResult.data,posts,likeResult.data||[],comments,workouts,hasMoreWorkouts),true);
+  gymUXShow("Perfil EDGY","Perfil público do atleta",gymPublicProfileMarkup(a.data,summaryResult.data,posts,likeResult.data||[],comments,workouts,activity),true);
   gymHydrateSharedWorkouts();
   if(quiet){const body=document.querySelector("#gymUXModal .gymUXBody");if(body)body.scrollTop=priorScroll||0}
  }catch(err){
@@ -1945,7 +1951,7 @@ function gymPublicRenderCached(){
  const s=gymPublicProfileSnapshot,body=document.querySelector("#gymUXModal .gymUXBody");
  if(!body)return;
  const scroll=body.scrollTop;
- body.innerHTML=gymPublicProfileMarkup(s.athlete,s.summary,s.posts,s.likes,s.comments,s.workouts,s.hasMoreWorkouts);
+ body.innerHTML=gymPublicProfileMarkup(s.athlete,s.summary,s.posts,s.likes,s.comments,s.workouts,s.activity);
  gymHydrateSharedWorkouts();
  body.scrollTop=scroll;
 }
@@ -2376,13 +2382,11 @@ function gymShareEnsureAccount(){
  const current=user?.id||null;
  if(current!==gymSharedCacheOwner){
   gymSharedWorkoutCache.clear();
-  gymOwnWorkoutsVisible=12;
   gymSharedCacheOwner=current;
  }
 }
 let gymSharedLoading=false;
 let gymSharePublishing=false;
-let gymOwnWorkoutsVisible=12;
 function gymSharingWorkoutToDetail(workout){
  const entries=(workout.gym_workout_exercises||[]).slice().sort((a,b)=>a.position-b.position);
  return {
@@ -2520,23 +2524,23 @@ function gymSharingWorkoutEntry(workout){
  '<div><strong>'+esc(workout.name||"Treino")+'</strong><small>'+date(workout.started_at)+' · '+gymSharingNum(workout.duration_minutes)+' min</small></div></div>'+
  gymSharingInline(workout.id)+'</article>';
 }
-function gymSharingPublicWorkoutList(workouts,hasMore=false){
+function gymSharingPublicWorkoutList(workouts){
  const list=Array.isArray(workouts)?workouts:[];
- return '<section class="gymPublicWorkoutCollection"><div class="gymPublicSectionHead"><div><span class="gymPublicEyebrow">HISTÓRICO PÚBLICO</span><h3>Treinos concluídos</h3><small>Todos os treinos do atleta, mesmo os não publicados no Feed</small></div><strong>'+list.length+(hasMore?'+':'')+'</strong></div>'+
- (list.length?list.map(gymSharingWorkoutEntry).join(""):'<p class="gymShareEmpty">Ainda não há treinos concluídos.</p>')+
- (hasMore?'<button type="button" class="gymShareLoadMore" data-gym-more-public="true">Mostrar mais treinos</button>':'')+'</section>';
+ return '<section class="gymPublicWorkoutCollection"><div class="gymPublicSectionHead"><div><span class="gymPublicEyebrow">ESTA SEMANA</span><h3>Treinos desta semana</h3><small>Sessões concluídas entre segunda-feira e domingo</small></div><strong>'+list.length+'</strong></div>'+
+ (list.length?list.map(gymSharingWorkoutEntry).join(""):'<p class="gymShareEmpty">Este atleta ainda não concluiu treinos nesta semana.</p>')+'</section>';
 }
 function gymSharingPersonalWorkoutList(){
  if(!user)return "";
- const all=gymDone().slice().sort((a,b)=>new Date(b.started_at)-new Date(a.started_at));
- const show=all.slice(0,gymOwnWorkoutsVisible);
- // O histórico do próprio já está em memória: evita RPCs redundantes ao abrir o perfil.
+ const monday=gymMondayOf(new Date()),nextMonday=new Date(monday);
+ nextMonday.setDate(nextMonday.getDate()+7);
+ const all=gymDone().filter(w=>{
+  const d=new Date(w.started_at);return d>=monday&&d<nextMonday;
+ }).sort((a,b)=>new Date(b.started_at)-new Date(a.started_at));
  gymShareEnsureAccount();
- for(const workout of show)if(!gymSharedWorkoutCache.has(workout.id))gymSharedWorkoutCache.set(workout.id,gymSharingWorkoutToDetail(workout));
+ for(const workout of all)if(!gymSharedWorkoutCache.has(workout.id))gymSharedWorkoutCache.set(workout.id,gymSharingWorkoutToDetail(workout));
  const own=gymOwnSocial();
- return '<section class="gymPublicWorkoutCollection gymPersonalWorkoutCollection"><div class="gymPublicSectionHead"><div><span class="gymPublicEyebrow">O TEU HISTÓRICO</span><h3>Treinos concluídos</h3><small>'+(own?.is_public?'Visíveis para outros atletas no teu perfil público':'Só tu podes consultar estes treinos enquanto o perfil for privado')+'</small></div><strong>'+all.length+'</strong></div>'+
- (show.length?show.map(w=>gymSharingWorkoutEntry({id:w.id,name:w.name,started_at:w.started_at,duration_minutes:duration(w)})).join(""):'<p class="gymShareEmpty">Ainda não tens treinos concluídos.</p>')+
- (all.length>show.length?'<button type="button" class="gymShareLoadMore" data-gym-more-own="true">Mostrar mais '+Math.min(12,all.length-show.length)+' treinos</button>':'')+'</section>';
+ return '<section class="gymPublicWorkoutCollection gymPersonalWorkoutCollection"><div class="gymPublicSectionHead"><div><span class="gymPublicEyebrow">ESTA SEMANA</span><h3>Treinos desta semana</h3><small>'+(own?.is_public?'Sessões concluídas visíveis no teu perfil público':'Só tu podes consultar estas sessões enquanto o perfil for privado')+'</small></div><strong>'+all.length+'</strong></div>'+
+ (all.length?all.map(w=>gymSharingWorkoutEntry({id:w.id,name:w.name,started_at:w.started_at,duration_minutes:duration(w)})).join(""):'<p class="gymShareEmpty">Ainda não concluíste treinos nesta semana. Consulta as sessões anteriores no Histórico.</p>')+'</section>';
 }
 async function gymSharingOpenWorkout(id){
  if(!user||!id)return;
@@ -2582,41 +2586,12 @@ function gymSharingDialog(id){
  '<div class="gymShareComposeTitle"><strong>'+esc(workout.name)+'</strong><small>'+date(workout.started_at)+'</small></div>'+intro+
  gymSharingCompactHTML(gymSharingWorkoutToDetail(workout))+
  '<label class="gymShareCaption">Adiciona uma mensagem (opcional)<textarea name="caption" maxlength="220" rows="3" placeholder="Como correu o treino? O que melhoraste?"></textarea></label>'+
- '<p class="gymSharePrivacy">O Feed mostra os top sets e permite expandir todas as séries. Com o perfil público, todos os teus treinos concluídos (incluindo os anteriores e não publicados) também são visíveis no perfil. As medidas continuam privadas.</p>'+
+ '<p class="gymSharePrivacy">O Feed mostra os top sets e permite expandir todas as séries. Com o perfil público, os treinos concluídos desta semana aparecem no perfil; o histórico completo mantém-se no separador Histórico. As medidas continuam privadas.</p>'+
  '<div class="gymShareFormActions"><button type="button" class="btn secondary" data-ux-close>Cancelar</button><button class="btn" type="submit">Publicar treino</button></div></form>',true);
 }
 document.addEventListener("click",event=>{
  const button=event.target.closest?.("button");
  if(!button||!user)return;
- if(button.dataset.gymMoreOwn){
-  event.preventDefault();event.stopImmediatePropagation();
-  gymOwnWorkoutsVisible+=12;
-  const section=document.querySelector(".gymPersonalWorkoutCollection");
-  if(section){section.outerHTML=gymSharingPersonalWorkoutList();gymHydrateSharedWorkouts()}
-  return;
- }
- if(button.dataset.gymMorePublic){
-  event.preventDefault();event.stopImmediatePropagation();
-  const snapshot=gymPublicProfileSnapshot,athleteId=gymPublicProfileId,requester=user.id;
-  if(!snapshot||!athleteId||!snapshot.hasMoreWorkouts)return;
-  button.disabled=true;button.textContent="A carregar…";
-  (async()=>{
-   try{
-    const {data,error}=await db.rpc("gym_public_athlete_workouts",{p_athlete_id:athleteId,p_limit:13,p_offset:snapshot.workouts.length});
-    if(error)throw error;
-    if(user?.id!==requester||gymPublicProfileSnapshot!==snapshot||gymPublicProfileId!==athleteId)return;
-    const entries=Array.isArray(data)?data:[];
-    snapshot.workouts.push(...entries.slice(0,12));
-    snapshot.hasMoreWorkouts=entries.length>12;
-    gymPublicRenderCached();
-   }catch(error){
-    console.warn("Gym more public workouts:",error);
-    toast("Não foi possível carregar mais treinos.");
-    if(button.isConnected){button.disabled=false;button.textContent="Mostrar mais treinos"}
-   }
-  })();
-  return;
- }
  if(button.dataset.shareWorkout){
   event.preventDefault();event.stopImmediatePropagation();
   gymSharingDialog(button.dataset.shareWorkout);return;
