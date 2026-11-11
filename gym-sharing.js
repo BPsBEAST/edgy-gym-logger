@@ -120,21 +120,20 @@ function gymSharingPublicWorkoutList(posts){
 async function gymSharingOpenWorkout(id){
  if(!user||!id)return;
  gymShareEnsureAccount();
- let workout=null;
- if(!workout){
-  gymUXShow("Treino partilhado","A consultar os exercícios e séries…",'<div class="gymShareLoading">A carregar treino…</div>',true);
-  try{
-   const {data,error}=await db.rpc("gym_shared_workout",{p_workout_id:id});
-   if(error)throw error;
-   workout=data||null;
-   gymSharedWorkoutCache.set(id,workout);
-  }catch(error){
-   console.warn("Gym shared workout view:",error);
-   gymUXShow("Treino indisponível","Não foi possível consultar este treino.",'<p class="gymShareEmpty">Tenta novamente. Apenas treinos partilhados podem ser consultados.</p>',true);
-   return;
-  }
+ const requester=user.id;
+ gymUXShow("Treino partilhado","A consultar os exercícios e séries…",'<div class="gymShareLoading">A carregar treino…</div>',true);
+ try{
+  // Check permission again on every open. A previously shared workout may have become private.
+  const {data,error}=await db.rpc("gym_shared_workout",{p_workout_id:id});
+  if(error)throw error;
+  if(user?.id!==requester||!gymUXModalOpen)return;
+  const workout=data||null;
+  gymSharedWorkoutCache.set(id,workout);
+  gymUXShow(workout?workout.name:"Treino privado",workout?"Treino completo partilhado pelo atleta":"Este treino já não está disponível.",gymSharingWorkoutHTML(workout),true);
+ }catch(error){
+  console.warn("Gym shared workout view:",error);
+  if(user?.id===requester&&gymUXModalOpen)gymUXShow("Treino indisponível","Não foi possível consultar este treino.",'<p class="gymShareEmpty">Tenta novamente. Apenas treinos partilhados podem ser consultados.</p>',true);
  }
- gymUXShow(workout?workout.name:"Treino privado",workout?"Treino completo partilhado pelo atleta":"Este treino já não está disponível.",gymSharingWorkoutHTML(workout),true);
 }
 function gymSharingOptInCard(){
  if(!user)return "";
