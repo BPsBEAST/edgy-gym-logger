@@ -2530,6 +2530,9 @@ function gymSharingPersonalWorkoutList(){
  if(!user)return "";
  const all=gymDone().slice().sort((a,b)=>new Date(b.started_at)-new Date(a.started_at));
  const show=all.slice(0,gymOwnWorkoutsVisible);
+ // O histórico do próprio já está em memória: evita RPCs redundantes ao abrir o perfil.
+ gymShareEnsureAccount();
+ for(const workout of show)if(!gymSharedWorkoutCache.has(workout.id))gymSharedWorkoutCache.set(workout.id,gymSharingWorkoutToDetail(workout));
  const own=gymOwnSocial();
  return '<section class="gymPublicWorkoutCollection gymPersonalWorkoutCollection"><div class="gymPublicSectionHead"><div><span class="gymPublicEyebrow">O TEU HISTÓRICO</span><h3>Treinos concluídos</h3><small>'+(own?.is_public?'Visíveis para outros atletas no teu perfil público':'Só tu podes consultar estes treinos enquanto o perfil for privado')+'</small></div><strong>'+all.length+'</strong></div>'+
  (show.length?show.map(w=>gymSharingWorkoutEntry({id:w.id,name:w.name,started_at:w.started_at,duration_minutes:duration(w)})).join(""):'<p class="gymShareEmpty">Ainda não tens treinos concluídos.</p>')+
