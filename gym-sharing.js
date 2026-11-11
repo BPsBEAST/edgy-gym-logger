@@ -129,9 +129,16 @@ async function gymHydrateSharedWorkouts(){
   }
  }
 }
+function gymSharingPostCaption(body){
+ const text=String(body||"").trim();
+ if(text.startsWith("TOP SETS\n"))return "";
+ const start=text.indexOf("\n\nTOP SETS\n");
+ if(start>=0)return text.slice(0,start).trim();
+ return text.replace(/(?:\n\n)?Treino concluído · [^\n]*$/u,"").trim();
+}
 const gymSharingPreviousFeedCard=gymFeedCard;
 gymFeedCard=function(post){
- const html=gymSharingPreviousFeedCard(post);
+ const html=gymSharingPreviousFeedCard(post.workout_id?{...post,body:gymSharingPostCaption(post.body)}:post);
  if(!post.workout_id)return html;
  const insert=gymSharingInline(post.workout_id);
  const boundary='<div class="gymPostActions">';
