@@ -1868,7 +1868,8 @@ function gymPublicProfileMarkup(target,summary,posts,likes,comments,workouts=[],
   const ownerLikes=byLikes.get(p.id)||[],ownerComments=byComments.get(p.id)||[];
   const hasLiked=ownerLikes.some(l=>l.user_id===user.id);
   const content=p.kind==="post"?(p.body||p.title):p.title;
-  const body=p.kind!=="post"&&p.body?'<p class="gymPublicPostBody">'+esc(p.body)+'</p>':'';
+  const displayedBody=p.workout_id?gymSharingPostCaption(p.body):p.body;
+  const body=p.kind!=="post"&&displayedBody?'<p class="gymPublicPostBody">'+esc(displayedBody)+'</p>':'';
   const expanded=gymPublicExpandedReplies.has(p.id);
   const shown=expanded?ownerComments:ownerComments.slice(-3);
   const label=({post:"Publicação",goal:"Meta",pr:"Recorde",workout:"Treino"}[p.kind]||"Publicação");
@@ -2498,9 +2499,16 @@ async function gymHydrateSharedWorkouts(){
   }
  }
 }
+function gymSharingPostCaption(body){
+ const text=String(body||"").trim();
+ if(text.startsWith("TOP SETS\n"))return "";
+ const start=text.indexOf("\n\nTOP SETS\n");
+ if(start>=0)return text.slice(0,start).trim();
+ return text.replace(/(?:\n\n)?Treino concluído · [^\n]*$/u,"").trim();
+}
 const gymSharingPreviousFeedCard=gymFeedCard;
 gymFeedCard=function(post){
- const html=gymSharingPreviousFeedCard(post);
+ const html=gymSharingPreviousFeedCard(post.workout_id?{...post,body:gymSharingPostCaption(post.body)}:post);
  if(!post.workout_id)return html;
  const insert=gymSharingInline(post.workout_id);
  const boundary='<div class="gymPostActions">';
