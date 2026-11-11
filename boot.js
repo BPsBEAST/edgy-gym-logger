@@ -8,7 +8,7 @@ const sources=[
  "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2",
  "https://unpkg.com/@supabase/supabase-js@2"
 ];
-const local=["gym-avatar-editor.js?v=1","gym-app.bundle.js?v=29"];
+const local=["gym-avatar-editor.js?v=1","gym-app.bundle.js?v=30"];
 function showIssue(message){
  if(!main)return;
  main.innerHTML='<section class="card hero" role="alert"><h1>Não foi possível carregar a aplicação</h1><p class="muted">'+message+'</p><button type="button" class="btn" id="gymRetryLoad">Tentar novamente</button></section>';
