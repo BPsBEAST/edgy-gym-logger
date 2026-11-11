@@ -1,6 +1,14 @@
 /* EDGY Gym · structured workouts, public shared training cards, and opt-in PR posts */
 "use strict";
 const gymSharedWorkoutCache=new Map();
+let gymSharedCacheOwner=null;
+function gymShareEnsureAccount(){
+ const current=user?.id||null;
+ if(current!==gymSharedCacheOwner){
+  gymSharedWorkoutCache.clear();
+  gymSharedCacheOwner=current;
+ }
+}
 let gymSharedLoading=false;
 let gymSharePublishing=false;
 function gymSharingWorkoutToDetail(workout){
@@ -41,6 +49,7 @@ function gymSharingWorkoutHTML(workout){
  gymSharingSetsHTML(ex.sets)+'</section>').join("")+'</div></div>';
 }
 function gymSharingInline(workoutId){
+ gymShareEnsureAccount();
  const saved=gymSharedWorkoutCache.get(workoutId);
  return '<div class="gymSharedWorkoutInline" data-gym-workout-preview="'+esc(workoutId)+'">'+
  (saved?gymSharingWorkoutHTML(saved):'<p class="gymShareLoading">A carregar exercícios e séries…</p>')+
@@ -55,6 +64,7 @@ function gymPaintSharedWorkoutPreviews(){
  }
 }
 async function gymHydrateSharedWorkouts(){
+ gymShareEnsureAccount();
  if(!user)return;
  gymPaintSharedWorkoutPreviews();
  if(gymSharedLoading)return;
@@ -106,7 +116,8 @@ function gymSharingPublicWorkoutList(posts){
 }
 async function gymSharingOpenWorkout(id){
  if(!user||!id)return;
- let workout=gymSharedWorkoutCache.get(id);
+ gymShareEnsureAccount();
+ let workout=null;
  if(!workout){
   gymUXShow("Treino partilhado","A consultar os exercícios e séries…",'<div class="gymShareLoading">A carregar treino…</div>',true);
   try{
@@ -136,6 +147,7 @@ function gymSharingComposePost(workout,caption){
  return (caption.trim()?caption.trim().slice(0,220)+'\n\n':'')+summary;
 }
 function gymSharingDialog(id){
+ gymShareEnsureAccount();
  const workout=gymDone().find(w=>w.id===id);
  if(!workout||!user)return;
  if(!gymOwnSocial()?.is_public){toast("Ativa primeiro o teu perfil público para partilhar treinos.");return}
