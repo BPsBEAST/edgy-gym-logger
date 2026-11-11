@@ -123,3 +123,6 @@ Não são atribuídos XP retroativos por treinos terminados antes da migração.
 
 ### Top sets e histórico público (novembro de 2026)
 Os posts de treinos mostram no texto apenas a melhor série de trabalho por exercício (maior carga, desempate por repetições), com opção de expandir e consultar todas as séries. Os perfis públicos listam os treinos concluídos da semana corrente (segunda a domingo), mesmo sem publicação. Os gráficos de atividade semanal e evolução de 12 semanas reutilizam os componentes do perfil privado. Tornar o perfil privado oculta estes treinos de outros utilizadores; as medidas e os treinos ativos não são públicos.
+
+### Editar treinos concluídos (novembro de 2026)
+O Histórico permite editar o nome e corrigir as séries já existentes (peso, repetições, tipo, RPE, falha e conclusão). Um RPC autenticado atualiza os dados numa transação e permite excecionalmente alterar séries de uma sessão concluída, verificando a propriedade do treino. Não é possível criar/remover séries neste editor e o XP atribuído originalmente permanece inalterado. Os top sets, volume e recordes apresentados são recalculados após atualização.
