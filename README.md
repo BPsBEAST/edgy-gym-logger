@@ -33,7 +33,7 @@ Cada sessão concluída apresenta duração, volume, séries, exercícios, detal
 Fotografia/nome/@ associados à EDGY, totais, gráfico semanal, calendário, medidas e respetiva evolução. Medidas adicionais: peso, peito, cintura, abdómen, ombros, braços, coxa, gémeos e glúteo.
 
 ### Feed
-Desativado por defeito. Ao aderir, o utilizador passa a ter um perfil de comunidade visível para outros utilizadores autenticados: nome e @. Permite seguir atletas, gostar de publicações, partilhar treinos e publicar objetivos. Os treinos concluídos aparecem no perfil público do atleta (incluindo treinos antigos não publicados), com top sets no resumo e todas as séries num painel expansível. Treinos em curso e medidas continuam privados. O Feed apenas recebe treinos publicados voluntariamente.
+Desativado por defeito. Ao aderir, o utilizador passa a ter um perfil de comunidade visível para outros utilizadores autenticados: nome e @. Permite seguir atletas, gostar de publicações, partilhar treinos e publicar objetivos. Os treinos concluídos da semana atual aparecem no perfil público, com top sets no resumo e todas as séries num painel expansível. Os gráficos desta semana e das últimas 12 semanas também aparecem no perfil público. Treinos em curso e medidas continuam privados. O Feed apenas recebe treinos publicados voluntariamente.
 
 ## Base de dados
 
@@ -73,7 +73,7 @@ O repositório tem ficheiros estáticos na raiz, preparados para GitHub Pages. C
 4. Concluir treino, verificar volume e PRs, guardar modelo no Histórico e iniciar novo treino pelo modelo.
 5. Adicionar medidas em duas datas e verificar calendário e gráficos.
 6. Com segunda conta, ativar Feed e testar seguir, gostar, partilhar e notificações.
-7. Confirmar que o histórico completo e medidas não ficam visíveis na outra conta.
+7. Confirmar que as medidas e os treinos em curso não ficam visíveis na outra conta e que a lista do perfil apresenta apenas a semana atual.
 
 ## Atualização — comunidade e identidade EDGY
 
@@ -122,4 +122,4 @@ Não são atribuídos XP retroativos por treinos terminados antes da migração.
 5. Verificar na EDGY Games que o total de XP e nível reflete a recompensa quando atualizar os dados da conta.
 
 ### Top sets e histórico público (novembro de 2026)
-Os posts de treinos mostram no texto apenas a melhor série de trabalho por exercício (maior carga, desempate por repetições), com opção de expandir e consultar todas as séries. Os perfis públicos listam todos os treinos concluídos, mesmo sem publicação, com paginação de 12 sessões. Tornar o perfil privado oculta estes treinos de outros utilizadores; as medidas e os treinos ativos não são públicos.
+Os posts de treinos mostram no texto apenas a melhor série de trabalho por exercício (maior carga, desempate por repetições), com opção de expandir e consultar todas as séries. Os perfis públicos listam os treinos concluídos da semana corrente (segunda a domingo), mesmo sem publicação. Os gráficos de atividade semanal e evolução de 12 semanas reutilizam os componentes do perfil privado. Tornar o perfil privado oculta estes treinos de outros utilizadores; as medidas e os treinos ativos não são públicos.
