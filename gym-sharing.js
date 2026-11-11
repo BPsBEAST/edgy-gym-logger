@@ -46,8 +46,18 @@ function gymSharingInline(workoutId){
  (saved?gymSharingWorkoutHTML(saved):'<p class="gymShareLoading">A carregar exercícios e séries…</p>')+
  '</div><button type="button" class="gymShareOpen" data-gym-open-workout="'+esc(workoutId)+'">Ver treino completo</button>';
 }
+function gymPaintSharedWorkoutPreviews(){
+ for(const node of document.querySelectorAll("[data-gym-workout-preview]")){
+  const id=node.dataset.gymWorkoutPreview;
+  if(!gymSharedWorkoutCache.has(id)||node.dataset.gymHydrated==="1")continue;
+  node.innerHTML=gymSharingWorkoutHTML(gymSharedWorkoutCache.get(id));
+  node.dataset.gymHydrated="1";
+ }
+}
 async function gymHydrateSharedWorkouts(){
- if(!user||gymSharedLoading)return;
+ if(!user)return;
+ gymPaintSharedWorkoutPreviews();
+ if(gymSharedLoading)return;
  const nodes=[...document.querySelectorAll("[data-gym-workout-preview]")];
  if(!nodes.length)return;
  const ids=[...new Set(nodes.map(node=>node.dataset.gymWorkoutPreview))].filter(Boolean);
@@ -61,16 +71,22 @@ async function gymHydrateSharedWorkouts(){
    if(error)throw error;
    const fetched=new Map((Array.isArray(data)?data:[]).map(w=>[w.id,w]));
    for(const id of subset)gymSharedWorkoutCache.set(id,fetched.get(id)||null);
-   for(const node of nodes){
-    const id=node.dataset.gymWorkoutPreview;
-    if(subset.includes(id)&&node.isConnected!==false)node.innerHTML=gymSharingWorkoutHTML(gymSharedWorkoutCache.get(id));
-   }
+   // Render into current DOM (old cards may have been replaced during the request).
+   gymPaintSharedWorkoutPreviews();
   }
  }catch(error){
   console.warn("EDGY shared workout:",error);
   for(const node of nodes)if(missing.includes(node.dataset.gymWorkoutPreview))
    node.innerHTML='<p class="gymShareEmpty">Não foi possível carregar o treino. Podes tentar abrir novamente.</p>';
- }finally{gymSharedLoading=false}
+ }finally{
+  gymSharedLoading=false;
+  gymPaintSharedWorkoutPreviews();
+  const needsNew=document.querySelectorAll("[data-gym-workout-preview]");
+  if([...needsNew].some(node=>!gymSharedWorkoutCache.has(node.dataset.gymWorkoutPreview))){
+   // Only needed if a new set of cards appeared during the previous request.
+   gymHydrateSharedWorkouts();
+  }
+ }
 }
 const gymSharingPreviousFeedCard=gymFeedCard;
 gymFeedCard=function(post){
