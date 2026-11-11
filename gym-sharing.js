@@ -6,11 +6,13 @@ function gymShareEnsureAccount(){
  const current=user?.id||null;
  if(current!==gymSharedCacheOwner){
   gymSharedWorkoutCache.clear();
+  gymOwnWorkoutsVisible=12;
   gymSharedCacheOwner=current;
  }
 }
 let gymSharedLoading=false;
 let gymSharePublishing=false;
+let gymOwnWorkoutsVisible=12;
 function gymSharingWorkoutToDetail(workout){
  const entries=(workout.gym_workout_exercises||[]).slice().sort((a,b)=>a.position-b.position);
  return {
@@ -35,6 +37,32 @@ function gymSharingSetsHTML(sets){
    '</div>';
  }).join("")+'</div>';
 }
+function gymSharingTopSet(exercise){
+ const sets=(exercise?.sets||[]).filter(s=>s.completed!==false&&Number(s.reps)>0);
+ const working=sets.filter(s=>s.set_type!=="warmup"&&s.set_type!=="dropset");
+ const candidates=working.length?working:sets.filter(s=>s.set_type!=="warmup");
+ const available=candidates.length?candidates:sets;
+ return available.slice().sort((a,b)=>Number(b.weight||0)-Number(a.weight||0)||Number(b.reps||0)-Number(a.reps||0))[0]||null;
+}
+function gymSharingTopSetsText(workout){
+ return (workout.exercises||[]).map(ex=>{
+  const s=gymSharingTopSet(ex);
+  return s?ex.name+": "+gymSharingNum(s.weight)+" kg × "+gymSharingNum(s.reps):null;
+ }).filter(Boolean).join("\n");
+}
+function gymSharingCompactHTML(workout){
+ if(!workout)return '<p class="gymShareEmpty">Treino indisponível ou privado.</p>';
+ const exercises=workout.exercises||[];
+ const topSets=exercises.map(ex=>{
+  const s=gymSharingTopSet(ex);
+  return '<div class="gymShareTopRow"><span>'+esc(ex.name||"Exercício")+'</span>'+
+   '<strong>'+(s?gymSharingNum(s.weight)+' kg <small>×</small> '+gymSharingNum(s.reps):'Sem séries concluídas')+'</strong></div>';
+ }).join("");
+ return '<div class="gymShareCompact"><div class="gymShareCompactMeta"><span>'+gymSharingNum(workout.duration_minutes)+' min</span><span>'+gymSharingNum(workout.volume_kg)+' kg volume</span><span>'+gymSharingNum(workout.completed_sets)+' séries</span></div>'+
+ '<div class="gymShareTopSets"><div class="gymShareTopHeading">TOP SETS · MELHOR SÉRIE DE CADA EXERCÍCIO</div>'+
+ (topSets||'<p class="gymShareEmpty">Sem exercícios concluídos.</p>')+'</div>'+
+ '<details class="gymShareDetails"><summary>Ver treino completo <span>Exercícios e todas as séries</span></summary><div class="gymShareExpanded">'+gymSharingWorkoutHTML(workout)+'</div></details></div>';
+}
 function gymSharingWorkoutHTML(workout){
  if(!workout)return '<p class="gymShareEmpty">Treino indisponível ou privado.</p>';
  const exercises=(workout.exercises||[]);
@@ -50,16 +78,16 @@ function gymSharingWorkoutHTML(workout){
 }
 function gymSharingInline(workoutId){
  gymShareEnsureAccount();
+ const known=gymSharedWorkoutCache.has(workoutId);
  const saved=gymSharedWorkoutCache.get(workoutId);
  return '<div class="gymSharedWorkoutInline" data-gym-workout-preview="'+esc(workoutId)+'">'+
- (saved?gymSharingWorkoutHTML(saved):'<p class="gymShareLoading">A carregar exercícios e séries…</p>')+
- '</div><button type="button" class="gymShareOpen" data-gym-open-workout="'+esc(workoutId)+'">Ver treino completo</button>';
+ (known?gymSharingCompactHTML(saved):'<p class="gymShareLoading">A carregar top sets…</p>')+'</div>';
 }
 function gymPaintSharedWorkoutPreviews(){
  for(const node of document.querySelectorAll("[data-gym-workout-preview]")){
   const id=node.dataset.gymWorkoutPreview;
   if(!gymSharedWorkoutCache.has(id)||node.dataset.gymHydrated==="1")continue;
-  node.innerHTML=gymSharingWorkoutHTML(gymSharedWorkoutCache.get(id));
+  node.innerHTML=gymSharingCompactHTML(gymSharedWorkoutCache.get(id));
   node.dataset.gymHydrated="1";
  }
 }
@@ -110,12 +138,25 @@ gymFeedCard=function(post){
  if(!html.includes(boundary))return html;
  return html.replace(boundary,insert+boundary);
 };
-function gymSharingPublicWorkoutList(posts){
- const shared=[...new Map(posts.filter(p=>p.workout_id).map(p=>[p.workout_id,p])).values()];
- return '<section class="gymPublicWorkoutCollection"><div class="gymPublicSectionHead"><div><span class="gymPublicEyebrow">TREINOS PARTILHADOS</span><h3>Explorar os treinos</h3><small>Apenas os treinos que este atleta decidiu publicar</small></div><strong>'+shared.length+'</strong></div>'+
- (shared.length?shared.map(p=>'<button type="button" class="gymPublicWorkoutLink" data-gym-open-workout="'+esc(p.workout_id)+'">'+
- '<span class="gymPublicWorkoutIcon">▤</span><span><strong>'+esc(p.title||"Treino partilhado")+'</strong><small>'+date(p.created_at)+'</small></span><b>Ver treino</b></button>').join(""):
- '<p class="gymShareEmpty">Ainda não há treinos partilhados.</p>')+'</section>';
+function gymSharingWorkoutEntry(workout){
+ return '<article class="gymPublicWorkoutEntry"><div class="gymPublicWorkoutEntryHead"><span class="gymPublicWorkoutIcon">▤</span>'+
+ '<div><strong>'+esc(workout.name||"Treino")+'</strong><small>'+date(workout.started_at)+' · '+gymSharingNum(workout.duration_minutes)+' min</small></div></div>'+
+ gymSharingInline(workout.id)+'</article>';
+}
+function gymSharingPublicWorkoutList(workouts,hasMore=false){
+ const list=Array.isArray(workouts)?workouts:[];
+ return '<section class="gymPublicWorkoutCollection"><div class="gymPublicSectionHead"><div><span class="gymPublicEyebrow">HISTÓRICO PÚBLICO</span><h3>Treinos concluídos</h3><small>Todos os treinos do atleta, mesmo os não publicados no Feed</small></div><strong>'+list.length+(hasMore?'+':'')+'</strong></div>'+
+ (list.length?list.map(gymSharingWorkoutEntry).join(""):'<p class="gymShareEmpty">Ainda não há treinos concluídos.</p>')+
+ (hasMore?'<button type="button" class="gymShareLoadMore" data-gym-more-public="true">Mostrar mais treinos</button>':'')+'</section>';
+}
+function gymSharingPersonalWorkoutList(){
+ if(!user)return "";
+ const all=gymDone().slice().sort((a,b)=>new Date(b.started_at)-new Date(a.started_at));
+ const show=all.slice(0,gymOwnWorkoutsVisible);
+ const own=gymOwnSocial();
+ return '<section class="gymPublicWorkoutCollection gymPersonalWorkoutCollection"><div class="gymPublicSectionHead"><div><span class="gymPublicEyebrow">O TEU HISTÓRICO</span><h3>Treinos concluídos</h3><small>'+(own?.is_public?'Visíveis para outros atletas no teu perfil público':'Só tu podes consultar estes treinos enquanto o perfil for privado')+'</small></div><strong>'+all.length+'</strong></div>'+
+ (show.length?show.map(w=>gymSharingWorkoutEntry({id:w.id,name:w.name,started_at:w.started_at,duration_minutes:duration(w)})).join(""):'<p class="gymShareEmpty">Ainda não tens treinos concluídos.</p>')+
+ (all.length>show.length?'<button type="button" class="gymShareLoadMore" data-gym-more-own="true">Mostrar mais '+Math.min(12,all.length-show.length)+' treinos</button>':'')+'</section>';
 }
 async function gymSharingOpenWorkout(id){
  if(!user||!id)return;
@@ -143,10 +184,11 @@ function gymSharingOptInCard(){
  '<small>'+(own?.is_public?"Funciona apenas enquanto o perfil for público. Podes desativar a qualquer momento.":"Ativa primeiro o teu perfil público para publicar conquistas.")+'</small></section>';
 }
 const gymSharingProfileBase=renderProfile;
-renderProfile=function(){return gymSharingProfileBase()+gymSharingOptInCard()};
+renderProfile=function(){return gymSharingProfileBase()+gymSharingPersonalWorkoutList()+gymSharingOptInCard()};
 function gymSharingComposePost(workout,caption){
- const summary='Treino concluído · '+duration(workout)+' min · '+gymSharingNum(volume(workout))+' kg de volume · '+count(workout)+' séries · '+(workout.gym_workout_exercises||[]).length+' exercícios.';
- return (caption.trim()?caption.trim().slice(0,220)+'\n\n':'')+summary;
+ const topSets=gymSharingTopSetsText(gymSharingWorkoutToDetail(workout));
+ const intro=String(caption||"").trim().slice(0,220);
+ return (intro?intro+'\n\n':'')+(topSets?'TOP SETS\n'+topSets:'Treino concluído');
 }
 function gymSharingDialog(id){
  gymShareEnsureAccount();
@@ -156,16 +198,45 @@ function gymSharingDialog(id){
  const prs=gymPRData().events.get(id)||[];
  const intro=prs.length?'<div class="gymSharePR">🏆 '+prs.length+' '+(prs.length===1?"recorde neste treino":"recordes neste treino")+
  ': '+prs.map(pr=>esc(pr.name)+" "+gymSharingNum(pr.weight)+" kg").join(" · ")+'</div>':'';
- gymUXShow("Partilhar treino","Publicação completa no Feed",'<form id="gymShareWorkoutForm" data-gym-share-id="'+esc(id)+'">'+
+ gymUXShow("Partilhar treino","Resumo com top sets no Feed",'<form id="gymShareWorkoutForm" data-gym-share-id="'+esc(id)+'">'+
  '<div class="gymShareComposeTitle"><strong>'+esc(workout.name)+'</strong><small>'+date(workout.started_at)+'</small></div>'+intro+
- gymSharingWorkoutHTML(gymSharingWorkoutToDetail(workout))+
+ gymSharingCompactHTML(gymSharingWorkoutToDetail(workout))+
  '<label class="gymShareCaption">Adiciona uma mensagem (opcional)<textarea name="caption" maxlength="220" rows="3" placeholder="Como correu o treino? O que melhoraste?"></textarea></label>'+
- '<p class="gymSharePrivacy">Este treino, incluindo todas as cargas e repetições concluídas, ficará visível no Feed e no teu perfil público até eliminares a publicação ou tornares o perfil privado.</p>'+
+ '<p class="gymSharePrivacy">O Feed mostra os top sets e permite expandir todas as séries. Com o perfil público, todos os teus treinos concluídos (incluindo os anteriores e não publicados) também são visíveis no perfil. As medidas continuam privadas.</p>'+
  '<div class="gymShareFormActions"><button type="button" class="btn secondary" data-ux-close>Cancelar</button><button class="btn" type="submit">Publicar treino</button></div></form>',true);
 }
 document.addEventListener("click",event=>{
  const button=event.target.closest?.("button");
  if(!button||!user)return;
+ if(button.dataset.gymMoreOwn){
+  event.preventDefault();event.stopImmediatePropagation();
+  gymOwnWorkoutsVisible+=12;
+  const section=document.querySelector(".gymPersonalWorkoutCollection");
+  if(section){section.outerHTML=gymSharingPersonalWorkoutList();gymHydrateSharedWorkouts()}
+  return;
+ }
+ if(button.dataset.gymMorePublic){
+  event.preventDefault();event.stopImmediatePropagation();
+  const snapshot=gymPublicProfileSnapshot,athleteId=gymPublicProfileId,requester=user.id;
+  if(!snapshot||!athleteId||!snapshot.hasMoreWorkouts)return;
+  button.disabled=true;button.textContent="A carregar…";
+  (async()=>{
+   try{
+    const {data,error}=await db.rpc("gym_public_athlete_workouts",{p_athlete_id:athleteId,p_limit:13,p_offset:snapshot.workouts.length});
+    if(error)throw error;
+    if(user?.id!==requester||gymPublicProfileSnapshot!==snapshot||gymPublicProfileId!==athleteId)return;
+    const entries=Array.isArray(data)?data:[];
+    snapshot.workouts.push(...entries.slice(0,12));
+    snapshot.hasMoreWorkouts=entries.length>12;
+    gymPublicRenderCached();
+   }catch(error){
+    console.warn("Gym more public workouts:",error);
+    toast("Não foi possível carregar mais treinos.");
+    if(button.isConnected){button.disabled=false;button.textContent="Mostrar mais treinos"}
+   }
+  })();
+  return;
+ }
  if(button.dataset.shareWorkout){
   event.preventDefault();event.stopImmediatePropagation();
   gymSharingDialog(button.dataset.shareWorkout);return;
