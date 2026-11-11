@@ -43,12 +43,13 @@ function gymPublicProfileMarkup(target,summary,posts,likes,comments){
    return '<div class="gymPublicReply"><button type="button" data-gym-athlete="'+esc(c.user_id)+'" class="gymPublicReplyAvatar">'+gymCommunityAvatar(c.user_id,actor.name)+'</button><div><button type="button" class="gymPublicReplyName" data-gym-athlete="'+esc(c.user_id)+'">'+esc(actor.name)+'</button><p>'+esc(c.body)+'</p></div></div>';
   }).join("");
   return '<article class="gymPublicPost"><header><span>'+esc(label)+'</span><small>'+date(p.created_at)+'</small></header><p class="gymPublicPostTitle">'+esc(content)+'</p>'+body+
+   (p.workout_id?gymSharingInline(p.workout_id):'')+
    '<div class="gymPublicPostActions"><button type="button" data-gym-public-like="'+esc(p.id)+'" aria-label="'+(hasLiked?'Retirar gosto':'Gostar da publicação')+'">'+(hasLiked?'♥':'♡')+' '+ownerLikes.length+' gostos</button><button type="button" data-gym-public-expand="'+esc(p.id)+'">◎ '+ownerComments.length+' '+(ownerComments.length===1?'resposta':'respostas')+'</button></div>'+
    (ownerComments.length?'<div class="gymPublicReplies">'+replies+(ownerComments.length>3?'<button class="gymPublicShowAll" type="button" data-gym-public-expand="'+esc(p.id)+'">'+(expanded?'Mostrar menos':'Ver todas as respostas')+'</button>':'')+'</div>':'')+
    (gymOwnSocial()?.is_public?'<form class="gymPublicReplyForm" data-gym-public-reply="'+esc(p.id)+'"><input name="body" required maxlength="500" placeholder="Escrever resposta…" aria-label="Responder à publicação"><button type="submit">Responder</button></form>':'')+
    '</article>';
  }).join("");
- return '<div class="gymPublicProfile">'+hero+stats+xpBox+week+'<section class="gymPublicPosts"><div class="gymPublicSectionHead"><div><span class="gymPublicEyebrow">COMUNIDADE</span><h3>Publicações</h3></div><strong>'+fmt(Number(summary.posts)||0)+' posts</strong></div>'+
+ return '<div class="gymPublicProfile">'+hero+stats+xpBox+week+gymSharingPublicWorkoutList(posts)+'<section class="gymPublicPosts"><div class="gymPublicSectionHead"><div><span class="gymPublicEyebrow">COMUNIDADE</span><h3>Publicações</h3></div><strong>'+fmt(Number(summary.posts)||0)+' posts</strong></div>'+
  (content||'<p class="gymPublicEmpty">Este atleta ainda não tem publicações.</p>')+'</section></div>';
 }
 async function gymAthleteDialog(id,options={}){
@@ -63,7 +64,7 @@ async function gymAthleteDialog(id,options={}){
  try{
   const [a,b,summaryResult]=await Promise.all([
    db.from("gym_social_profiles").select("user_id,display_name,username,is_public,avatar_path").eq("user_id",id).maybeSingle(),
-   db.from("gym_feed_posts").select("id,user_id,kind,title,body,created_at").eq("user_id",id).order("created_at",{ascending:false}).limit(30),
+   db.from("gym_feed_posts").select("id,user_id,workout_id,kind,title,body,created_at").eq("user_id",id).order("created_at",{ascending:false}).limit(30),
    db.rpc("gym_public_athlete_summary",{p_athlete_id:id})
   ]);
   if(!user||user.id!==uid||gymPublicProfileRequest!==request||gymPublicProfileId!==id||!gymUXModalOpen)return;
@@ -90,6 +91,7 @@ async function gymAthleteDialog(id,options={}){
   gymPublicProfileSnapshot={athlete:a.data,summary:summaryResult.data,posts,likes:likeResult.data||[],comments};
   const scroll=document.querySelector("#gymUXModal .gymUXBody"),priorScroll=quiet?scroll?.scrollTop:0;
   gymUXShow("Perfil EDGY","Perfil público do atleta",gymPublicProfileMarkup(a.data,summaryResult.data,posts,likeResult.data||[],comments),true);
+  gymHydrateSharedWorkouts();
   if(quiet){const body=document.querySelector("#gymUXModal .gymUXBody");if(body)body.scrollTop=priorScroll||0}
  }catch(err){
   console.warn("EDGY public profile:",err);
@@ -104,6 +106,7 @@ function gymPublicRenderCached(){
  if(!body)return;
  const scroll=body.scrollTop;
  body.innerHTML=gymPublicProfileMarkup(s.athlete,s.summary,s.posts,s.likes,s.comments);
+ gymHydrateSharedWorkouts();
  body.scrollTop=scroll;
 }
 document.addEventListener("click",event=>{
