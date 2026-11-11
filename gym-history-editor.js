@@ -4,6 +4,7 @@ let gymEditFinishedSaving=false;
 function gymEditFinishedOpen(id){
  const workout=gymDone().find(w=>w.id===id);
  if(!workout||!user)return;
+ const totalMinutes=Math.max(1,Math.round(Number(duration(workout))||0));
  const entries=(workout.gym_workout_exercises||[]).slice().sort((a,b)=>a.position-b.position);
  const sections=entries.map((we,i)=>{
   const rows=(we.gym_sets||[]).slice().sort((a,b)=>a.position-b.position).map((s,j)=>
@@ -20,9 +21,13 @@ function gymEditFinishedOpen(id){
   ).join('');
   return '<section class="gymEditHistoryExercise"><header><span>'+String(i+1).padStart(2,'0')+'</span><strong>'+esc(we.gym_exercises?.name||'Exercício')+'</strong><small>'+(we.gym_sets||[]).length+' séries</small></header>'+rows+'</section>';
  }).join('');
- gymUXShow("Editar treino","Corrige as cargas e repetições deste treino concluído.",
+ gymUXShow("Editar treino","Corrige a duração, as cargas e as repetições deste treino concluído.",
   '<form id="gymEditFinishedForm" data-gym-edit-workout="'+esc(id)+'" class="gymEditHistoryForm">'+
   '<label class="gymUXField"><span>Nome do treino</span><input name="name" class="gymUXInput" maxlength="70" required value="'+esc(workout.name)+'"></label>'+
+  '<div class="gymUXTwo gymEditHistoryTime">'+
+   '<label class="gymUXField"><span>Duração · horas</span><input class="gymUXInput" name="duration_hours" type="number" inputmode="numeric" min="0" max="72" step="1" required value="'+Math.floor(totalMinutes/60)+'"></label>'+
+   '<label class="gymUXField"><span>Duração · minutos</span><input class="gymUXInput" name="duration_minutes" type="number" inputmode="numeric" min="0" max="59" step="1" required value="'+(totalMinutes%60)+'"></label>'+
+  '</div>'+
   '<div class="gymEditHistoryInfo">As alterações às séries atualizam os PRs, o volume e o resumo público. O XP atribuído quando terminaste o treino não é recalculado. Não é possível adicionar ou remover séries neste editor.</div>'+
   '<div class="gymEditHistoryExercises">'+(sections||'<p class="muted">Sem exercícios registados.</p>')+'</div>'+
   '<div class="gymUXActions"><button class="btn secondary" type="button" data-ux-close>Cancelar</button><button class="btn" type="submit">Guardar alterações</button></div></form>',true);
@@ -64,6 +69,14 @@ document.addEventListener("submit",event=>{
  if(!workout){toast("Este treino já não está disponível.");return}
  const name=String(form.elements.name.value||"").trim();
  if(!name||name.length>70){toast("O nome do treino deve ter entre 1 e 70 caracteres.");return}
+ const rawHours=String(form.elements.duration_hours.value||"").trim();
+ const rawMinutes=String(form.elements.duration_minutes.value||"").trim();
+ const hours=Number(rawHours),minutes=Number(rawMinutes);
+ const durationMinutes=hours*60+minutes;
+ if(!rawHours||!rawMinutes||!Number.isInteger(hours)||!Number.isInteger(minutes)||
+  hours<0||hours>72||minutes<0||minutes>59||durationMinutes<1||durationMinutes>4320){
+  toast("A duração deve estar entre 1 minuto e 72 horas.");return;
+ }
  let sets;
  try{sets=gymEditFinishedData(form)}catch(err){toast(err.message);return}
  const submit=form.querySelector('[type="submit"]');
@@ -71,8 +84,8 @@ document.addEventListener("submit",event=>{
  if(submit){submit.disabled=true;submit.textContent="A guardar…"}
  (async()=>{
   try{
-   const {data,error}=await db.rpc("gym_edit_finished_workout",{
-    p_workout_id:id,p_name:name,p_sets:sets
+   const {data,error}=await db.rpc("gym_edit_finished_workout_with_duration",{
+    p_workout_id:id,p_name:name,p_sets:sets,p_duration_minutes:durationMinutes
    });
    if(error)throw error;
    if(!data?.updated)throw new Error("Não foi possível confirmar a edição.");
@@ -82,7 +95,7 @@ document.addEventListener("submit",event=>{
    await load();
    page="historico";
    render();
-   toast("Treino atualizado com sucesso.");
+   toast("Treino e duração atualizados com sucesso.");
   }catch(err){
    console.warn("EDGY edit completed workout:",err);
    toast(err.message||"Não foi possível guardar as alterações.");
