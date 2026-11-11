@@ -140,7 +140,7 @@ function gymUXEditProfile(){
  gymUXField("username","Identificador @","O teu identificador",profile?.username||"", 'required minlength="3" maxlength="20" pattern="[a-zA-Z0-9_]+" title="3 a 20 caracteres: letras, números ou _" autocapitalize="none" spellcheck="false"')+
  '<p class="gymUXProfileHint">O @ tem entre 3 e 20 caracteres: letras, números e _ (sem espaços, pontos ou hífenes).</p>'+
  '<label class="gymUXField"><span>Descrição</span><textarea name="bio" class="gymUXInput" rows="3" maxlength="160" placeholder="Sobre ti…">'+esc(profile?.bio||"")+'</textarea></label>'+
- '<label class="gymUXPrivacy"><span><strong>Perfil público no Gym</strong><small>Permite que outros atletas vejam o teu nome, @ e publicações. As medidas e os treinos completos permanecem privados.</small></span><input name="is_public" type="checkbox" '+(social?.is_public?"checked":"")+'></label>'+
+ '<label class="gymUXPrivacy"><span><strong>Perfil público no Gym</strong><small>Outros atletas podem ver o teu nome, @, publicações e todos os treinos concluídos, incluindo os antigos e não publicados. As medidas continuam privadas. Desativa para ocultar o histórico.</small></span><input name="is_public" type="checkbox" '+(social?.is_public?"checked":"")+'></label>'+
  '<p class="gymUXFine">Email: '+esc(user.email||"")+' · Alterar a visibilidade aqui não altera a visibilidade do teu perfil na EDGY Games.</p><p class="gymUXProfileStatus" data-gym-profile-status role="status" aria-live="polite" hidden></p>'+gymUXActions("Guardar perfil")+'</form>',true);
 }
 const gymUXPriorFeed=renderFeed;
