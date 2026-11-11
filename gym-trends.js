@@ -30,14 +30,25 @@ function gymWeeklyCurvePath(points){
  }
  return path;
 }
-function gymWeekCard(){
- const weeks=gymWeekDataset(),today=new Date();
- const monday=gymMondayOf(today),tomorrow=new Date(monday);tomorrow.setDate(tomorrow.getDate()+7);
+function gymWeekCard(activity=null){
+ const weeks=Array.isArray(activity?.weeks)&&activity.weeks.length===12
+  ?activity.weeks.map(w=>({
+    start:new Date(String(w.start).slice(0,10)+"T12:00:00"),
+    count:Number(w.count)||0,minutes:Number(w.minutes)||0
+   }))
+  :gymWeekDataset();
+ const today=new Date();
+ const monday=activity?.weeks?.length?new Date(String(activity.weeks[11].start).slice(0,10)+"T12:00:00"):gymMondayOf(today);
+ const tomorrow=new Date(monday);tomorrow.setDate(tomorrow.getDate()+7);
  const days=Array.from({length:7},(_,i)=>{
   const start=new Date(monday);start.setDate(start.getDate()+i);
   const end=new Date(start);end.setDate(end.getDate()+1);
-  const sessions=gymDone().filter(w=>new Date(w.started_at)>=start&&new Date(w.started_at)<end);
-  return {day:["Seg","Ter","Qua","Qui","Sex","Sáb","Dom"][i],count:sessions.length,minutes:sessions.reduce((n,w)=>n+duration(w),0),today:start.toDateString()===today.toDateString(),future:start>today};
+  const publicDay=Array.isArray(activity?.days)?activity.days[i]:null;
+  const sessions=publicDay?null:gymDone().filter(w=>new Date(w.started_at)>=start&&new Date(w.started_at)<end);
+  return {day:["Seg","Ter","Qua","Qui","Sex","Sáb","Dom"][i],
+   count:publicDay?Number(publicDay.count)||0:sessions.length,
+   minutes:publicDay?Number(publicDay.minutes)||0:sessions.reduce((n,w)=>n+duration(w),0),
+   today:start.toDateString()===today.toDateString(),future:start>today};
  });
  const total=days.reduce((n,d)=>n+d.count,0),minutes=days.reduce((n,d)=>n+d.minutes,0),peak=Math.max(1,...days.map(d=>d.count));
  const bars=days.map((d,i)=>'<div class="gymCurrentDay '+(d.today?'is-today':'')+' '+(d.future?'is-future':'')+'" style="--bar-order:'+i+'" title="'+d.count+' treinos · '+d.minutes+' minutos"><div class="gymCurrentBarTrack"><span class="gymCurrentBar" style="--bar-height:'+(d.count?Math.max(12,Math.round(d.count/peak*100)):0)+'%"></span></div><b>'+d.day+'</b><small>'+d.count+'</small></div>').join("");
@@ -50,7 +61,8 @@ function gymWeekCard(){
  const guides=[0,.5,1].map(f=>{const y=bottom-(bottom-top-18)*f;return '<line x1="'+left+'" x2="'+right+'" y1="'+y.toFixed(1)+'" y2="'+y.toFixed(1)+'" stroke="#5e3c61" stroke-width=".8" stroke-dasharray="4 6" opacity=".6"/>';}).join("");
  const dots=points.map((p,i)=>'<g class="gymLineDot" style="--dot-order:'+i+'" tabindex="0"><title>'+p.count+' treinos · '+p.minutes+' minutos · semana de '+p.start.toLocaleDateString("pt-PT",{day:"numeric",month:"short"})+'</title><circle class="gymDotHalo" cx="'+p.x.toFixed(2)+'" cy="'+p.y.toFixed(2)+'" r="8" fill="#f81c8b" opacity="'+(i===11?'.18':'.09')+'"/><circle cx="'+p.x.toFixed(2)+'" cy="'+p.y.toFixed(2)+'" r="'+(i===11?5.2:3.4)+'" fill="'+(i===11?'#ff59ac':'#ffd2eb')+'" stroke="#3d2046" stroke-width="2"/></g>').join("");
  const labels=weeks.map((w,i)=>i%2===0||i===11?'<text x="'+points[i].x.toFixed(2)+'" y="223" text-anchor="middle" fill="#b49cbf" font-size="12">'+w.start.toLocaleDateString("pt-PT",{day:"2-digit",month:"short"})+'</text>':'').join("");
- const chart='<svg class="gymTrendSVG" viewBox="0 0 720 236" role="img" aria-label="Evolução de treinos concluídos por semana, últimas doze semanas"><defs><linearGradient id="gym-week-area" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#f20a87" stop-opacity=".76"/><stop offset="80%" stop-color="#aa277f" stop-opacity=".26"/><stop offset="100%" stop-color="#7b2a77" stop-opacity=".04"/></linearGradient><linearGradient id="gym-week-line" x1="0" x2="1"><stop offset="0%" stop-color="#b7309c"/><stop offset="100%" stop-color="#ff4fa3"/></linearGradient></defs>'+guides+'<path d="'+area+'" fill="url(#gym-week-area)" class="gymTrendArea"/><path d="'+line+'" class="gymTrendLine" stroke="url(#gym-week-line)" stroke-width="4" stroke-linecap="round" fill="none"/>'+dots+labels+'</svg>';
+ const gradientId=activity?"gym-public-week":"gym-week";
+ const chart='<svg class="gymTrendSVG" viewBox="0 0 720 236" role="img" aria-label="Evolução de treinos concluídos por semana, últimas doze semanas"><defs><linearGradient id="'+gradientId+'-area" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#f20a87" stop-opacity=".76"/><stop offset="80%" stop-color="#aa277f" stop-opacity=".26"/><stop offset="100%" stop-color="#7b2a77" stop-opacity=".04"/></linearGradient><linearGradient id="'+gradientId+'-line" x1="0" x2="1"><stop offset="0%" stop-color="#b7309c"/><stop offset="100%" stop-color="#ff4fa3"/></linearGradient></defs>'+guides+'<path d="'+area+'" fill="url(#'+gradientId+'-area)" class="gymTrendArea"/><path d="'+line+'" class="gymTrendLine" stroke="url(#'+gradientId+'-line)" stroke-width="4" stroke-linecap="round" fill="none"/>'+dots+labels+'</svg>';
  const average=weeks.reduce((n,w)=>n+w.count,0)/12;
  const trend='<section class="card gymChartCard gymTrendCard"><div class="gymChartHead"><div><span class="gymChartEyebrow">EVOLUÇÃO</span><h3>Treinos por semana</h3><p>Últimas 12 semanas · cada ponto é uma semana</p></div><div class="gymTrendAverage"><strong>'+fmt(average)+'</strong><span>média / semana</span></div></div><div class="gymTrendCanvas">'+chart+'</div><div class="gymTrendLegend"><i></i> Treinos concluídos <span>·</span> '+weeks.reduce((n,w)=>n+w.count,0)+' treinos no período</div></section>';
  return current+trend;
