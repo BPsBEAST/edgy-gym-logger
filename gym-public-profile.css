@@ -88,3 +88,6 @@
  .gymPublicReplyForm button{padding:9px 10px}
 }
 @media(prefers-reduced-motion:reduce){.gymPublicWeekTrack>span{animation:none!important}.gymPublicFollowBtn,.gymPublicPostActions button{transition:none!important}}
+
+/* Match the same weekly charts used in the private profile. */
+.gymPublicProfile .gymChartCard{margin:0!important;min-width:0;width:100%}
